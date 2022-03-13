@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.32210.238
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "video-editing-api", "video-editing-api\video-editing-api.csproj", "{33F7409F-AF64-4D9A-A24E-62447AF53F67}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{33F7409F-AF64-4D9A-A24E-62447AF53F67}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{33F7409F-AF64-4D9A-A24E-62447AF53F67}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{33F7409F-AF64-4D9A-A24E-62447AF53F67}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{33F7409F-AF64-4D9A-A24E-62447AF53F67}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {0E635BC7-4FE7-41B7-BE12-C61AE409BCC4}
+	EndGlobalSection
+EndGlobal
