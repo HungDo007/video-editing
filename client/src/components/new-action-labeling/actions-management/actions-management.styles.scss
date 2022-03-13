@@ -1,0 +1,52 @@
+@mixin border-style {
+  border: 3px solid #cdc7c7;
+  margin: 1rem;
+  padding: 0 1rem 1rem;
+}
+
+.actions-block {
+  .actions-title {
+    font-weight: bold;
+  }
+  .actions-new-btn {
+    text-align: end;
+  }
+  .actions-running {
+    display: flex;
+
+    .actions-running-detail {
+      width: 20%;
+      @include border-style();
+
+      .actions-status {
+        margin-left: 2rem;
+      }
+    }
+  }
+  .actions-new {
+    @include border-style();
+
+    .action-new-info {
+      display: flex;
+
+      .action-new-name {
+        width: 25%;
+        margin: 1.5rem;
+      }
+
+      .action-new-description {
+        width: 65%;
+        margin: 1.5rem;
+      }
+    }
+
+    .actions-add-btn {
+      margin-left: 1.5rem;
+    }
+
+    .start-label-btn {
+      text-align: center;
+      margin: 1rem 0;
+    }
+  }
+}
