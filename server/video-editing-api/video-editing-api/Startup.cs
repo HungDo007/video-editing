@@ -11,11 +11,16 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using video_editing_api.Model;
+using video_editing_api.Service.DBConnection;
+using video_editing_api.Service.User;
+using video_editing_api.Service.VideoEditing;
 
 namespace video_editing_api
 {
     public class Startup
     {
+        private readonly string _myAllowSpecificOrigins = "AllowSpecficOrigins";
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -26,6 +31,25 @@ namespace video_editing_api
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddCors(options =>
+            {
+                options.AddPolicy(name: _myAllowSpecificOrigins,
+                    builder =>
+                    {
+                        builder.WithOrigins("http://localhost:5000", "http://localhost:3000", "https://studentshop.azurewebsites.net")
+                            .AllowAnyOrigin()
+                            .AllowAnyMethod()
+                            .AllowAnyHeader()
+                            .WithExposedHeaders("Content-Range");
+                    });
+            });
+
+            services.Configure<DbConfig>(Configuration);
+
+            services.AddScoped<IDbClient, DbClient>();
+            services.AddScoped<IVideoEditingService, VideoEditingService>();
+            services.AddScoped<IUserService, UserService>();
+
 
             services.AddControllers();
             services.AddSwaggerGen(c =>
@@ -44,7 +68,9 @@ namespace video_editing_api
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "video_editing_api v1"));
             }
 
-            app.UseHttpsRedirection();
+            app.UseCors(_myAllowSpecificOrigins);
+
+            //app.UseHttpsRedirection();
 
             app.UseRouting();
 
