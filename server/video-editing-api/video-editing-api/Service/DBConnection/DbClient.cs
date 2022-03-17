@@ -7,12 +7,12 @@ namespace video_editing_api.Service.DBConnection
     public class DbClient : IDbClient
     {
         private readonly IMongoCollection<Action> _actions;
-        private readonly string _dbName = "VideoEditing";
+        //private readonly string _dbName = "VideoEditing";
         private readonly string _actionCollection = "Action";
         public DbClient(IOptions<DbConfig> options)
         {
             var client = new MongoClient(options.Value.Connection_String);
-            var database = client.GetDatabase(_dbName);
+            var database = client.GetDatabase(options.Value.Database_Name);
             _actions = database.GetCollection<Action>(_actionCollection);
         }
         public IMongoCollection<Action> GetActionCollection() => _actions;
