@@ -1,0 +1,37 @@
+.file-upload {
+  display: flex;
+  margin: 2rem 0;
+  align-items: center;
+
+  .file-upload-btn {
+    margin-right: 2rem;
+  }
+}
+
+.video-container {
+  display: flex;
+
+  .video-content {
+    width: unset;
+
+    .cut-btn {
+      display: flex;
+      justify-content: space-around;
+    }
+
+    .control-btn {
+      display: flex;
+      justify-content: center;
+    }
+  }
+
+  .cut-table {
+    margin-left: 2rem;
+  }
+
+ 
+}
+
+.create-models-btn {
+  float: right;
+}

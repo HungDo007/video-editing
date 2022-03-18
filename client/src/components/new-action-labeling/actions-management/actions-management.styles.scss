@@ -26,8 +26,13 @@
   .actions-new {
     @include border-style();
 
+    .actions-close-btn {
+      float: right;
+    }
+
     .action-new-info {
       display: flex;
+      width: 100%;
 
       .action-new-name {
         width: 25%;

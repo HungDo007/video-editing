@@ -10,13 +10,14 @@ const VideoInput = () => {
     setVideoSrc(url);
   };
 
-  function handleChange1(a){
-    alert("1")
-  };
-
   return (
     <div>
-      <input id="raised-button-file" type="file" onChange={handleChange} />
+      <input
+        hidden
+        id="raised-button-file"
+        type="file"
+        onChange={handleChange}
+      />
       {videoSrc ? (
         <video src={videoSrc} width="100%" height={300} controls />
       ) : (
