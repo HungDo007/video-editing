@@ -1,5 +1,8 @@
 .App {
-  margin: 2rem;
+}
+
+a {
+  text-decoration: none;
 }
 
 * {

@@ -40,7 +40,7 @@ const ActionsLabeling = () => {
       <div className="video-container">
         <div className="video-content">
           <div>
-            <video src={videoSrc} height={430} controls />
+            <video src={videoSrc} width={700} controls />
           </div>
           <div className="cut-btn">
             <Button variant="outlined">Add to Start</Button>
@@ -82,18 +82,22 @@ const ActionsLabeling = () => {
         </div>
         <div className="cut-table">
           <table>
-            <tr>
-              <th>Start</th>
-              <th>End</th>
-              <th>Duration</th>
-              <th>Label</th>
-            </tr>
-            <tr>
-              <td>a</td>
-              <td>b</td>
-              <td>c</td>
-              <td>d</td>
-            </tr>
+            <thead>
+              <tr>
+                <th>Start</th>
+                <th>End</th>
+                <th>Duration</th>
+                <th>Label</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>a</td>
+                <td>b</td>
+                <td>c</td>
+                <td>d</td>
+              </tr>
+            </tbody>
           </table>
         </div>
       </div>

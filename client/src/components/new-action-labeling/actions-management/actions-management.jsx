@@ -1,13 +1,13 @@
 import { useState } from "react";
 
-import { Button, IconButton, TextField } from "@mui/material";
+import { Box, Button, Grid, IconButton, TextField } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import DeleteIcon from "@mui/icons-material/Delete";
 
 import "./actions-management.styles.scss";
+import { Link } from "react-router-dom";
 
 const ActionsManagement = () => {
-  const [status, setStatus] = useState(false);
   const [actions, setActions] = useState([
     {
       name: "",
@@ -36,20 +36,38 @@ const ActionsManagement = () => {
           ADD NEW ACTIONS
         </Button>
       </div>
-      <div className="actions-running">
-        <div className="actions-running-detail">
-          <div className="actions-status">RUNNING</div>
-          <div>Description</div>
-          <div>Created</div>
-          <div>Status</div>
-        </div>
-        <div className="actions-running-detail">
-          <div className="actions-status">RUNNING</div>
-          <div>Description</div>
-          <div>Created</div>
-          <div>Status</div>
-        </div>
-      </div>
+      <Grid container spacing={5}>
+        <Grid item>
+          <Box
+            sx={{
+              border: "3px solid #cdc7c7",
+              margin: "1rem",
+              padding: "0rem 1rem 1rem",
+              width: 200,
+            }}
+          >
+            <Box sx={{ ml: "2rem" }}>RUNNING</Box>
+            <div>Description</div>
+            <div>Created</div>
+            <div>Status</div>
+          </Box>
+        </Grid>
+        <Grid item>
+          <Box
+            sx={{
+              border: "3px solid #cdc7c7",
+              margin: "1rem",
+              padding: "0rem 1rem 1rem",
+              width: 200,
+            }}
+          >
+            <Box sx={{ ml: "2rem" }}>RUNNING</Box>
+            <div>Description</div>
+            <div>Created</div>
+            <div>Status</div>
+          </Box>
+        </Grid>
+      </Grid>
       {actions.length ? (
         <div className="actions-new">
           <div className="actions-close-btn">
@@ -95,7 +113,9 @@ const ActionsManagement = () => {
             </Button>
           </div>
           <div className="start-label-btn">
-            <Button variant="contained">Start Labeling</Button>
+            <Link to="actions-labeling">
+              <Button variant="contained">Start Labeling</Button>
+            </Link>
           </div>
         </div>
       ) : null}
