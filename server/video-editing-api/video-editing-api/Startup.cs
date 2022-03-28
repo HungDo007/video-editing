@@ -44,7 +44,7 @@ namespace video_editing_api
                     });
             });
 
-            services.Configure<DbConfig>(Configuration);
+            services.Configure<DbConfig>(Configuration.GetSection(SystemConstants.DbConfig));
 
             services.AddScoped<IDbClient, DbClient>();
             services.AddScoped<IVideoEditingService, VideoEditingService>();

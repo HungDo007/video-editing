@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
     <RootNamespace>video_editing_api</RootNamespace>
-    <UserSecretsId>114f13ee-5b1f-4b52-83cc-c06169194ca0</UserSecretsId>
+    
   </PropertyGroup>
 
   <ItemGroup>
