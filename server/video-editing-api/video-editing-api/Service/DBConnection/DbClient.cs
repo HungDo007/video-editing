@@ -2,34 +2,80 @@
 using MongoDB.Driver;
 using System.Security.Authentication;
 using video_editing_api.Model;
+using video_editing_api.Model.Collection;
 
 namespace video_editing_api.Service.DBConnection
 {
     public class DbClient : IDbClient
     {
         private readonly DbConfig _dbConfig;
-        private readonly IMongoCollection<Action> _actions;
+        private readonly IMongoDatabase _database;
         public DbClient(IOptions<DbConfig> options)
         {
             try
             {
                 _dbConfig = options.Value;
-                string connectionString = _dbConfig.ConnectionString;
+
                 MongoClientSettings settings = MongoClientSettings.FromUrl(
-                   new MongoUrl(connectionString)
+                   new MongoUrl(_dbConfig.ConnectionString)
                  );
                 settings.SslSettings =
                   new SslSettings() { EnabledSslProtocols = SslProtocols.Tls12 };
                 var mongoClient = new MongoClient(settings);
 
-                var database = mongoClient.GetDatabase("VideoEditing");
-                _actions = database.GetCollection<Action>(SystemConstants.ActionColection);
+                _database = mongoClient.GetDatabase(_dbConfig.DbName);                
             }
-            catch(System.Exception e )
+            catch (System.Exception e)
             {
                 throw new System.Exception(e.Message);
             }
         }
-        public IMongoCollection<Action> GetActionCollection() => _actions;
+        public IMongoCollection<Action> GetActionCollection()
+        {
+            try
+            {
+                return _database.GetCollection<Action>(SystemConstants.ActionCollection);
+            }
+            catch(System.Exception e)
+            {
+                throw new System.Exception(e.Message);
+            }
+        }
+
+        public IMongoCollection<MatchInfo> GetMatchInfoCollection()
+        {
+            try
+            {
+                return _database.GetCollection<MatchInfo>(SystemConstants.MatchInfoCollection);
+            }
+            catch (System.Exception e)
+            {
+                throw new System.Exception(e.Message);
+            }
+        }
+
+        public IMongoCollection<SaveFilePath> GetSaveFilePathCollection()
+        {
+            try
+            {
+                return _database.GetCollection<SaveFilePath>(SystemConstants.SaveFilePathCollection);
+            }
+            catch (System.Exception e)
+            {
+                throw new System.Exception(e.Message);
+            }
+        }
+
+        public IMongoCollection<Tournament> GetTournamentCollection()
+        {
+            try
+            {
+                return _database.GetCollection<Tournament>(SystemConstants.TournamentCollection);
+            }
+            catch (System.Exception e)
+            {
+                throw new System.Exception(e.Message);
+            }
+        }
     }
 }
