@@ -135,12 +135,13 @@ namespace video_editing_api.Controllers
 
 
        
-        [HttpPost("concatHighlight/{matchId}")]
-        public async Task<IActionResult> UpLoadVideo(string matchId, TrimVideoHightlightModel model)
+        [HttpPost("concatHighlight")]
+        public async Task<IActionResult> UpLoadVideo()
         {
             try
             {
-                string res = await _videoEditingService.ConcatVideoOfMatch(matchId, model);
+                //matchId, model string matchId, TrimVideoHightlightModel model  /{matchId}
+                string res = await _videoEditingService.ConcatVideoOfMatch();
                 return Ok(new Response<string>(200, "", res));
             }
             catch (System.Exception e)

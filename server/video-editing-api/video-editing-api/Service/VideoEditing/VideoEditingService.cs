@@ -223,12 +223,22 @@ namespace video_editing_api.Service.VideoEditing
                 throw new System.Exception(e.Message);
             }
         }
-
-        public async Task<string> ConcatVideoOfMatch(string matchId, TrimVideoHightlightModel model)
+        //string matchId, TrimVideoHightlightModel model
+        public async Task<string> ConcatVideoOfMatch()
         {
             try
             {
-                var match = _matchInfo.Find(x => x.Id == matchId).First();
+                //var match = _matchInfo.Find(x => x.Id == matchId).First();
+
+                var param = new VideoUploadParams
+                {
+                    File = new FileDescription("https://res.cloudinary.com/tamlh/video/upload/v1648822613/VideoEditing/Premier League/MU vs MC-29-03-2022-14-43/24dd8757-d0f3-4934-9378-8a8e8c33d981.mp4"),
+                    Transformation = new Transformation().Chain()
+  .Flags("splice").Overlay(new Layer().PublicId("video:VideoEditing/Premier League/MU vs MC-29-03-2022-14-43/45b09a54-ad64-4f95-9ca3-758099fe106d")).Chain()
+.Chain()
+  .Flags("layer_apply").StartOffset("0")
+                };
+                var uploadResult = await _cloudinary.UploadAsync(param);
 
                 return string.Empty;
             }
