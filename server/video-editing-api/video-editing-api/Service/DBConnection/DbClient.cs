@@ -54,11 +54,11 @@ namespace video_editing_api.Service.DBConnection
             }
         }
 
-        public IMongoCollection<SaveFilePath> GetSaveFilePathCollection()
+        public IMongoCollection<HighlightVideo> GetHighlightVideoCollection()
         {
             try
             {
-                return _database.GetCollection<SaveFilePath>(SystemConstants.SaveFilePathCollection);
+                return _database.GetCollection<HighlightVideo>(SystemConstants.HighlightVideoCollection);
             }
             catch (System.Exception e)
             {

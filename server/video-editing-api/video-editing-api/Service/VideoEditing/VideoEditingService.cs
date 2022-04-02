@@ -20,7 +20,7 @@ namespace video_editing_api.Service.VideoEditing
         private readonly IMongoCollection<Action> _actions;
         private readonly IMongoCollection<Tournament> _tournament;
         private readonly IMongoCollection<MatchInfo> _matchInfo;
-        private readonly IMongoCollection<SaveFilePath> _saveFilePath;
+        private readonly IMongoCollection<HighlightVideo> _highlight;
 
 
         private readonly Cloudinary _cloudinary;
@@ -30,7 +30,7 @@ namespace video_editing_api.Service.VideoEditing
             _actions = dbClient.GetActionCollection();
             _tournament = dbClient.GetTournamentCollection();
             _matchInfo = dbClient.GetMatchInfoCollection();
-            _saveFilePath = dbClient.GetSaveFilePathCollection();
+            _highlight = dbClient.GetHighlightVideoCollection();
 
 
             var account = new Account(
@@ -125,7 +125,8 @@ namespace video_editing_api.Service.VideoEditing
                                MactchTime = m.MactchTime,
                                MatchName = m.MatchName,
                                Port = m.Port,
-                               TournametName = t.Name
+                               TournametName = t.Name,
+                               Videos = m.Videos,
                            }).FirstOrDefault();
                 return res;
             }
@@ -149,7 +150,8 @@ namespace video_editing_api.Service.VideoEditing
                                MactchTime = m.MactchTime,
                                MatchName = m.MatchName,
                                Port = m.Port,
-                               TournametName = t.Name
+                               TournametName = t.Name,
+                               Videos = m.Videos,
                            }).ToList();
 
                 return res;
@@ -202,6 +204,7 @@ namespace video_editing_api.Service.VideoEditing
         {
             try
             {
+                var videoresource = new VideoResource();
                 await using var stream = file.OpenReadStream();
                 var name = System.Guid.NewGuid();
                 var param = new VideoUploadParams
@@ -212,35 +215,89 @@ namespace video_editing_api.Service.VideoEditing
                 };
                 var uploadResult = await _cloudinary.UploadAsync(param);
 
-                return new VideoResource()
+                if (uploadResult.Error == null)
                 {
-                    PublicId = uploadResult.PublicId,
-                    Url = uploadResult.SecureUrl.ToString()
-                };
+                    videoresource.PublicId = uploadResult.PublicId;
+                    videoresource.Url = uploadResult.SecureUrl.ToString();
+                }
+                else
+                {
+                    throw new System.Exception(uploadResult.Error.ToString());
+                }
+                return videoresource;
             }
             catch (System.Exception e)
             {
                 throw new System.Exception(e.Message);
             }
         }
-        //string matchId, TrimVideoHightlightModel model
-        public async Task<string> ConcatVideoOfMatch()
+
+
+        public async Task<List<HighlightVideo>> GetHighlightVideos()
         {
             try
             {
-                //var match = _matchInfo.Find(x => x.Id == matchId).First();
+                return await _highlight.Find(highligth => true).ToListAsync();
+            }
+            catch (System.Exception e)
+            {
+                throw new System.Exception(e.Message);
+            }
+        }
 
-                var param = new VideoUploadParams
+        public async Task<string> ConcatVideoOfMatch(string matchId, List<TrimVideoHightlightModel> models)
+        {
+            try
+            {
+                string response = string.Empty;
+                var match = _matchInfo.Find(x => x.Id == matchId).First();
+                if (models.Count > 0)
                 {
-                    File = new FileDescription("https://res.cloudinary.com/tamlh/video/upload/v1648822613/VideoEditing/Premier League/MU vs MC-29-03-2022-14-43/24dd8757-d0f3-4934-9378-8a8e8c33d981.mp4"),
-                    Transformation = new Transformation().Chain()
-  .Flags("splice").Overlay(new Layer().PublicId("video:VideoEditing/Premier League/MU vs MC-29-03-2022-14-43/45b09a54-ad64-4f95-9ca3-758099fe106d")).Chain()
-.Chain()
-  .Flags("layer_apply").StartOffset("0")
-                };
-                var uploadResult = await _cloudinary.UploadAsync(param);
+                    var trans = new Transformation().EndOffset(models[0].EndTime).StartOffset(models[0].StartTime);
 
-                return string.Empty;
+                    for (int i = 1; i < models.Count; i++)
+                    {
+                        trans.Chain().Flags("splice").Overlay(new Layer().PublicId($"video:{models[i].PublicId}")).EndOffset(models[i].EndTime).StartOffset(models[i].StartTime).Chain();
+                    }
+
+                    var fitstVideo = match.Videos.Where(x => x.PublicId == models[0].PublicId).FirstOrDefault();
+                    if (fitstVideo != null)
+                    {
+                        var name = System.Guid.NewGuid();
+                        var param = new VideoUploadParams
+                        {
+                            File = new FileDescription(fitstVideo.Url),
+                            Transformation = trans.Chain().Flags("layer_apply"),
+                            PublicId = $"VideoEditing/Highlight/{match.MatchName}-{match.MactchTime.ToString("dd-MM-yyyy-HH-mm")}/{name}"
+                        };
+                        var uploadResult = await _cloudinary.UploadAsync(param);
+                        if (uploadResult.Error == null)
+                        {
+                            var highlight = new HighlightVideo()
+                            {
+                                MatchId = match.Id,
+                                MatchInfo = $"({match.MatchName})T({match.MactchTime.ToString("dd-MM-yyyy-hh-mm")})",
+                                PublicId = uploadResult.PublicId,
+                                Url = uploadResult.SecureUrl.ToString()
+                            };
+                            await _highlight.InsertOneAsync(highlight);
+                            response = "Succeed";
+                        }
+                        else
+                        {
+                            throw new System.Exception(uploadResult.Error.ToString());
+                        }
+                    }
+                    else
+                    {
+                        throw new System.Exception("No video in storage video of match!");
+                    }
+                }
+                else
+                {
+                    throw new System.Exception("No video to concat");
+                }
+                return response;
             }
             catch (System.Exception e)
             {

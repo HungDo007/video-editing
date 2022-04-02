@@ -134,14 +134,25 @@ namespace video_editing_api.Controllers
 
 
 
-       
-        [HttpPost("concatHighlight")]
-        public async Task<IActionResult> UpLoadVideo()
+        [HttpGet("getHighligth")]
+        public async Task<IActionResult> GeHighligth()
         {
             try
             {
-                //matchId, model string matchId, TrimVideoHightlightModel model  /{matchId}
-                string res = await _videoEditingService.ConcatVideoOfMatch();
+                var res = await _videoEditingService.GetHighlightVideos();
+                return Ok(new Response<List<HighlightVideo>>(200, "", res));
+            }
+            catch (System.Exception e)
+            {
+                return BadRequest(new Response<List<HighlightVideo>>(400, e.Message, null));
+            }
+        }
+        [HttpPost("concatHighlight/{matchId}")]
+        public async Task<IActionResult> UpLoadVideo(string matchId, List<TrimVideoHightlightModel> models)
+        {
+            try
+            {                
+                string res = await _videoEditingService.ConcatVideoOfMatch(matchId, models);
                 return Ok(new Response<string>(200, "", res));
             }
             catch (System.Exception e)
@@ -151,7 +162,6 @@ namespace video_editing_api.Controllers
         }
 
         [HttpPost("uploadVideoForMatch/{matchId}")]
-        //[Consumes("multipart/form-data")]
         public async Task<IActionResult> UpLoadVideo(string matchId, IFormFile file)
         {
             try

@@ -9,6 +9,6 @@ namespace video_editing_api.Service.DBConnection
         IMongoCollection<Action> GetActionCollection();
         IMongoCollection<Tournament> GetTournamentCollection();
         IMongoCollection<MatchInfo> GetMatchInfoCollection();
-        IMongoCollection<SaveFilePath> GetSaveFilePathCollection();
+        IMongoCollection<HighlightVideo> GetHighlightVideoCollection();
     }
 }
