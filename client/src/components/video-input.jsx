@@ -1,3 +1,5 @@
+import { useRef, useState, useEffect } from "react";
+
 import {
   Box,
   Button,
@@ -8,44 +10,52 @@ import {
   Slider,
   Tooltip,
 } from "@mui/material";
-import { useRef, useState } from "react";
+
 import ReactPlayer from "react-player";
+
+import videoEditingApi from "../api/video-editing";
 import CustomBar from "./custom/custom-bar";
 
 const VideoInput = () => {
   const videoPlayer = useRef(null);
   const [totalDuration, setTotalDuration] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [index, setIndex] = useState(0);
+  const [videoIndex, setVideoIndex] = useState(0);
   const [videos, setVideos] = useState([]);
-  const [value, setValue] = useState([0, 0]);
-  const [checked, setChecked] = useState(false);
+  const [videoPieceTime, setVideoPieceTime] = useState([0, 0]);
 
-  const handleChange = (event) => {
-    const files = event.target.files;
-    let duration = 0;
-    let arr = [];
-    for (let index = 0; index < files.length; index++) {
-      const file = files[index];
-      const url = URL.createObjectURL(file);
-      const reader = new FileReader();
-      const videoObj = {
-        name: file.name,
-        url: url,
-      };
-      reader.onload = () => {
-        let media = new Audio(reader.result);
-        media.onloadedmetadata = () => {
-          duration += media.duration;
-          videoObj["duration"] = media.duration;
-          setTotalDuration(duration);
-        };
-      };
-      reader.readAsDataURL(file);
+  const [matches, setMatches] = useState([]);
+  const [matchId, setMatchId] = useState("");
 
-      arr.push(videoObj);
-    }
-    setVideos(arr);
+  // const handleChange = (event) => {
+  //   const files = event.target.files;
+  //   let duration = 0;
+  //   let arr = [];
+  //   for (let index = 0; index < files.length; index++) {
+  //     const file = files[index];
+  //     const url = URL.createObjectURL(file);
+  //     const reader = new FileReader();
+  //     const videoObj = {
+  //       name: file.name,
+  //       url: url,
+  //     };
+  //     reader.onload = () => {
+  //       let media = new Audio(reader.result);
+  //       media.onloadedmetadata = () => {
+  //         duration += media.duration;
+  //         videoObj["duration"] = media.duration;
+  //         setTotalDuration(duration);
+  //       };
+  //     };
+  //     reader.readAsDataURL(file);
+
+  //     arr.push(videoObj);
+  //   }
+  //   setVideos(arr);
+  // };
+
+  const handleSelectChange = (event) => {
+    setMatchId(event.target.value);
   };
 
   const handleDuration = (duration) => {
@@ -53,49 +63,126 @@ const VideoInput = () => {
   };
 
   const handleSlideChange = (event, newValue) => {
-    setValue(newValue);
-
+    setVideoPieceTime(newValue);
+    const newVideos = [...videos];
+    newVideos[videoIndex].startTime = newValue[0];
+    newVideos[videoIndex].endTime = newValue[1];
+    setVideos(newVideos);
     videoPlayer.current.seekTo(newValue[0], "seconds");
   };
 
   const handleCheckBoxChange = (event) => {
-    setChecked(event.target.checked);
+    const newVideos = [...videos];
+    newVideos[videoIndex].remove = event.target.checked;
+    setVideos(newVideos);
   };
 
-  const handleSave = () => {
-    console.log(value);
-    console.log(videos);
-  };
+  useEffect(() => {
+    const getMatches = async () => {
+      try {
+        const response = await videoEditingApi.getMatches();
+        setMatches(response.data);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    getMatches();
+  }, []);
 
+  useEffect(() => {
+    const getMatchById = async () => {
+      try {
+        const params = {
+          Id: matchId,
+        };
+        const response = await videoEditingApi.getMatchById(params);
+        if (response.data) {
+          const videos = response.data.videos.map((video) => ({
+            ...video,
+            remove: false,
+            startTime: videoPieceTime[0].toString(),
+            endTime: videoPieceTime[1].toString(),
+          }));
+          const totalDuration = response.data.videos.reduce(
+            (accumulator, video) => {
+              return accumulator + video.duration;
+            },
+            0
+          );
+          setTotalDuration(totalDuration);
+          setVideos(videos);
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    getMatchById();
+  }, [matchId]);
+  // console.log(matches);
+  const handleEditVideo = () => {
+    const payload = videos.reduce((filtered, video) => {
+      if (!video.remove) {
+        const newVideoInfo = {
+          publicId: video.publicId,
+          startTime: video.startTime,
+          endTime: video.endTime,
+        };
+        filtered.push(newVideoInfo);
+      }
+      return filtered;
+    }, []);
+    console.log(payload);
+    const concatHighlight = async () => {
+      try {
+        const response = await videoEditingApi.concatHighlight(
+          matchId,
+          payload
+        );
+        console.log(response);
+      } catch (error) {
+        console.log(error.response);
+      }
+    };
+    concatHighlight();
+  };
   return (
     <div className="tournament-block">
       <div className="tournament-info">
         <Card sx={{ padding: 5 }}>
           <div className="tournament-field">
             <p>Choose match</p>
-            <Select displayEmpty>
-              <MenuItem>C1 - Base Real 0.00 1/1/2023</MenuItem>
+            <Select
+              displayEmpty
+              sx={{ width: 300 }}
+              value={matchId}
+              onChange={handleSelectChange}
+            >
+              {matches.map((match) => (
+                <MenuItem key={match.id} value={match.id}>
+                  {match.tournametName} - {match.matchName}
+                </MenuItem>
+              ))}
             </Select>
           </div>
-          <input
+          {/* <input
             multiple
             id="raised-button-file"
             type="file"
             onChange={handleChange}
-          />
+          /> */}
           <ReactPlayer
             ref={videoPlayer}
-            url={videos[index]?.url}
+            url={videos[videoIndex]?.url}
             onDuration={handleDuration}
             controls
             width="100%"
-            height="100%"
+            height="500px"
           />
           <Box sx={{ display: "flex" }}>
             <Slider
               min={0}
               max={duration}
-              value={value}
+              value={videoPieceTime}
               valueLabelDisplay="auto"
               valueLabelFormat={(s) =>
                 new Date(s * 1000).toISOString().substr(11, 8)
@@ -103,13 +190,20 @@ const VideoInput = () => {
               onChange={handleSlideChange}
             />
             <Tooltip title="Remove">
-              <Checkbox checked={checked} onChange={handleCheckBoxChange} />
+              <Checkbox
+                checked={videos[videoIndex]?.remove ?? false}
+                onChange={handleCheckBoxChange}
+              />
             </Tooltip>
+          </Box>
+          <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+            <div>0:00</div>
+            <div>{new Date(duration * 1000).toISOString().substr(11, 8)}</div>
           </Box>
           <CustomBar
             videos={videos}
             duration={totalDuration}
-            setIndex={setIndex}
+            setIndex={setVideoIndex}
           />
           <Box sx={{ display: "flex", justifyContent: "space-between" }}>
             <div>0:00</div>
@@ -117,13 +211,11 @@ const VideoInput = () => {
               {new Date(totalDuration * 1000).toISOString().substr(11, 8)}
             </div>
           </Box>
-          <div>
-            <Button variant="outlined" onClick={() => handleSave()}>
-              Save
-            </Button>
-          </div>
+          <div></div>
           <Box sx={{ textAlign: "center" }}>
-            <Button variant="contained">Finish</Button>
+            <Button variant="contained" onClick={handleEditVideo}>
+              Finish
+            </Button>
           </Box>
         </Card>
       </div>
