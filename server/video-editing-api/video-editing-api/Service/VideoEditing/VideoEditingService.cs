@@ -218,11 +218,12 @@ namespace video_editing_api.Service.VideoEditing
                 if (uploadResult.Error == null)
                 {
                     videoresource.PublicId = uploadResult.PublicId;
+                    videoresource.Duration = uploadResult.Duration;
                     videoresource.Url = uploadResult.SecureUrl.ToString();
                 }
                 else
                 {
-                    throw new System.Exception(uploadResult.Error.ToString());
+                    throw new System.Exception(uploadResult.Error.Message);
                 }
                 return videoresource;
             }
@@ -267,7 +268,7 @@ namespace video_editing_api.Service.VideoEditing
                         var param = new VideoUploadParams
                         {
                             File = new FileDescription(fitstVideo.Url),
-                            Transformation = trans.Chain().Flags("layer_apply"),
+                            Transformation = models.Count > 1 ? trans.Chain().Flags("layer_apply") : trans,
                             PublicId = $"VideoEditing/Highlight/{match.MatchName}-{match.MactchTime.ToString("dd-MM-yyyy-HH-mm")}/{name}"
                         };
                         var uploadResult = await _cloudinary.UploadAsync(param);
@@ -277,6 +278,7 @@ namespace video_editing_api.Service.VideoEditing
                             {
                                 MatchId = match.Id,
                                 MatchInfo = $"({match.MatchName})T({match.MactchTime.ToString("dd-MM-yyyy-hh-mm")})",
+                                Duration = uploadResult.Duration,
                                 PublicId = uploadResult.PublicId,
                                 Url = uploadResult.SecureUrl.ToString()
                             };
@@ -285,7 +287,7 @@ namespace video_editing_api.Service.VideoEditing
                         }
                         else
                         {
-                            throw new System.Exception(uploadResult.Error.ToString());
+                            throw new System.Exception(uploadResult.Error.Message);
                         }
                     }
                     else

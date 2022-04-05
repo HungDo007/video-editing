@@ -10,6 +10,7 @@ namespace video_editing_api.Model.Collection
         [BsonRepresentation(MongoDB.Bson.BsonType.ObjectId)]
         public string MatchId { get; set; }
         public string MatchInfo { get; set; }
+        public double Duration { get; set; }
         public string PublicId { get; set; }
         public string Url { get; set; }
     }
