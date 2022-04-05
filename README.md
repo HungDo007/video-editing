@@ -1,11 +1,11 @@
 # KLTN: Video Analytics
 
-\*\*\*Nhóm sinh viên thực hiện (Hệ đại trà):
+***Nhóm sinh viên thực hiện (Hệ đại trà):***
 
-```
+
 > **Lương Hữu Tâm** - *18110347*
 > **Đỗ Quang Hùng** - *18110295*
-```
+
 
 ## Công nghệ sử dụng
 
