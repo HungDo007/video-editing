@@ -208,12 +208,12 @@ namespace video_editing_api.Service.VideoEditing
                 await using var stream = file.OpenReadStream();
                 var name = System.Guid.NewGuid();
                 var param = new VideoUploadParams
-                {
+                {                   
                     File = new FileDescription(file.FileName, stream),
                     Transformation = new Transformation().Height(720).Width(1280).Crop("fill"),
                     PublicId = $"VideoEditing/{tournamentName}/{matchName}-{matchTime}/{name}"
                 };
-                var uploadResult = await _cloudinary.UploadAsync(param);
+                var uploadResult = _cloudinary.Upload(param);
 
                 if (uploadResult.Error == null)
                 {

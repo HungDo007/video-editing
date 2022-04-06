@@ -162,6 +162,7 @@ namespace video_editing_api.Controllers
         }
 
         [HttpPost("uploadVideoForMatch/{matchId}")]
+        [DisableRequestSizeLimit]        
         public async Task<IActionResult> UpLoadVideo(string matchId, IFormFile file)
         {
             try
