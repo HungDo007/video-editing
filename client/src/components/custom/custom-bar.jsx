@@ -16,7 +16,7 @@ const CustomBar = ({ videos, duration, setIndex }) => {
           a -= item.duration;
           let percent = (a / duration) * 100;
           return (
-            <span
+            <div
               key={index}
               className="bar-item"
               style={{
@@ -24,8 +24,17 @@ const CustomBar = ({ videos, duration, setIndex }) => {
               }}
               onClick={() => handleClick(index)}
             >
+              <div
+                style={{
+                  marginTop: index % 2 === 0 ? 40 : -40,
+                  color: "black",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                <small>{item.name}</small>
+              </div>
               <input className="bar-item-ip" />
-            </span>
+            </div>
           );
         })}
       </span>

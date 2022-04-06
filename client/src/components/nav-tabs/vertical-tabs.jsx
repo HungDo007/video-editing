@@ -23,11 +23,11 @@ export default function VerticalTabs() {
           ".MuiTabs-indicator": { left: 0 },
         }}
       >
-        <Tab label="NEW ACTION LABELING" onClick={() => navigate("/")} />
+        {/* <Tab label="NEW ACTION LABELING" onClick={() => navigate("/")} />
         <Tab label="MODEL MANAGEMENT" onClick={() => navigate("/model")} />
-        <Tab label="VIDEO ANALYTICS" onClick={() => navigate("/video")} />
+        <Tab label="VIDEO ANALYTICS" onClick={() => navigate("/video")} /> */}
         <Tab label="TOURNAMENT" onClick={() => navigate("/tournament")} />
-        <Tab label="VIDEO" onClick={() => navigate("/video-edit")} />
+        {/* <Tab label="VIDEO" onClick={() => navigate("/video-edit")} /> */}
       </Tabs>
     </Box>
   );

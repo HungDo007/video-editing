@@ -1,22 +1,31 @@
 import { useRef, useState, useEffect } from "react";
-
+import CancelOutlinedIcon from "@mui/icons-material/CancelOutlined";
 import {
+  Backdrop,
   Box,
   Button,
   Card,
   Checkbox,
-  MenuItem,
-  Select,
+  CircularProgress,
+  Dialog,
+  DialogContent,
+  DialogTitle,
   Slider,
-  Tooltip,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
 } from "@mui/material";
 
 import ReactPlayer from "react-player";
 
 import videoEditingApi from "../api/video-editing";
 import CustomBar from "./custom/custom-bar";
+import { useLocation } from "react-router-dom";
 
 const VideoInput = () => {
+  const location = useLocation();
   const videoPlayer = useRef(null);
   const [totalDuration, setTotalDuration] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -24,84 +33,24 @@ const VideoInput = () => {
   const [videos, setVideos] = useState([]);
   const [videoPieceTime, setVideoPieceTime] = useState([0, 0]);
 
-  const [matches, setMatches] = useState([]);
-  const [matchId, setMatchId] = useState("");
-
-  // const handleChange = (event) => {
-  //   const files = event.target.files;
-  //   let duration = 0;
-  //   let arr = [];
-  //   for (let index = 0; index < files.length; index++) {
-  //     const file = files[index];
-  //     const url = URL.createObjectURL(file);
-  //     const reader = new FileReader();
-  //     const videoObj = {
-  //       name: file.name,
-  //       url: url,
-  //     };
-  //     reader.onload = () => {
-  //       let media = new Audio(reader.result);
-  //       media.onloadedmetadata = () => {
-  //         duration += media.duration;
-  //         videoObj["duration"] = media.duration;
-  //         setTotalDuration(duration);
-  //       };
-  //     };
-  //     reader.readAsDataURL(file);
-
-  //     arr.push(videoObj);
-  //   }
-  //   setVideos(arr);
-  // };
-
-  const handleSelectChange = (event) => {
-    setMatchId(event.target.value);
-  };
-
-  const handleDuration = (duration) => {
-    setDuration(duration);
-  };
-
-  const handleSlideChange = (event, newValue) => {
-    setVideoPieceTime(newValue);
-    const newVideos = [...videos];
-    newVideos[videoIndex].startTime = newValue[0];
-    newVideos[videoIndex].endTime = newValue[1];
-    setVideos(newVideos);
-    videoPlayer.current.seekTo(newValue[0], "seconds");
-  };
-
-  const handleCheckBoxChange = (event) => {
-    const newVideos = [...videos];
-    newVideos[videoIndex].remove = event.target.checked;
-    setVideos(newVideos);
-  };
-
-  useEffect(() => {
-    const getMatches = async () => {
-      try {
-        const response = await videoEditingApi.getMatches();
-        setMatches(response.data);
-      } catch (error) {
-        console.log(error);
-      }
-    };
-    getMatches();
-  }, []);
+  const [open, setOpen] = useState(false);
+  const [openDialog, setOpenDialog] = useState(false);
+  const [scroll, setScroll] = useState("paper");
+  const [videoResult, setVideoResult] = useState("");
 
   useEffect(() => {
     const getMatchById = async () => {
       try {
         const params = {
-          Id: matchId,
+          Id: location.state.row.id,
         };
         const response = await videoEditingApi.getMatchById(params);
         if (response.data) {
           const videos = response.data.videos.map((video) => ({
             ...video,
             remove: false,
-            startTime: videoPieceTime[0].toString(),
-            endTime: videoPieceTime[1].toString(),
+            startTime: videoPieceTime[0],
+            endTime: videoPieceTime[1],
           }));
           const totalDuration = response.data.videos.reduce(
             (accumulator, video) => {
@@ -117,8 +66,21 @@ const VideoInput = () => {
       }
     };
     getMatchById();
-  }, [matchId]);
-  // console.log(matches);
+  }, []);
+
+  const handleDuration = (duration) => {
+    setDuration(duration);
+  };
+
+  const handleSlideChange = (event, newValue) => {
+    setVideoPieceTime(newValue);
+    const newVideos = [...videos];
+    newVideos[videoIndex].startTime = newValue[0];
+    newVideos[videoIndex].endTime = newValue[1];
+    setVideos(newVideos);
+    videoPlayer.current.seekTo(newValue[0], "seconds");
+  };
+
   const handleEditVideo = () => {
     const payload = videos.reduce((filtered, video) => {
       if (!video.remove) {
@@ -132,44 +94,85 @@ const VideoInput = () => {
       return filtered;
     }, []);
     console.log(payload);
+    setOpen(true);
     const concatHighlight = async () => {
       try {
         const response = await videoEditingApi.concatHighlight(
-          matchId,
+          location.state.row.id,
           payload
         );
         console.log(response);
+        setOpen(false);
+        setVideoResult(response.data);
+        setOpenDialog(true);
       } catch (error) {
         console.log(error.response);
       }
     };
     concatHighlight();
   };
+
+  const handdelchange = (e, video) => {
+    console.log(e.target.checked, video);
+    const newVideos = [...videos];
+    const a = newVideos.findIndex((vid) => vid.publicId === video.publicId);
+    newVideos[a].remove = e.target.checked;
+    setVideos(newVideos);
+  };
+
   return (
     <div className="tournament-block">
+      <Backdrop
+        sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }}
+        open={open}
+      >
+        <CircularProgress color="inherit" />
+      </Backdrop>
+
+      <Dialog
+        open={openDialog}
+        onClose={() => setOpenDialog(false)}
+        scroll="paper"
+        aria-labelledby="scroll-dialog-title"
+        aria-describedby="scroll-dialog-description"
+        maxWidth="1192px"
+      >
+        <DialogTitle
+          sx={{
+            backgroundColor: "#333333",
+            color: "#ffffff",
+            fontSize: "15px",
+            display: "flex",
+            justifyContent: "space-between",
+          }}
+        >
+          <div> View Result</div>
+          <Button onClick={() => setOpenDialog(false)}>
+            <CancelOutlinedIcon className="color-button-cancel" />
+          </Button>
+        </DialogTitle>
+
+        {/**Dialog xem hóa đơn */}
+        <DialogContent
+          sx={{
+            width: "60vw",
+            height: "100vh",
+            backgroundColor: "rgba(255,255,255,0.1)",
+          }}
+          dividers={scroll === "paper"}
+        >
+          <ReactPlayer
+            ref={null}
+            url={videoResult}
+            controls
+            width="100%"
+            height="100%"
+          />
+        </DialogContent>
+      </Dialog>
+
       <div className="tournament-info">
         <Card sx={{ padding: 5 }}>
-          <div className="tournament-field">
-            <p>Choose match</p>
-            <Select
-              displayEmpty
-              sx={{ width: 300 }}
-              value={matchId}
-              onChange={handleSelectChange}
-            >
-              {matches.map((match) => (
-                <MenuItem key={match.id} value={match.id}>
-                  {match.tournametName} - {match.matchName}
-                </MenuItem>
-              ))}
-            </Select>
-          </div>
-          {/* <input
-            multiple
-            id="raised-button-file"
-            type="file"
-            onChange={handleChange}
-          /> */}
           <ReactPlayer
             ref={videoPlayer}
             url={videos[videoIndex]?.url}
@@ -189,14 +192,14 @@ const VideoInput = () => {
               }
               onChange={handleSlideChange}
             />
-            <Tooltip title="Remove">
-              <Checkbox
-                checked={videos[videoIndex]?.remove ?? false}
-                onChange={handleCheckBoxChange}
-              />
-            </Tooltip>
           </Box>
-          <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+          <Box
+            sx={{
+              marginBottom: 2,
+              display: "flex",
+              justifyContent: "space-between",
+            }}
+          >
             <div>0:00</div>
             <div>{new Date(duration * 1000).toISOString().substr(11, 8)}</div>
           </Box>
@@ -205,14 +208,136 @@ const VideoInput = () => {
             duration={totalDuration}
             setIndex={setVideoIndex}
           />
-          <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+          <Box
+            sx={{
+              marginTop: 2,
+              display: "flex",
+              justifyContent: "space-between",
+            }}
+          >
             <div>0:00</div>
             <div>
               {new Date(totalDuration * 1000).toISOString().substr(11, 8)}
             </div>
           </Box>
           <div></div>
-          <Box sx={{ textAlign: "center" }}>
+          <Table>
+            <TableHead>
+              <TableRow sx={{ backgroundColor: "#CEEBF9" }}>
+                <TableCell
+                  key={0}
+                  sx={{
+                    border: "1px solid #76BBD9",
+                    padding: 1,
+                  }}
+                  align="center"
+                >
+                  <b>STT</b>
+                </TableCell>
+                <TableCell
+                  key={1}
+                  sx={{
+                    border: "1px solid #76BBD9",
+                    padding: 1,
+                  }}
+                  align="center"
+                >
+                  <b>Name</b>
+                </TableCell>
+                <TableCell
+                  key={2}
+                  sx={{
+                    border: "1px solid #76BBD9",
+                    padding: 1,
+                  }}
+                  align="center"
+                >
+                  <b>Start</b>
+                </TableCell>
+                <TableCell
+                  key={3}
+                  sx={{
+                    border: "1px solid #76BBD9",
+                    padding: 1,
+                  }}
+                  align="center"
+                >
+                  <b>End</b>
+                </TableCell>
+                <TableCell
+                  key={4}
+                  sx={{
+                    border: "1px solid #76BBD9",
+                    padding: 1,
+                  }}
+                  align="center"
+                >
+                  <b>Remove</b>
+                </TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {/* style={ {minHeight: '45px' } } */}
+              {videos.map((video, i) => (
+                <TableRow key={i}>
+                  <TableCell
+                    key={1}
+                    sx={{
+                      border: "1px solid #76BBD9",
+                      padding: 1,
+                    }}
+                    align="center"
+                  >
+                    {i + 1}
+                  </TableCell>
+                  <TableCell
+                    key={2}
+                    sx={{
+                      border: "1px solid #76BBD9",
+                      padding: 1,
+                    }}
+                    align="center"
+                  >
+                    {video.name}
+                  </TableCell>
+                  <TableCell
+                    key={3}
+                    sx={{
+                      border: "1px solid #76BBD9",
+                      padding: 1,
+                    }}
+                    align="center"
+                  >
+                    {video.startTime}
+                  </TableCell>
+                  <TableCell
+                    key={6}
+                    sx={{
+                      border: "1px solid #76BBD9",
+                      padding: 1,
+                    }}
+                    align="center"
+                  >
+                    {video.endTime}
+                  </TableCell>
+                  <TableCell
+                    key={7}
+                    sx={{
+                      border: "1px solid #76BBD9",
+                      padding: 1,
+                    }}
+                    align="center"
+                  >
+                    <Checkbox
+                      value={video.remove}
+                      onChange={(e) => handdelchange(e, video)}
+                    />
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+          <Box sx={{ textAlign: "center", marginTop: 5 }}>
             <Button variant="contained" onClick={handleEditVideo}>
               Finish
             </Button>

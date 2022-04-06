@@ -23,7 +23,7 @@ namespace video_editing_api.Service.VideoEditing
         Task<string> AddMatchInfo(MatchInfo matchInfo);
 
 
-        Task<string> UploadVideo(string Id, IFormFile file);
+        string UploadVideo(string Id, IFormFile file);
         Task<string> ConcatVideoOfMatch(string matchId, List<TrimVideoHightlightModel> models);
         Task<List<HighlightVideo>> GetHighlightVideos();
 

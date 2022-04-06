@@ -176,7 +176,7 @@ namespace video_editing_api.Service.VideoEditing
         #endregion
 
 
-        public async Task<string> UploadVideo(string Id, IFormFile file)
+        public string UploadVideo(string Id, IFormFile file)
         {
 
             try
@@ -188,7 +188,7 @@ namespace video_editing_api.Service.VideoEditing
                 string matchName = match.MatchName;
                 string matchTime = match.MactchTime.ToString("dd-MM-yyyy-HH-mm");
 
-                match.Videos.Add(await UploadVideoForMatch(file, tournamentName, matchName, matchTime));
+                match.Videos.Add(UploadVideoForMatch(file, tournamentName, matchName, matchTime));
 
                 _matchInfo.ReplaceOne(m => m.Id == Id, match);
                 return "Succed";
@@ -200,17 +200,17 @@ namespace video_editing_api.Service.VideoEditing
         }
 
 
-        private async Task<VideoResource> UploadVideoForMatch(IFormFile file, string tournamentName, string matchName, string matchTime)
+        private VideoResource UploadVideoForMatch(IFormFile file, string tournamentName, string matchName, string matchTime)
         {
             try
             {
                 var videoresource = new VideoResource();
-                await using var stream = file.OpenReadStream();
+                using var stream = file.OpenReadStream();
                 var name = System.Guid.NewGuid();
                 var param = new VideoUploadParams
                 {                   
                     File = new FileDescription(file.FileName, stream),
-                    Transformation = new Transformation().Height(720).Width(1280).Crop("fill"),
+                    Transformation = new Transformation().Crop("fill"),
                     PublicId = $"VideoEditing/{tournamentName}/{matchName}-{matchTime}/{name}"
                 };
                 var uploadResult = _cloudinary.Upload(param);
@@ -219,6 +219,7 @@ namespace video_editing_api.Service.VideoEditing
                 {
                     videoresource.PublicId = uploadResult.PublicId;
                     videoresource.Duration = uploadResult.Duration;
+                    videoresource.Name = "";
                     videoresource.Url = uploadResult.SecureUrl.ToString();
                 }
                 else
@@ -283,7 +284,7 @@ namespace video_editing_api.Service.VideoEditing
                                 Url = uploadResult.SecureUrl.ToString()
                             };
                             await _highlight.InsertOneAsync(highlight);
-                            response = "Succeed";
+                            response = highlight.Url;
                         }
                         else
                         {

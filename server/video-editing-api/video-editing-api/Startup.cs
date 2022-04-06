@@ -46,13 +46,12 @@ namespace video_editing_api
 
             services.Configure<DbConfig>(Configuration.GetSection(SystemConstants.DbConfig));
             
-
             services.AddScoped<IDbClient, DbClient>();
             services.AddScoped<IVideoEditingService, VideoEditingService>();
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IUploadService, UploadService>();
 
-
+            //services.AddHttpClient();
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {

@@ -10,7 +10,7 @@ import VideoInput from "../video-input";
 
 const RoutePath = () => (
   <Routes>
-    <Route path="/" element={<ActionsManagement />} />
+    <Route path="/" element={<Tournament />} />
     <Route path="/actions-labeling" element={<ActionsLabeling />} />
     <Route path="/model" element={<ModelManagement />} />
     <Route path="/model/configuration" element={<ModelConfiguration />} />

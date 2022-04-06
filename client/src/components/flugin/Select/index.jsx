@@ -2,8 +2,7 @@ import React from "react";
 import { TextField, Autocomplete } from "@mui/material";
 
 export default function CustomSelect(props) {
-  const { value, options, onChange, labelRender } = props;
-
+  const { value, options, onChange, labelRender, placeholder, require } = props;
   return (
     <div>
       <Autocomplete
@@ -13,7 +12,12 @@ export default function CustomSelect(props) {
         fullWidth
         getOptionLabel={(option) => option[labelRender] || ""}
         renderInput={(params) => (
-          <TextField {...params} inputProps={{ ...params.inputProps }} />
+          <TextField
+            {...params}
+            placeholder={placeholder}
+            required={require ? require : false}
+            inputProps={{ ...params.inputProps }}
+          />
         )}
         onChange={onChange}
       />

@@ -163,11 +163,11 @@ namespace video_editing_api.Controllers
 
         [HttpPost("uploadVideoForMatch/{matchId}")]
         [DisableRequestSizeLimit]        
-        public async Task<IActionResult> UpLoadVideo(string matchId, IFormFile file)
+        public IActionResult UpLoadVideo(string matchId, IFormFile file)
         {
             try
             {
-                string res = await _videoEditingService.UploadVideo(matchId,file);
+                string res = _videoEditingService.UploadVideo(matchId,file);
                 return Ok(new Response<string>(200, "", res));
             }
             catch (System.Exception e)
