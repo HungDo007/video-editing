@@ -27,7 +27,10 @@ export default function VerticalTabs() {
         <Tab label="MODEL MANAGEMENT" onClick={() => navigate("/model")} />
         <Tab label="VIDEO ANALYTICS" onClick={() => navigate("/video")} /> */}
         <Tab label="TOURNAMENT" onClick={() => navigate("/tournament")} />
-        {/* <Tab label="VIDEO" onClick={() => navigate("/video-edit")} /> */}
+        <Tab
+          label="HIGHLIGHT REVIEW"
+          onClick={() => navigate("/highlight-review")}
+        />
       </Tabs>
     </Box>
   );

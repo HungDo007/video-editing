@@ -7,6 +7,7 @@ import ModelConfiguration from "../model-management/model-configuration/model-co
 import VideoManagement from "../video-analytics/videos-management/videos-management";
 import Tournament from "../tournament/tournament";
 import VideoInput from "../video-input";
+import HighlightReview from "../highlight-review";
 
 const RoutePath = () => (
   <Routes>
@@ -17,6 +18,7 @@ const RoutePath = () => (
     <Route path="/video" element={<VideoManagement />} />
     <Route path="/tournament" element={<Tournament />} />
     <Route path="/video-edit" element={<VideoInput />} />
+    <Route path="/highlight-review" element={<HighlightReview />} />
   </Routes>
 );
 
