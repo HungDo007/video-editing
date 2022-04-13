@@ -1,17 +1,22 @@
 ﻿using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Options;
-using MongoDB.Bson;
 using MongoDB.Driver;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using video_editing_api.Model;
 using video_editing_api.Model.Collection;
 using video_editing_api.Model.InputModel;
 using video_editing_api.Service.DBConnection;
+using video_editing_api.Service.Storage;
+using Xabe.FFmpeg;
+
 
 namespace video_editing_api.Service.VideoEditing
 {
@@ -22,17 +27,22 @@ namespace video_editing_api.Service.VideoEditing
         private readonly IMongoCollection<MatchInfo> _matchInfo;
         private readonly IMongoCollection<HighlightVideo> _highlight;
 
-
+        private readonly IStorageService _storageService;
         private readonly Cloudinary _cloudinary;
+        private readonly IWebHostEnvironment _env;
 
-        public VideoEditingService(IDbClient dbClient, IConfiguration config)
+
+        private string _dir;
+        public VideoEditingService(IDbClient dbClient, IConfiguration config, IStorageService storageService, IWebHostEnvironment env)
         {
             _actions = dbClient.GetActionCollection();
             _tournament = dbClient.GetTournamentCollection();
             _matchInfo = dbClient.GetMatchInfoCollection();
             _highlight = dbClient.GetHighlightVideoCollection();
+            _dir = env.WebRootPath;
+            _storageService = storageService;
 
-
+            _env = env;
             var account = new Account(
                config["Cloudinary:CloudName"],
                config["Cloudinary:ApiKey"],
@@ -176,6 +186,38 @@ namespace video_editing_api.Service.VideoEditing
         #endregion
 
 
+
+
+        public async Task<string> UploadVideoForMatch(string Id, IFormFile file)
+        {
+            try
+            {
+                var match = _matchInfo.Find(x => x.Id == Id).First();
+                var tournament = _tournament.Find(x => x.Id == match.TournamentId).First();
+
+                string folderName = $"{tournament.Name}_{match.MatchName}_{match.MactchTime.ToString("dd-MM-yyyy-HH-mm")}";
+                string publicId = System.Guid.NewGuid().ToString();
+                string fileName = file.FileName;
+                string type = fileName.Substring(fileName.LastIndexOf("."));
+
+                string path = await _storageService.SaveFile(folderName, $"{publicId}{type}", file);
+                VideoResource vr = new VideoResource()
+                {
+                    PublicId = publicId,
+                    Name = fileName.Substring(0, fileName.LastIndexOf(".")),
+                    Url = path,
+                    Duration = await getDuration(path)
+                };
+                match.Videos.Add(vr);
+                _matchInfo.ReplaceOne(m => m.Id == Id, match);
+                return "Succed";
+            }
+            catch (System.Exception e)
+            {
+                throw new System.Exception(e.Message);
+            }
+        }
+
         public string UploadVideo(string Id, IFormFile file)
         {
 
@@ -208,7 +250,7 @@ namespace video_editing_api.Service.VideoEditing
                 using var stream = file.OpenReadStream();
                 var name = System.Guid.NewGuid();
                 var param = new VideoUploadParams
-                {                   
+                {
                     File = new FileDescription(file.FileName, stream),
                     Transformation = new Transformation().Crop("fill"),
                     PublicId = $"VideoEditing/{tournamentName}/{matchName}-{matchTime}/{name}"
@@ -305,6 +347,157 @@ namespace video_editing_api.Service.VideoEditing
             catch (System.Exception e)
             {
                 throw new System.Exception(e.Message);
+            }
+        }
+
+
+
+
+        //public async Task<bool> Up()
+        //{
+        //    try
+        //    {
+        //        //await _storageService.SaveFile("test", "test.mp4", file);
+        //        //await Trim();
+        //        //await Concat();
+        //        //await test();
+        //        return true;
+        //    }
+        //    catch (System.Exception ex)
+        //    {
+        //        throw new System.Exception(ex.Message);
+        //    }
+        //}
+
+
+        public async Task<bool> Trim()
+        {
+            try
+            {
+                var input = Path.Combine(_dir, "test\\test.mp4");
+                var output = Path.Combine(_dir, "converted.mp4");
+                //var ffmpeg = FFmpeg.
+
+                FFmpeg.SetExecutablesPath(Path.Combine(_dir, "ffmpeg"));
+                // Resource
+                var info = await FFmpeg.GetMediaInfo(input);
+                var a = info.Duration;
+
+                var videoStream = info.VideoStreams.First().SetCodec(Xabe.FFmpeg.VideoCodec.h264).SetSize(VideoSize.Hd480).Split(System.TimeSpan.FromSeconds(30), System.TimeSpan.FromSeconds(10));
+                IStream audioStream = info.AudioStreams.FirstOrDefault()?.SetCodec(AudioCodec.aac);
+                await FFmpeg.Conversions.New()
+                    .AddStream(videoStream, audioStream)
+                    .SetOutput(output)
+                    .Start();
+                //MediaInfo.Get(input);
+                return true;
+            }
+            catch (System.Exception ex)
+            {
+                throw new System.Exception(ex.Message);
+            }
+        }
+
+
+        public async Task<bool> Concat()
+        {
+            try
+            {
+                var input = Path.Combine(_dir, "test\\test.mp4");
+                var output = Path.Combine(_dir, "converted.mp4");
+                var output1 = Path.Combine(_dir, "converted1.mp4");
+
+                FFmpeg.SetExecutablesPath(Path.Combine(_dir, "ffmpeg"));
+
+                string[] arr = { input, output };
+
+                var conversion = await FFmpeg.Conversions.FromSnippet.Concatenate(output1, arr);
+                await conversion.Start();
+                return true;
+            }
+            catch (System.Exception ex)
+            {
+                throw new System.Exception(ex.Message);
+            }
+        }
+
+
+        public async Task<bool> Up(string matchId, List<TrimVideoHightlightModel> models)
+        {
+            try
+            {
+                List<string> path = new List<string>();
+                var match = _matchInfo.Find(x => x.Id == matchId).First();
+
+                //string outputName = 
+
+                StringBuilder arguments = new StringBuilder();
+                StringBuilder temp = new StringBuilder();
+                StringBuilder inputVideo = new StringBuilder();
+                StringBuilder trimInfo = new StringBuilder();
+
+
+                for (int i = 0; i < models.Count; i++)
+                {
+
+                    path.Add(match.Videos.Where(video => video.PublicId == models[i].PublicId).First().Url);
+                    temp.Append($"[v{i}][a{i}]");
+                    trimInfo.Append($"[{i}:v]trim=start={models[i].StartTime}:end={models[i].EndTime},setpts=PTS-STARTPTS[v{i}];[{i}:a]atrim=start={models[i].StartTime}:end={models[i].EndTime},asetpts=PTS-STARTPTS[a{i}];");
+
+                }
+                foreach (var item in path)
+                {
+                    inputVideo.Append($"-i {Path.Combine(_dir, item.Replace("/", "\\"))} ");
+                }
+
+                arguments.Append("-y ");
+                arguments.Append(inputVideo.ToString());
+                arguments.Append("-filter_complex \"");
+                arguments.Append(trimInfo.ToString());
+
+                arguments.Append($"{temp.ToString()}concat=n={path.Count}:v=1:a=1[v][a]\" -map \"[v]\" -map \"[a]\" output.mp4");
+
+
+                var arg = $"-y -i {Path.Combine(_dir, "C1_Tota-Vis_09-01-2022-18-04/c5abe37c-4773-4aa6-97e2-31efe226b86d.mp4")} -i {Path.Combine(_dir, "C1_Tota-Vis_09-01-2022-18-04/b748e801-cce3-4457-830a-c2c0798e3936.mp4")} -filter_complex \"[0:v]trim=start=60:end=180,setpts=PTS-STARTPTS[v0];[0:a]atrim=start=60:end=180,asetpts=PTS-STARTPTS[a0];[1:v]trim=start=60:end=120,setpts=PTS-STARTPTS[v1];[1:a]atrim=start=60:end=120,asetpts=PTS-STARTPTS[a1];[v0][a0][v1][a1]concat=n=2:v=1:a=1[v][a]\" -map \"[v]\" -map \"[a]\" output.mp4";
+                await Task.Run(() =>
+                {
+                    string path = Path.Combine(_env.ContentRootPath, "ffmpeg", "ffmpeg.exe");
+                    var startInfo = new ProcessStartInfo()
+                    {
+                        FileName = Path.Combine(_env.ContentRootPath, "ffmpeg", "ffmpeg.exe"),
+                        Arguments = arguments.ToString(),
+                        WorkingDirectory = Path.Combine(_dir, "Highlight"),
+                        CreateNoWindow = true,
+                        UseShellExecute = false
+                    };
+                    using (var process = new Process { StartInfo = startInfo })
+                    {
+                        process.Start();
+                        process.WaitForExit();
+                    }
+                });
+                return true;
+            }
+            catch (System.Exception ex)
+            {
+                throw new System.Exception(ex.Message);
+            }
+        }
+
+
+        private async Task<double> getDuration(string path)
+        {
+            try
+            {
+                path = path.Replace("/", "\\");
+                var input = Path.Combine(_dir, path);
+                FFmpeg.SetExecutablesPath(Path.Combine(_dir, "ffmpeg"));
+                var info = await FFmpeg.GetMediaInfo(input);
+                return info.Duration.TotalSeconds;
+            }
+            catch (System.Exception ex)
+            {
+                throw new System.Exception(ex.Message);
             }
         }
     }

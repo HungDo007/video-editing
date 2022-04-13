@@ -14,11 +14,10 @@ namespace video_editing_api.Controllers
     public class VideoEditingsController : ControllerBase
     {
         private readonly IVideoEditingService _videoEditingService;
-        private readonly IUploadService _uploadService;
-        public VideoEditingsController(IVideoEditingService videoEditingService, IUploadService uploadService)
+
+        public VideoEditingsController(IVideoEditingService videoEditingService)
         {
             _videoEditingService = videoEditingService;
-            _uploadService = uploadService;
         }
 
 
@@ -151,8 +150,9 @@ namespace video_editing_api.Controllers
         public async Task<IActionResult> UpLoadVideo(string matchId, List<TrimVideoHightlightModel> models)
         {
             try
-            {                
+            {
                 string res = await _videoEditingService.ConcatVideoOfMatch(matchId, models);
+                //bool res = await _videoEditingService.Up(matchId, models);
                 return Ok(new Response<string>(200, "", res));
             }
             catch (System.Exception e)
@@ -162,13 +162,28 @@ namespace video_editing_api.Controllers
         }
 
         [HttpPost("uploadVideoForMatch/{matchId}")]
-        [DisableRequestSizeLimit]        
-        public IActionResult UpLoadVideo(string matchId, IFormFile file)
+        [DisableRequestSizeLimit]
+        public async Task<IActionResult> UpLoadVideo(string matchId, IFormFile file)
         {
             try
             {
-                string res = _videoEditingService.UploadVideo(matchId,file);
+                string res = await _videoEditingService.UploadVideoForMatch(matchId, file);
                 return Ok(new Response<string>(200, "", res));
+            }
+            catch (System.Exception e)
+            {
+                return BadRequest(new Response<string>(400, e.Message, null));
+            }
+        }
+
+        [HttpPost("upload")]
+        [DisableRequestSizeLimit]
+        public async Task<IActionResult> Up(string matchId, List<TrimVideoHightlightModel> models)
+        {
+            try
+            {
+                bool res = await _videoEditingService.Up(matchId, models);
+                return Ok(new Response<bool>(200, "", res));
             }
             catch (System.Exception e)
             {

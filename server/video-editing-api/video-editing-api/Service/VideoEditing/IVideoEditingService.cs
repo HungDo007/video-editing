@@ -27,6 +27,8 @@ namespace video_editing_api.Service.VideoEditing
         Task<string> ConcatVideoOfMatch(string matchId, List<TrimVideoHightlightModel> models);
         Task<List<HighlightVideo>> GetHighlightVideos();
 
+        Task<string> UploadVideoForMatch(string Id, IFormFile file);
+        Task<bool> Up(string matchId, List<TrimVideoHightlightModel> models);
 
     }
 }
