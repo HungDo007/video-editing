@@ -106,7 +106,8 @@ const VideoInput = () => {
         setVideoResult(response.data);
         setOpenDialog(true);
       } catch (error) {
-        console.log(error.response);
+        setOpen(false);
+        alert(error.response.description);
       }
     };
     concatHighlight();
@@ -163,6 +164,7 @@ const VideoInput = () => {
         >
           <ReactPlayer
             ref={null}
+            //url={process.env.REACT_APP_IMAGE_URL + videoResult}
             url={videoResult}
             controls
             width="100%"
@@ -175,7 +177,12 @@ const VideoInput = () => {
         <Card sx={{ padding: 5 }}>
           <ReactPlayer
             ref={videoPlayer}
-            url={videos[videoIndex]?.url}
+            // url={
+            //   videos[videoIndex]
+            //     ? process.env.REACT_APP_IMAGE_URL + videos[videoIndex].url
+            //     : null
+            // }
+            url={videos[videoIndex] ? videos[videoIndex].url : null}
             onDuration={handleDuration}
             controls
             width="100%"

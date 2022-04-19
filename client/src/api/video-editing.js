@@ -22,6 +22,8 @@ const videoEditingApi = {
   },
 
   concatHighlight: (matchId, data) => {
+    console.log(matchId, data);
+
     const url = `/VideoEditings/concatHighlight/${matchId}`;
     return axiosClient.post(url, data);
   },
