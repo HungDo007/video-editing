@@ -8,7 +8,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using video_editing_api.Model;
 using video_editing_api.Model.Collection;
@@ -426,46 +425,50 @@ namespace video_editing_api.Service.VideoEditing
         {
             try
             {
-                List<string> path = new List<string>();
-                var match = _matchInfo.Find(x => x.Id == matchId).First();
+                //List<string> path = new List<string>();
+                //var match = _matchInfo.Find(x => x.Id == matchId).First();
 
-                //string outputName = 
+                ////string outputName = 
 
-                StringBuilder arguments = new StringBuilder();
-                StringBuilder temp = new StringBuilder();
-                StringBuilder inputVideo = new StringBuilder();
-                StringBuilder trimInfo = new StringBuilder();
-
-
-                for (int i = 0; i < models.Count; i++)
-                {
-
-                    path.Add(match.Videos.Where(video => video.PublicId == models[i].PublicId).First().Url);
-                    temp.Append($"[v{i}][a{i}]");
-                    trimInfo.Append($"[{i}:v]trim=start={models[i].StartTime}:end={models[i].EndTime},setpts=PTS-STARTPTS[v{i}];[{i}:a]atrim=start={models[i].StartTime}:end={models[i].EndTime},asetpts=PTS-STARTPTS[a{i}];");
-
-                }
-                foreach (var item in path)
-                {
-                    inputVideo.Append($"-i {Path.Combine(_dir, item.Replace("/", "\\"))} ");
-                }
-
-                arguments.Append("-y ");
-                arguments.Append(inputVideo.ToString());
-                arguments.Append("-filter_complex \"");
-                arguments.Append(trimInfo.ToString());
-
-                arguments.Append($"{temp.ToString()}concat=n={path.Count}:v=1:a=1[v][a]\" -map \"[v]\" -map \"[a]\" output.mp4");
+                //StringBuilder arguments = new StringBuilder();
+                //StringBuilder temp = new StringBuilder();
+                //StringBuilder inputVideo = new StringBuilder();
+                //StringBuilder trimInfo = new StringBuilder();
 
 
-                var arg = $"-y -i {Path.Combine(_dir, "C1_Tota-Vis_09-01-2022-18-04/c5abe37c-4773-4aa6-97e2-31efe226b86d.mp4")} -i {Path.Combine(_dir, "C1_Tota-Vis_09-01-2022-18-04/b748e801-cce3-4457-830a-c2c0798e3936.mp4")} -filter_complex \"[0:v]trim=start=60:end=180,setpts=PTS-STARTPTS[v0];[0:a]atrim=start=60:end=180,asetpts=PTS-STARTPTS[a0];[1:v]trim=start=60:end=120,setpts=PTS-STARTPTS[v1];[1:a]atrim=start=60:end=120,asetpts=PTS-STARTPTS[a1];[v0][a0][v1][a1]concat=n=2:v=1:a=1[v][a]\" -map \"[v]\" -map \"[a]\" output.mp4";
+                //for (int i = 0; i < models.Count; i++)
+                //{
+
+                //    path.Add(match.Videos.Where(video => video.PublicId == models[i].PublicId).First().Url);
+                //    temp.Append($"[v{i}][a{i}]");
+                //    trimInfo.Append($"[{i}:v]trim=start={models[i].StartTime}:end={models[i].EndTime},setpts=PTS-STARTPTS[v{i}];[{i}:a]atrim=start={models[i].StartTime}:end={models[i].EndTime},asetpts=PTS-STARTPTS[a{i}];");
+
+                //}
+                //foreach (var item in path)
+                //{
+                //    inputVideo.Append($"-i {Path.Combine(_dir, item.Replace("/", "\\"))} ");
+                //}
+
+                //arguments.Append("-y ");
+                //arguments.Append(inputVideo.ToString());
+                //arguments.Append("-filter_complex \"");
+                //arguments.Append(trimInfo.ToString());
+
+                //arguments.Append($"{temp.ToString()}concat=n={path.Count}:v=1:a=1[v][a]\" -map \"[v]\" -map \"[a]\" output.mp4");
+
+
+                //var arg = $"-y -i {Path.Combine(_dir, "C1_Tota-Vis_09-01-2022-18-04/c5abe37c-4773-4aa6-97e2-31efe226b86d.mp4")} -i {Path.Combine(_dir, "C1_Tota-Vis_09-01-2022-18-04/b748e801-cce3-4457-830a-c2c0798e3936.mp4")} -filter_complex \"[0:v]trim=start=60:end=180,setpts=PTS-STARTPTS[v0];[0:a]atrim=start=60:end=180,asetpts=PTS-STARTPTS[a0];[1:v]trim=start=60:end=120,setpts=PTS-STARTPTS[v1];[1:a]atrim=start=60:end=120,asetpts=PTS-STARTPTS[a1];[v0][a0][v1][a1]concat=n=2:v=1:a=1[v][a]\" -map \"[v]\" -map \"[a]\" output.mp4";
+
+                var a = "-y -i http://118.69.218.59:5050/projects/625925c9b9e572905bcba1c9/raw/video -i http://118.69.218.59:5050/projects/625925ce85ea1d1c82f86ffa/raw/video -filter_complex \"[0:v]trim=start=10:end=20,setpts=PTS-STARTPTS[v0];[0:a]atrim=start=10:end=20,asetpts=PTS-STARTPTS[a0];[1:v]trim=start=10:end=30,setpts=PTS-STARTPTS[v1];[1:a]atrim=start=10:end=30,asetpts=PTS-STARTPTS[a1];[v0][a0][v1][a1]concat=n=2:v=1:a=1[v][a]\" -map \"[v]\" -map \"[a]\" output1234.mp4";
+
                 await Task.Run(() =>
                 {
                     string path = Path.Combine(_env.ContentRootPath, "ffmpeg", "ffmpeg.exe");
                     var startInfo = new ProcessStartInfo()
                     {
                         FileName = Path.Combine(_env.ContentRootPath, "ffmpeg", "ffmpeg.exe"),
-                        Arguments = arguments.ToString(),
+                        //Arguments = arguments.ToString(),
+                        Arguments = a,
                         WorkingDirectory = Path.Combine(_dir, "Highlight"),
                         CreateNoWindow = true,
                         UseShellExecute = false

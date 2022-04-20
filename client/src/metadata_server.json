@@ -1,0 +1,423 @@
+{
+    "event": [
+        {
+            "level": 4,
+            "time": "0436",
+            "event": "highlight",
+            "file_name": "http://118.69.218.59:5050/projects/625925bf85ea1d1c82f86ff2/raw/video",
+            "players": [],
+            "ts": [
+                238,
+                328
+            ]
+        },
+        {
+            "level": 1,
+            "time": "0652",
+            "event": "replay",
+            "file_name": "http://118.69.218.59:5050/projects/625925c185ea1d1c82f86ff4/raw/video",
+            "players": [],
+            "ts": [
+                374,
+                464
+            ]
+        },
+        {
+            "level": 3,
+            "time": "0930",
+            "event": "highlight",
+            "file_name": "http://118.69.218.59:5050/projects/625925c385ea1d1c82f86ff6/raw/video",
+            "players": [],
+            "ts": [
+                532,
+                622
+            ]
+        },
+        {
+            "level": 4,
+            "time": "1214",
+            "event": "highlight",
+            "file_name": "http://118.69.218.59:5050/projects/625925c585ea1d1c82f86ff8/raw/video",
+            "players": [],
+            "ts": [
+                696,
+                786
+            ]
+        },
+        {
+            "level": 1,
+            "time": "1331",
+            "event": "replay",
+            "file_name": "http://118.69.218.59:5050/projects/625925c7b9e572905bcba1c7/raw/video",
+            "players": [],
+            "ts": [
+                773,
+                863
+            ]
+        },
+        {
+            "level": 3,
+            "time": "1443",
+            "event": "highlight",
+            "file_name": "http://118.69.218.59:5050/projects/625925c9b9e572905bcba1c9/raw/video",
+            "players": [],
+            "ts": [
+                845,
+                935
+            ]
+        },
+        {
+            "level": 1,
+            "time": "1812",
+            "event": "replay",
+            "file_name": "http://118.69.218.59:5050/projects/625925ce85ea1d1c82f86ffa/raw/video",
+            "players": [],
+            "ts": [
+                1054,
+                1144
+            ]
+        },
+        {
+            "level": 4,
+            "time": "1934",
+            "event": "highlight",
+            "file_name": "http://118.69.218.59:5050/projects/625925d085ea1d1c82f86ffc/raw/video",
+            "players": [],
+            "ts": [
+                1136,
+                1226
+            ]
+        },
+        {
+            "level": 5,
+            "time": "2048",
+            "event": "goal",
+            "file_name": "http://118.69.218.59:5050/projects/625925d685ea1d1c82f86ffe/raw/video",
+            "players": [],
+            "ts": [
+                1070,
+                1430
+            ]
+        },
+        {
+            "level": 3,
+            "time": "2101",
+            "event": "highlight",
+            "file_name": "http://118.69.218.59:5050/projects/625925d885ea1d1c82f87000/raw/video",
+            "players": [],
+            "ts": [
+                1223,
+                1313
+            ]
+        },
+        {
+            "level": 5,
+            "time": "2334",
+            "event": "goal",
+            "file_name": "http://118.69.218.59:5050/projects/625925de85ea1d1c82f87002/raw/video",
+            "players": [],
+            "ts": [
+                1235,
+                1595
+            ]
+        },
+        {
+            "level": 4,
+            "time": "2349",
+            "event": "highlight",
+            "file_name": "http://118.69.218.59:5050/projects/625925e085ea1d1c82f87004/raw/video",
+            "players": [],
+            "ts": [
+                1391,
+                1481
+            ]
+        },
+        {
+            "level": 3,
+            "time": "2538",
+            "event": "highlight",
+            "file_name": "http://118.69.218.59:5050/projects/625925e285ea1d1c82f87006/raw/video",
+            "players": [],
+            "ts": [
+                1500,
+                1590
+            ]
+        },
+        {
+            "level": 3,
+            "time": "3124",
+            "event": "highlight",
+            "file_name": "http://118.69.218.59:5050/projects/625925e485ea1d1c82f87008/raw/video",
+            "players": [],
+            "ts": [
+                1846,
+                1936
+            ]
+        },
+        {
+            "level": 3,
+            "time": "3227",
+            "event": "highlight",
+            "file_name": "http://118.69.218.59:5050/projects/625925e6b9e572905bcba1cb/raw/video",
+            "players": [],
+            "ts": [
+                1909,
+                1999
+            ]
+        },
+        {
+            "level": 3,
+            "time": "3726",
+            "event": "highlight",
+            "file_name": "http://118.69.218.59:5050/projects/625925e885ea1d1c82f8700a/raw/video",
+            "players": [],
+            "ts": [
+                2209,
+                2299
+            ]
+        },
+        {
+            "level": 5,
+            "time": "3924",
+            "event": "goal",
+            "file_name": "http://118.69.218.59:5050/projects/625925ee85ea1d1c82f8700c/raw/video",
+            "players": [],
+            "ts": [
+                2185,
+                2545
+            ]
+        },
+        {
+            "level": 3,
+            "time": "3926",
+            "event": "highlight",
+            "file_name": "http://118.69.218.59:5050/projects/625925f185ea1d1c82f8700e/raw/video",
+            "players": [],
+            "ts": [
+                2328,
+                2418
+            ]
+        },
+        {
+            "level": 3,
+            "time": "4124",
+            "event": "highlight",
+            "file_name": "http://118.69.218.59:5050/projects/625925f385ea1d1c82f87010/raw/video",
+            "players": [],
+            "ts": [
+                2446,
+                2536
+            ]
+        },
+        {
+            "level": 5,
+            "time": "4600",
+            "event": "goal",
+            "file_name": "http://118.69.218.59:5050/projects/625925f985ea1d1c82f87012/raw/video",
+            "players": [],
+            "ts": [
+                3604,
+                3964
+            ]
+        },
+        {
+            "level": 3,
+            "time": "4616",
+            "event": "highlight",
+            "file_name": "http://118.69.218.59:5050/projects/625925fb85ea1d1c82f87014/raw/video",
+            "players": [],
+            "ts": [
+                3760,
+                3850
+            ]
+        },
+        {
+            "level": 3,
+            "time": "4922",
+            "event": "highlight",
+            "file_name": "http://118.69.218.59:5050/projects/625925fd85ea1d1c82f87016/raw/video",
+            "players": [],
+            "ts": [
+                3946,
+                4036
+            ]
+        },
+        {
+            "level": 3,
+            "time": "5515",
+            "event": "highlight",
+            "file_name": "http://118.69.218.59:5050/projects/625925ff85ea1d1c82f87018/raw/video",
+            "players": [],
+            "ts": [
+                4300,
+                4390
+            ]
+        },
+        {
+            "level": 3,
+            "time": "5853",
+            "event": "highlight",
+            "file_name": "http://118.69.218.59:5050/projects/6259260185ea1d1c82f8701a/raw/video",
+            "players": [],
+            "ts": [
+                4518,
+                4608
+            ]
+        },
+        {
+            "level": 1,
+            "time": "5922",
+            "event": "replay",
+            "file_name": "http://118.69.218.59:5050/projects/6259260385ea1d1c82f8701c/raw/video",
+            "players": [],
+            "ts": [
+                4546,
+                4636
+            ]
+        },
+        {
+            "level": 3,
+            "time": "6427",
+            "event": "highlight",
+            "file_name": "http://118.69.218.59:5050/projects/6259260585ea1d1c82f8701e/raw/video",
+            "players": [],
+            "ts": [
+                4852,
+                4942
+            ]
+        },
+        {
+            "level": 3,
+            "time": "6621",
+            "event": "highlight",
+            "file_name": "http://118.69.218.59:5050/projects/62592607b9e572905bcba1cd/raw/video",
+            "players": [],
+            "ts": [
+                4966,
+                5056
+            ]
+        },
+        {
+            "level": 3,
+            "time": "6714",
+            "event": "highlight",
+            "file_name": "http://118.69.218.59:5050/projects/62592608b9e572905bcba1cf/raw/video",
+            "players": [],
+            "ts": [
+                5019,
+                5109
+            ]
+        },
+        {
+            "level": 3,
+            "time": "6819",
+            "event": "highlight",
+            "file_name": "http://118.69.218.59:5050/projects/6259260ab9e572905bcba1d1/raw/video",
+            "players": [],
+            "ts": [
+                5084,
+                5174
+            ]
+        },
+        {
+            "level": 4,
+            "time": "6922",
+            "event": "highlight",
+            "file_name": "http://118.69.218.59:5050/projects/6259260cb9e572905bcba1d3/raw/video",
+            "players": [],
+            "ts": [
+                5146,
+                5236
+            ]
+        },
+        {
+            "level": 4,
+            "time": "7127",
+            "event": "highlight",
+            "file_name": "http://118.69.218.59:5050/projects/6259260e85ea1d1c82f87020/raw/video",
+            "players": [],
+            "ts": [
+                5272,
+                5362
+            ]
+        },
+        {
+            "level": 1,
+            "time": "7503",
+            "event": "replay",
+            "file_name": "http://118.69.218.59:5050/projects/6259261085ea1d1c82f87022/raw/video",
+            "players": [],
+            "ts": [
+                5492,
+                5582
+            ]
+        },
+        {
+            "level": 4,
+            "time": "8306",
+            "event": "highlight",
+            "file_name": "http://118.69.218.59:5050/projects/62592612b9e572905bcba1d5/raw/video",
+            "players": [],
+            "ts": [
+                5971,
+                6061
+            ]
+        },
+        {
+            "level": 1,
+            "time": "8419",
+            "event": "replay",
+            "file_name": "http://118.69.218.59:5050/projects/62592614b9e572905bcba1d7/raw/video",
+            "players": [],
+            "ts": [
+                6044,
+                6134
+            ]
+        },
+        {
+            "level": 1,
+            "time": "8710",
+            "event": "replay",
+            "file_name": "http://118.69.218.59:5050/projects/6259261685ea1d1c82f87024/raw/video",
+            "players": [],
+            "ts": [
+                6215,
+                6305
+            ]
+        },
+        {
+            "level": 3,
+            "time": "9000",
+            "event": "highlight",
+            "file_name": "http://118.69.218.59:5050/projects/6259261885ea1d1c82f87026/raw/video",
+            "players": [],
+            "ts": [
+                6434,
+                6524
+            ]
+        },
+        {
+            "level": 3,
+            "time": "9000",
+            "event": "highlight",
+            "file_name": "http://118.69.218.59:5050/projects/6259261a85ea1d1c82f87028/raw/video",
+            "players": [],
+            "ts": [
+                6528,
+                6618
+            ]
+        }
+    ],
+    "match_name": "Chelsea_RealMadrid_C1",
+    "league": "C1",
+    "teams": [
+        "Chelsea",
+        "RealMadrid"
+    ],
+    "match_date": "220407",
+    "IP": "225.1.9.48:30120",
+    "score": [
+        1,
+        3
+    ]
+}

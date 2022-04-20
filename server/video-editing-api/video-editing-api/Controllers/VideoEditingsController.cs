@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Minio;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 using video_editing_api.Model;
 using video_editing_api.Model.Collection;
@@ -151,9 +153,9 @@ namespace video_editing_api.Controllers
         {
             try
             {
-                string res = await _videoEditingService.ConcatVideoOfMatch(matchId, models);
-                //bool res = await _videoEditingService.Up(matchId, models);
-                return Ok(new Response<string>(200, "", res));
+                //string res = await _videoEditingService.ConcatVideoOfMatch(matchId, models);
+                bool res = await _videoEditingService.Up(matchId, models);
+                return Ok(new Response<string>(200, "", "res"));
             }
             catch (System.Exception e)
             {
@@ -189,6 +191,52 @@ namespace video_editing_api.Controllers
             {
                 return BadRequest(new Response<string>(400, e.Message, null));
             }
+        }
+
+
+        [HttpPost("test")]
+        public async Task<IActionResult> asdf(IFormFile file)
+        {
+            var client = new MinioClient().WithEndpoint("118.69.218.59:9002").WithCredentials("cadsfpt", "As2fQkAZjh").Build();
+
+            //byte[] bs = System.IO.File.ReadAllBytes("D:\\video-editing\\server\\video-editing-api\\video-editing-api\\wwwroot\\Highlight\\output.mp4");
+            //byte[] bs = Convert(file);
+            //System.IO.MemoryStream filestream = new System.IO.MemoryStream(bs);
+            //// Specify SSE-C encryption options
+            //Aes aesEncryption = Aes.Create();
+            //aesEncryption.KeySize = 256;
+            //aesEncryption.GenerateKey();
+            //var ssec = new SSEC(aesEncryption.Key);
+
+            //PutObjectArgs putObjectArgs = new PutObjectArgs()
+            //                                           .WithBucket("video-editing")
+            //                                           .WithObject($"test/{file.FileName}")
+            //                                           .WithStreamData(filestream)
+            //                                           .WithContentType(file.ContentType);
+            //await client.PutObjectAsync(putObjectArgs).ConfigureAwait(false);
+
+
+
+            GetObjectArgs getObjectArgs = new GetObjectArgs().WithBucket("video-editing").WithObject("output.mp4");
+            var a = await client.GetObjectAsync(getObjectArgs).ConfigureAwait(false);
+
+            // await client.PutObjectAsync("video-editing", "test.mp4", "D:\\video-editing\\server\\video-editing-api\\video-editing-api\\wwwroot\\Highlight\\output.mp4", "application/octet-stream", sse: ssec);
+
+            return Ok(a);
+        }
+
+        private byte[] Convert(IFormFile file)
+        {
+            byte[] fileBytes = { };
+            if (file.Length > 0)
+            {
+                using (var ms = new MemoryStream())
+                {
+                    file.CopyTo(ms);
+                    fileBytes = ms.ToArray();
+                }
+            }
+            return fileBytes;
         }
     }
 }
