@@ -22,8 +22,6 @@ const videoEditingApi = {
   },
 
   concatHighlight: (matchId, data) => {
-    console.log(matchId, data);
-
     const url = `/VideoEditings/concatHighlight/${matchId}`;
     return axiosClient.post(url, data);
   },
@@ -31,6 +29,11 @@ const videoEditingApi = {
   getHighlight: () => {
     const url = "/VideoEditings/getHighligth";
     return axiosClient.get(url);
+  },
+
+  deleteMatch: (id) => {
+    const url = `VideoEditings/deleteMatch/${id}`;
+    return axiosClient.delete(url);
   },
 };
 

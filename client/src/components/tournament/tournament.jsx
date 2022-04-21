@@ -13,8 +13,10 @@ import {
   TableRow,
   TableCell,
   TableBody,
+  IconButton,
 } from "@mui/material";
 import videoEditingApi from "../../api/video-editing";
+import DeleteIcon from "@mui/icons-material/Delete";
 //import "./tournament.styles.scss";
 import CustomCircularProgress from "../custom/custom-circular-progress";
 import CustomSelect from "../flugin/Select";
@@ -103,6 +105,21 @@ const Tournament = () => {
     e.preventDefault();
     navigate("/video-edit", { state: { row } });
     console.log(row);
+  };
+
+  const handleDeleteClick = (e, row) => {
+    const deleteMatch = async (id) => {
+      try {
+        await videoEditingApi.deleteMatch(id);
+        setNoti(true);
+        setMessage("Delete Succeed");
+        setTypeNoti("success");
+        getMatches();
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    deleteMatch(row.id);
   };
 
   return (
@@ -219,20 +236,93 @@ const Tournament = () => {
           </Grid>
         </Grid>
       </Card>
-      {matches.length ? (
-        <Table>
-          <TableHead>
-            <TableRow sx={{ backgroundColor: "#CEEBF9" }}>
-              <TableCell
-                key={0}
-                sx={{
-                  border: "1px solid #76BBD9",
-                  padding: 1,
-                }}
-                align="center"
-              >
-                <b>Num</b>
-              </TableCell>
+      <Table>
+        <TableHead>
+          <TableRow sx={{ backgroundColor: "#CEEBF9" }}>
+            <TableCell
+              key={0}
+              sx={{
+                border: "1px solid #76BBD9",
+                padding: 1,
+              }}
+              align="center"
+            >
+              <b>Num</b>
+            </TableCell>
+            <TableCell
+              key={1}
+              sx={{
+                border: "1px solid #76BBD9",
+                padding: 1,
+              }}
+              align="center"
+            >
+              <b>Tournament</b>
+            </TableCell>
+            <TableCell
+              key={2}
+              sx={{
+                border: "1px solid #76BBD9",
+                padding: 1,
+              }}
+              align="center"
+            >
+              <b>Match</b>
+            </TableCell>
+            <TableCell
+              key={3}
+              sx={{
+                border: "1px solid #76BBD9",
+                padding: 1,
+              }}
+              align="center"
+            >
+              <b>Time</b>
+            </TableCell>
+            <TableCell
+              key={4}
+              sx={{
+                border: "1px solid #76BBD9",
+                padding: 1,
+              }}
+              align="center"
+            >
+              <b>Channel</b>
+            </TableCell>
+            <TableCell
+              key={5}
+              sx={{
+                border: "1px solid #76BBD9",
+                padding: 1,
+              }}
+              align="center"
+            >
+              <b>IP:Port</b>
+            </TableCell>
+            <TableCell
+              key={6}
+              sx={{
+                border: "1px solid #76BBD9",
+                padding: 1,
+              }}
+              align="center"
+            >
+              <b>Video</b>
+            </TableCell>
+            <TableCell
+              key={7}
+              sx={{
+                border: "1px solid #76BBD9",
+                padding: 1,
+              }}
+              align="center"
+            />
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {/* style={ {minHeight: '45px' } } */}
+          {matches?.map((match, i) => (
+            <TableRow key={i}>
               <TableCell
                 key={1}
                 sx={{
@@ -241,7 +331,7 @@ const Tournament = () => {
                 }}
                 align="center"
               >
-                <b>Tournament</b>
+                {i + 1}
               </TableCell>
               <TableCell
                 key={2}
@@ -251,7 +341,7 @@ const Tournament = () => {
                 }}
                 align="center"
               >
-                <b>Match</b>
+                {match.tournametName}
               </TableCell>
               <TableCell
                 key={3}
@@ -261,7 +351,7 @@ const Tournament = () => {
                 }}
                 align="center"
               >
-                <b>Time</b>
+                {match.matchName}
               </TableCell>
               <TableCell
                 key={4}
@@ -271,7 +361,7 @@ const Tournament = () => {
                 }}
                 align="center"
               >
-                <b>Channel</b>
+                {match.mactchTime}
               </TableCell>
               <TableCell
                 key={5}
@@ -281,7 +371,7 @@ const Tournament = () => {
                 }}
                 align="center"
               >
-                <b>IP:Port</b>
+                {match.channel}
               </TableCell>
               <TableCell
                 key={6}
@@ -291,97 +381,58 @@ const Tournament = () => {
                 }}
                 align="center"
               >
-                <b>Video</b>
+                {`${match.ip}:${match.port}`}
+              </TableCell>
+              <TableCell
+                key={7}
+                sx={{
+                  border: "1px solid #76BBD9",
+                  padding: 1,
+                }}
+                align="center"
+              >
+                <Link
+                  href="#"
+                  underline="none"
+                  onClick={(e) => handleResultClick(e, match)}
+                >
+                  Result
+                </Link>
+              </TableCell>
+              <TableCell
+                key={8}
+                sx={{
+                  border: "1px solid #76BBD9",
+                  padding: 1,
+                }}
+                align="center"
+              >
+                <IconButton
+                  aria-label="delete"
+                  onClick={(e) => {
+                    handleDeleteClick(e, match);
+                  }}
+                >
+                  <DeleteIcon />
+                </IconButton>
               </TableCell>
             </TableRow>
-          </TableHead>
-          <TableBody>
-            {/* style={ {minHeight: '45px' } } */}
-            {matches.map((match, i) => (
-              <TableRow key={i}>
-                <TableCell
-                  key={1}
-                  sx={{
-                    border: "1px solid #76BBD9",
-                    padding: 1,
-                  }}
-                  align="center"
-                >
-                  {i + 1}
-                </TableCell>
-                <TableCell
-                  key={2}
-                  sx={{
-                    border: "1px solid #76BBD9",
-                    padding: 1,
-                  }}
-                  align="center"
-                >
-                  {match.tournametName}
-                </TableCell>
-                <TableCell
-                  key={3}
-                  sx={{
-                    border: "1px solid #76BBD9",
-                    padding: 1,
-                  }}
-                  align="center"
-                >
-                  {match.matchName}
-                </TableCell>
-                <TableCell
-                  key={4}
-                  sx={{
-                    border: "1px solid #76BBD9",
-                    padding: 1,
-                  }}
-                  align="center"
-                >
-                  {match.mactchTime}
-                </TableCell>
-                <TableCell
-                  key={5}
-                  sx={{
-                    border: "1px solid #76BBD9",
-                    padding: 1,
-                  }}
-                  align="center"
-                >
-                  {match.channel}
-                </TableCell>
-                <TableCell
-                  key={6}
-                  sx={{
-                    border: "1px solid #76BBD9",
-                    padding: 1,
-                  }}
-                  align="center"
-                >
-                  {`${match.ip}:${match.port}`}
-                </TableCell>
-                <TableCell
-                  key={7}
-                  sx={{
-                    border: "1px solid #76BBD9",
-                    padding: 1,
-                  }}
-                  align="center"
-                >
-                  <Link
-                    href="#"
-                    underline="none"
-                    onClick={(e) => handleResultClick(e, match)}
-                  >
-                    Result
-                  </Link>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      ) : (
-        <CustomCircularProgress />
-      )}
+          ))}
+          {(matches === undefined || matches.length === 0) && (
+            <TableRow>
+              <TableCell
+                sx={{
+                  border: "1px solid #76BBD9",
+                }}
+                align="center"
+                colSpan={8}
+              >
+                No data
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
     </>
   );
 };

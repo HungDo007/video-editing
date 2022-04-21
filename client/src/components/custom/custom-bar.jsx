@@ -3,6 +3,7 @@ import "./custom-bar.styles.scss";
 
 //const CustomBar = ({ videos, duration, setIndex }) => {
 const CustomBar = ({ videos, setIndex }) => {
+  console.log(videos);
   const handleClick = (index) => {
     setIndex(index);
   };

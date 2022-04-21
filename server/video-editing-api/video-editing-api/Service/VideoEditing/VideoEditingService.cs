@@ -4,10 +4,13 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using MongoDB.Driver;
+using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
+using System.Text;
 using System.Threading.Tasks;
 using video_editing_api.Model;
 using video_editing_api.Model.Collection;
@@ -182,6 +185,19 @@ namespace video_editing_api.Service.VideoEditing
                 throw new System.Exception(e.Message);
             }
         }
+
+        public async Task<bool> DeleteMatch(string id)
+        {
+            try
+            {
+                await _matchInfo.DeleteOneAsync(match => match.Id == id);
+                return true;
+            }
+            catch (System.Exception e)
+            {
+                throw new System.Exception(e.Message);
+            }
+        }
         #endregion
 
 
@@ -288,66 +304,66 @@ namespace video_editing_api.Service.VideoEditing
             }
         }
 
-        public async Task<string> ConcatVideoOfMatch(string matchId, List<TrimVideoHightlightModel> models)
-        {
-            try
-            {
-                string response = string.Empty;
-                var match = _matchInfo.Find(x => x.Id == matchId).First();
-                if (models.Count > 0)
-                {
-                    var trans = new Transformation().EndOffset(models[0].EndTime).StartOffset(models[0].StartTime);
+        //public async Task<string> ConcatVideoOfMatch(string matchId, List<TrimVideoHightlightModel> models)
+        //{
+        //    try
+        //    {
+        //        string response = string.Empty;
+        //        var match = _matchInfo.Find(x => x.Id == matchId).First();
+        //        if (models.Count > 0)
+        //        {
+        //            var trans = new Transformation().EndOffset(models[0].EndTime).StartOffset(models[0].StartTime);
 
-                    for (int i = 1; i < models.Count; i++)
-                    {
-                        trans.Chain().Flags("splice").Overlay(new Layer().PublicId($"video:{models[i].PublicId}")).EndOffset(models[i].EndTime).StartOffset(models[i].StartTime).Chain();
-                    }
+        //            for (int i = 1; i < models.Count; i++)
+        //            {
+        //                trans.Chain().Flags("splice").Overlay(new Layer().PublicId($"video:{models[i].PublicId}")).EndOffset(models[i].EndTime).StartOffset(models[i].StartTime).Chain();
+        //            }
 
-                    var fitstVideo = match.Videos.Where(x => x.PublicId == models[0].PublicId).FirstOrDefault();
-                    if (fitstVideo != null)
-                    {
-                        var name = System.Guid.NewGuid();
-                        var param = new VideoUploadParams
-                        {
-                            File = new FileDescription(fitstVideo.Url),
-                            Transformation = models.Count > 1 ? trans.Chain().Flags("layer_apply") : trans,
-                            PublicId = $"VideoEditing/Highlight/{match.MatchName}-{match.MactchTime.ToString("dd-MM-yyyy-HH-mm")}/{name}"
-                        };
-                        var uploadResult = await _cloudinary.UploadAsync(param);
-                        if (uploadResult.Error == null)
-                        {
-                            var highlight = new HighlightVideo()
-                            {
-                                MatchId = match.Id,
-                                MatchInfo = $"({match.MatchName})T({match.MactchTime.ToString("dd-MM-yyyy-hh-mm")})",
-                                Duration = uploadResult.Duration,
-                                PublicId = uploadResult.PublicId,
-                                Url = uploadResult.SecureUrl.ToString()
-                            };
-                            await _highlight.InsertOneAsync(highlight);
-                            response = highlight.Url;
-                        }
-                        else
-                        {
-                            throw new System.Exception(uploadResult.Error.Message);
-                        }
-                    }
-                    else
-                    {
-                        throw new System.Exception("No video in storage video of match!");
-                    }
-                }
-                else
-                {
-                    throw new System.Exception("No video to concat");
-                }
-                return response;
-            }
-            catch (System.Exception e)
-            {
-                throw new System.Exception(e.Message);
-            }
-        }
+        //            var fitstVideo = match.Videos.Where(x => x.PublicId == models[0].PublicId).FirstOrDefault();
+        //            if (fitstVideo != null)
+        //            {
+        //                var name = System.Guid.NewGuid();
+        //                var param = new VideoUploadParams
+        //                {
+        //                    File = new FileDescription(fitstVideo.Url),
+        //                    Transformation = models.Count > 1 ? trans.Chain().Flags("layer_apply") : trans,
+        //                    PublicId = $"VideoEditing/Highlight/{match.MatchName}-{match.MactchTime.ToString("dd-MM-yyyy-HH-mm")}/{name}"
+        //                };
+        //                var uploadResult = await _cloudinary.UploadAsync(param);
+        //                if (uploadResult.Error == null)
+        //                {
+        //                    var highlight = new HighlightVideo()
+        //                    {
+        //                        MatchId = match.Id,
+        //                        MatchInfo = $"({match.MatchName})T({match.MactchTime.ToString("dd-MM-yyyy-hh-mm")})",
+        //                        Duration = uploadResult.Duration,
+        //                        PublicId = uploadResult.PublicId,
+        //                        Url = uploadResult.SecureUrl.ToString()
+        //                    };
+        //                    await _highlight.InsertOneAsync(highlight);
+        //                    response = highlight.Url;
+        //                }
+        //                else
+        //                {
+        //                    throw new System.Exception(uploadResult.Error.Message);
+        //                }
+        //            }
+        //            else
+        //            {
+        //                throw new System.Exception("No video in storage video of match!");
+        //            }
+        //        }
+        //        else
+        //        {
+        //            throw new System.Exception("No video to concat");
+        //        }
+        //        return response;
+        //    }
+        //    catch (System.Exception e)
+        //    {
+        //        throw new System.Exception(e.Message);
+        //    }
+        //}
 
 
 
@@ -497,6 +513,39 @@ namespace video_editing_api.Service.VideoEditing
                 FFmpeg.SetExecutablesPath(Path.Combine(_dir, "ffmpeg"));
                 var info = await FFmpeg.GetMediaInfo(input);
                 return info.Duration.TotalSeconds;
+            }
+            catch (System.Exception ex)
+            {
+                throw new System.Exception(ex.Message);
+            }
+        }
+
+        public async Task<string> ConcatVideoOfMatch(string matchId, InputSendServer file)
+        {
+
+            try
+            {
+                var match = _matchInfo.Find(x => x.Id == matchId).First();
+
+                HttpClient client = new HttpClient();
+                client.BaseAddress = new System.Uri("http://118.69.218.59:7007");
+                var json = JsonConvert.SerializeObject(file);
+                json = json.Replace("E", "e");
+                var httpContent = new StringContent(json, Encoding.UTF8, "application/json");
+                var response = await client.PostAsync("/highlight", httpContent);
+                var result = await response.Content.ReadAsStringAsync();
+
+                ConcatResultModel model = JsonConvert.DeserializeObject<ConcatResultModel>(result);
+
+                HighlightVideo hl = new HighlightVideo()
+                {
+                    MatchId = matchId,
+                    mp4 = model.mp4,
+                    ts = model.ts,
+                    MatchInfo = $"({match.MatchName})T({match.MactchTime.ToString("dd-MM-yyyy-hh-mm")})"
+                };
+                await _highlight.InsertOneAsync(hl);
+                return "Succeed";
             }
             catch (System.Exception ex)
             {

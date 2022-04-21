@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Minio;
+using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.IO;
+using System.Net.Http;
+using System.Text;
 using System.Threading.Tasks;
 using video_editing_api.Model;
 using video_editing_api.Model.Collection;
@@ -23,32 +25,32 @@ namespace video_editing_api.Controllers
         }
 
 
-        [HttpGet("getAction")]
-        public async Task<IActionResult> GetActions()
-        {
-            try
-            {
-                var result = await _videoEditingService.GetActions();
-                return Ok(new Response<List<Action>>(200, "", result));
-            }
-            catch (System.Exception e)
-            {
-                return BadRequest(new Response<List<Action>>(400, e.Message, null));
-            }
-        }
-        [HttpPost("addAction")]
-        public async Task<IActionResult> AddAction([FromBody] List<Action> actions)
-        {
-            try
-            {
-                var result = await _videoEditingService.AddAction(actions);
-                return Ok(new Response<string>(200, "", result));
-            }
-            catch (System.Exception e)
-            {
-                return BadRequest(new Response<string>(400, e.Message, null));
-            }
-        }
+        //[HttpGet("getAction")]
+        //public async Task<IActionResult> GetActions()
+        //{
+        //    try
+        //    {
+        //        var result = await _videoEditingService.GetActions();
+        //        return Ok(new Response<List<Action>>(200, "", result));
+        //    }
+        //    catch (System.Exception e)
+        //    {
+        //        return BadRequest(new Response<List<Action>>(400, e.Message, null));
+        //    }
+        //}
+        //[HttpPost("addAction")]
+        //public async Task<IActionResult> AddAction([FromBody] List<Action> actions)
+        //{
+        //    try
+        //    {
+        //        var result = await _videoEditingService.AddAction(actions);
+        //        return Ok(new Response<string>(200, "", result));
+        //    }
+        //    catch (System.Exception e)
+        //    {
+        //        return BadRequest(new Response<string>(400, e.Message, null));
+        //    }
+        //}
 
         [HttpGet("getTournamentById")]
         public async Task<IActionResult> GetTournament(string Id)
@@ -132,6 +134,19 @@ namespace video_editing_api.Controllers
                 return BadRequest(new Response<string>(400, e.Message, null));
             }
         }
+        [HttpDelete("deleteMatch/{matchId}")]
+        public async Task<IActionResult> DeleteMatch(string matchId)
+        {
+            try
+            {
+                var result = await _videoEditingService.DeleteMatch(matchId);
+                return Ok(new Response<bool>(200, "", result));
+            }
+            catch (System.Exception e)
+            {
+                return BadRequest(new Response<string>(400, e.Message, null));
+            }
+        }
 
 
 
@@ -149,27 +164,11 @@ namespace video_editing_api.Controllers
             }
         }
         [HttpPost("concatHighlight/{matchId}")]
-        public async Task<IActionResult> UpLoadVideo(string matchId, List<TrimVideoHightlightModel> models)
+        public async Task<IActionResult> UpLoadVideo(string matchId, InputSendServer file)
         {
             try
             {
-                //string res = await _videoEditingService.ConcatVideoOfMatch(matchId, models);
-                bool res = await _videoEditingService.Up(matchId, models);
-                return Ok(new Response<string>(200, "", "res"));
-            }
-            catch (System.Exception e)
-            {
-                return BadRequest(new Response<string>(400, e.Message, null));
-            }
-        }
-
-        [HttpPost("uploadVideoForMatch/{matchId}")]
-        [DisableRequestSizeLimit]
-        public async Task<IActionResult> UpLoadVideo(string matchId, IFormFile file)
-        {
-            try
-            {
-                string res = await _videoEditingService.UploadVideoForMatch(matchId, file);
+                var res = await _videoEditingService.ConcatVideoOfMatch(matchId, file);
                 return Ok(new Response<string>(200, "", res));
             }
             catch (System.Exception e)
@@ -177,52 +176,106 @@ namespace video_editing_api.Controllers
                 return BadRequest(new Response<string>(400, e.Message, null));
             }
         }
+        //[HttpPost("concatHighlight/{matchId}")]
+        //public async Task<IActionResult> UpLoadVideo(string matchId, List<TrimVideoHightlightModel> models)
+        //{
+        //    try
+        //    {
+        //        //string res = await _videoEditingService.ConcatVideoOfMatch(matchId, models);
+        //        bool res = await _videoEditingService.Up(matchId, models);
+        //        return Ok(new Response<string>(200, "", "res"));
+        //    }
+        //    catch (System.Exception e)
+        //    {
+        //        return BadRequest(new Response<string>(400, e.Message, null));
+        //    }
+        //}
 
-        [HttpPost("upload")]
-        [DisableRequestSizeLimit]
-        public async Task<IActionResult> Up(string matchId, List<TrimVideoHightlightModel> models)
+        //[HttpPost("uploadVideoForMatch/{matchId}")]
+        //[DisableRequestSizeLimit]
+        //public async Task<IActionResult> UpLoadVideo(string matchId, IFormFile file)
+        //{
+        //    try
+        //    {
+        //        string res = await _videoEditingService.UploadVideoForMatch(matchId, file);
+        //        return Ok(new Response<string>(200, "", res));
+        //    }
+        //    catch (System.Exception e)
+        //    {
+        //        return BadRequest(new Response<string>(400, e.Message, null));
+        //    }
+        //}
+
+        //[HttpPost("upload")]
+        //[DisableRequestSizeLimit]
+        //public async Task<IActionResult> Up(string matchId, List<TrimVideoHightlightModel> models)
+        //{
+        //    try
+        //    {
+        //        bool res = await _videoEditingService.Up(matchId, models);
+        //        return Ok(new Response<bool>(200, "", res));
+        //    }
+        //    catch (System.Exception e)
+        //    {
+        //        return BadRequest(new Response<string>(400, e.Message, null));
+        //    }
+        //}
+
+
+        //[HttpPost("test")]
+        //public async Task<IActionResult> asdf(IFormFile file)
+        //{
+        //    var client = new MinioClient().WithEndpoint("118.69.218.59:9002").WithCredentials("cadsfpt", "As2fQkAZjh").Build();
+
+        //    //byte[] bs = System.IO.File.ReadAllBytes("D:\\video-editing\\server\\video-editing-api\\video-editing-api\\wwwroot\\Highlight\\output.mp4");
+        //    //byte[] bs = Convert(file);
+        //    //System.IO.MemoryStream filestream = new System.IO.MemoryStream(bs);
+        //    //// Specify SSE-C encryption options
+        //    //Aes aesEncryption = Aes.Create();
+        //    //aesEncryption.KeySize = 256;
+        //    //aesEncryption.GenerateKey();
+        //    //var ssec = new SSEC(aesEncryption.Key);
+
+        //    //PutObjectArgs putObjectArgs = new PutObjectArgs()
+        //    //                                           .WithBucket("video-editing")
+        //    //                                           .WithObject($"test/{file.FileName}")
+        //    //                                           .WithStreamData(filestream)
+        //    //                                           .WithContentType(file.ContentType);
+        //    //await client.PutObjectAsync(putObjectArgs).ConfigureAwait(false);
+
+
+
+        //    GetObjectArgs getObjectArgs = new GetObjectArgs().WithBucket("video-editing").WithObject("output.mp4");
+        //    var a = await client.GetObjectAsync(getObjectArgs).ConfigureAwait(false);
+
+        //    // await client.PutObjectAsync("video-editing", "test.mp4", "D:\\video-editing\\server\\video-editing-api\\video-editing-api\\wwwroot\\Highlight\\output.mp4", "application/octet-stream", sse: ssec);
+
+        //    return Ok(a);
+        //}
+
+
+        [HttpPost]
+        public async Task<IActionResult> test123(InputSendServer file)
         {
-            try
-            {
-                bool res = await _videoEditingService.Up(matchId, models);
-                return Ok(new Response<bool>(200, "", res));
-            }
-            catch (System.Exception e)
-            {
-                return BadRequest(new Response<string>(400, e.Message, null));
-            }
-        }
+            //string a = string.Empty;
+            //using (var reader = new StreamReader(file.OpenReadStream()))
+            //{
+            //    a = await reader.ReadToEndAsync();
+            //}
+            HttpClient client = new HttpClient();
+            client.BaseAddress = new System.Uri("http://118.69.218.59:7007");
+            //var temp = new
+            //{
+            //    json = a
+            //};
+            var json = JsonConvert.SerializeObject(file);
+            json = json.Replace("E", "e");
+            var httpContent = new StringContent(json, Encoding.UTF8, "application/json");
+            //var response = await client.PostAsJsonAsync("/highlight", temp);
+            var response = await client.PostAsync("/highlight", httpContent);
+            var result = await response.Content.ReadAsStringAsync();
 
-
-        [HttpPost("test")]
-        public async Task<IActionResult> asdf(IFormFile file)
-        {
-            var client = new MinioClient().WithEndpoint("118.69.218.59:9002").WithCredentials("cadsfpt", "As2fQkAZjh").Build();
-
-            //byte[] bs = System.IO.File.ReadAllBytes("D:\\video-editing\\server\\video-editing-api\\video-editing-api\\wwwroot\\Highlight\\output.mp4");
-            //byte[] bs = Convert(file);
-            //System.IO.MemoryStream filestream = new System.IO.MemoryStream(bs);
-            //// Specify SSE-C encryption options
-            //Aes aesEncryption = Aes.Create();
-            //aesEncryption.KeySize = 256;
-            //aesEncryption.GenerateKey();
-            //var ssec = new SSEC(aesEncryption.Key);
-
-            //PutObjectArgs putObjectArgs = new PutObjectArgs()
-            //                                           .WithBucket("video-editing")
-            //                                           .WithObject($"test/{file.FileName}")
-            //                                           .WithStreamData(filestream)
-            //                                           .WithContentType(file.ContentType);
-            //await client.PutObjectAsync(putObjectArgs).ConfigureAwait(false);
-
-
-
-            GetObjectArgs getObjectArgs = new GetObjectArgs().WithBucket("video-editing").WithObject("output.mp4");
-            var a = await client.GetObjectAsync(getObjectArgs).ConfigureAwait(false);
-
-            // await client.PutObjectAsync("video-editing", "test.mp4", "D:\\video-editing\\server\\video-editing-api\\video-editing-api\\wwwroot\\Highlight\\output.mp4", "application/octet-stream", sse: ssec);
-
-            return Ok(a);
+            return Ok();
         }
 
         private byte[] Convert(IFormFile file)

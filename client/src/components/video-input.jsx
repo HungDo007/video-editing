@@ -14,6 +14,10 @@ import {
   TableRow,
   TextField,
   InputAdornment,
+  Backdrop,
+  CircularProgress,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 
 import ReactPlayer from "react-player";
@@ -26,14 +30,19 @@ const VideoInput = () => {
   const location = useLocation();
   const videoPlayer = useRef(null);
   const [matchName, setMatchName] = useState();
-  //const [totalDuration, setTotalDuration] = useState(0);
+
+  const [noti, setNoti] = useState(false);
+  const [message, setMessage] = useState();
+  const [typeNoti, setTypeNoti] = useState();
+
   const [duration, setDuration] = useState(0);
   const [videoIndex, setVideoIndex] = useState(0);
+  const [body, setBody] = useState();
   const [videos, setVideos] = useState([]);
   const [videoPieceTime, setVideoPieceTime] = useState([0, 0]);
   const typingTimeoutRef = useRef(null);
   const [rPP, setRPP] = useState(0);
-
+  const [open, setOpen] = useState(false);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const handleChangePage = (event, newPage) => {
@@ -64,6 +73,7 @@ const VideoInput = () => {
 
   useEffect(() => {
     const getData = () => {
+      setBody(data);
       const videos = data.event.map((video) => ({
         ...video,
         selected: false,
@@ -85,9 +95,9 @@ const VideoInput = () => {
     setVideoPieceTime(newValue);
     const newVideos = [...videos];
 
-    newVideos[videoIndex].startTime = newValue[0];
-    newVideos[videoIndex].endTime = newValue[1];
-    newVideos[videoIndex].selected = true;
+    newVideos[page * rowsPerPage + videoIndex].startTime = newValue[0];
+    newVideos[page * rowsPerPage + videoIndex].endTime = newValue[1];
+    newVideos[page * rowsPerPage + videoIndex].selected = true;
     setVideos(newVideos);
 
     videoPlayer.current.seekTo(newValue[0], "seconds");
@@ -103,32 +113,38 @@ const VideoInput = () => {
           file_name: video.file_name,
           players: video.players,
           ts: [video.ts[0] + video.startTime, video.ts[0] + video.endTime],
-          //publicId: video.publicId,
-          //startTime: video.startTime,
-          //endTime: video.endTime,
         };
         filtered.push(newVideoInfo);
       }
       return filtered;
     }, []);
-    console.log(JSON.stringify(payload));
-
-    // const concatHighlight = async () => {
-    //   try {
-    //     const response = await videoEditingApi.concatHighlight(
-    //       location.state.row.id,
-    //       payload
-    //     );
-    //     console.log(response);
-    //     // setOpen(false);
-    //     // setVideoResult(response.data);
-    //     // setOpenDialog(true);
-    //   } catch (error) {
-    //     //setOpen(false);
-    //     //alert(error.response.description);
-    //   }
-    // };
-    // concatHighlight();
+    const newBody = {
+      ...body,
+      event: payload,
+    };
+    console.log(newBody);
+    const concatHighlight = async () => {
+      try {
+        const response = await videoEditingApi.concatHighlight(
+          location.state.row.id,
+          newBody
+        );
+        console.log(response);
+        setOpen(false);
+        setNoti(true);
+        setMessage("Concat Succeed, View result in function Highlight");
+        setTypeNoti("success");
+        // setVideoResult(response.data);
+        // setOpenDialog(true);
+      } catch (error) {
+        setOpen(false);
+        setNoti(true);
+        setMessage(error.response.description);
+        setTypeNoti("error");
+      }
+    };
+    setOpen(true);
+    concatHighlight();
   };
 
   const handdelchange = (e, video) => {
@@ -137,12 +153,30 @@ const VideoInput = () => {
     newVideos[a].selected = e.target.checked;
     setVideos(newVideos);
   };
-
   return (
-    <Box sx={{ padding: 5 }}>
-      <Typography variant="h4" textAlign="center">
-        {matchName}
-      </Typography>
+    <Box sx={{ padding: "1% 3%" }}>
+      <Backdrop
+        sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }}
+        open={open}
+      >
+        <CircularProgress color="inherit" />
+      </Backdrop>
+
+      <Snackbar
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+        open={noti}
+        autoHideDuration={5000}
+        onClose={() => setNoti(false)}
+      >
+        <Alert
+          onClose={() => setNoti(false)}
+          severity={typeNoti}
+          sx={{ width: "100%" }}
+        >
+          {message}
+        </Alert>
+      </Snackbar>
+
       <ReactPlayer
         ref={videoPlayer}
         url={videos[videoIndex] ? videos[videoIndex].file_name : null}
@@ -175,7 +209,6 @@ const VideoInput = () => {
       </Box>
       <CustomBar
         videos={videos?.slice(page * rPP, page * rPP + rPP)}
-        //duration={totalDuration}
         setIndex={setVideoIndex}
       />
       <Table>
@@ -349,6 +382,19 @@ const VideoInput = () => {
               </TableCell>
             </TableRow>
           ))}
+          {(videos === undefined || videos.length === 0) && (
+            <TableRow>
+              <TableCell
+                sx={{
+                  border: "1px solid #76BBD9",
+                }}
+                align="center"
+                colSpan={6}
+              >
+                No data
+              </TableCell>
+            </TableRow>
+          )}
         </TableBody>
       </Table>
       <Box sx={{ textAlign: "center", marginTop: 5 }}>
