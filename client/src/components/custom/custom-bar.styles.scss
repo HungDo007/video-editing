@@ -26,8 +26,9 @@
 
     .bar-item {
       position: absolute;
-      width: 20px;
-      height: 20px;
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
       box-sizing: border-box;
       outline: 0;
       background-color: #0603bd;

@@ -1,116 +1,116 @@
 import * as React from "react";
+import "./index.css";
+import "react-pro-sidebar/dist/css/styles.css";
+import ReorderIcon from "@mui/icons-material/Reorder";
+import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
+import AirplayIcon from "@mui/icons-material/Airplay";
+import PreviewIcon from "@mui/icons-material/Preview";
 
-import MenuIcon from "@mui/icons-material/Menu";
+import { Grid } from "@mui/material";
 
-import VerticalTabs from "./vertical-tabs";
-
+import { NavLink } from "react-router-dom";
 import {
-  AppBar,
-  Box,
-  CssBaseline,
-  Drawer,
-  IconButton,
-  Toolbar,
-  Typography,
-} from "@mui/material";
-import RoutePath from "../route-path/route-path";
-import { Outlet } from "react-router-dom";
-
-const drawerWidth = 240;
+  Menu,
+  MenuItem,
+  ProSidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarHeader,
+  SubMenu,
+} from "react-pro-sidebar";
 
 function ResponsiveDrawer(props) {
-  const { window } = props;
-  const [mobileOpen, setMobileOpen] = React.useState(false);
+  const [collapsed, setCollapsed] = React.useState(true);
+  const [listItem, setListItem] = React.useState(() => {
+    const listItem = [
+      { name: "Match", url: "/", icon: <AirplayIcon /> },
+      {
+        name: "Highlight",
+        url: "/highlight-review",
+        icon: <PreviewIcon />,
+      },
+    ];
+    return listItem;
+  });
 
-  const handleDrawerToggle = () => {
-    setMobileOpen(!mobileOpen);
+  const handleCollapsed = () => {
+    setCollapsed(!collapsed);
   };
 
-  const drawer = (
-    <div>
-      <Toolbar />
-      <VerticalTabs />
-    </div>
-  );
+  const iconCollapsed = {
+    fontSize: "xx-large",
+    margin: "20px 25px",
+  };
 
-  const container =
-    window !== undefined ? () => window().document.body : undefined;
+  const NavMenuu = (item) => {
+    if (collapsed) {
+      return (
+        <SubMenu key={item.name} title={item.name} icon={item.icon}>
+          <MenuItem key={item.name}>
+            <NavLink key={item.url} to={item.url}>
+              {item.name}
+            </NavLink>
+          </MenuItem>
+        </SubMenu>
+      );
+    } else {
+      return (
+        <MenuItem key={item.name} icon={item.icon}>
+          <NavLink key={item.url} to={item.url}>
+            {item.name}
+          </NavLink>
+        </MenuItem>
+      );
+    }
+  };
 
   return (
-    <Box sx={{ display: "flex" }}>
-      <CssBaseline />
-      <AppBar
-        position="fixed"
-        sx={{
-          width: { sm: `calc(100% - ${drawerWidth}px)` },
-          ml: { sm: `${drawerWidth}px` },
-        }}
-      >
-        <Toolbar>
-          <IconButton
-            aria-label="open drawer"
-            edge="start"
-            onClick={handleDrawerToggle}
-            sx={{ mr: 2, display: { sm: "none" } }}
-          >
-            <MenuIcon />
-          </IconButton>
-          <Typography variant="h6" noWrap component="div">
-            Dashboard
-          </Typography>
-        </Toolbar>
-      </AppBar>
-      <Box
-        component="nav"
-        sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
-        aria-label="mailbox folders"
-      >
-        {/* The implementation can be swapped with js to avoid SEO duplication of links. */}
-        <Drawer
-          container={container}
-          variant="temporary"
-          open={mobileOpen}
-          onClose={handleDrawerToggle}
-          ModalProps={{
-            keepMounted: true, // Better open performance on mobile.
-          }}
-          sx={{
-            display: { xs: "block", sm: "none" },
-            "& .MuiDrawer-paper": {
-              boxSizing: "border-box",
-              width: drawerWidth,
-            },
-          }}
+    <>
+      <div className="app">
+        <ProSidebar
+          collapsed={collapsed}
+          breakPoint="md"
+          style={{ height: "initial", minHeight: "100vh" }}
         >
-          {drawer}
-        </Drawer>
-        <Drawer
-          variant="permanent"
-          sx={{
-            display: { xs: "none", sm: "block" },
-            "& .MuiDrawer-paper": {
-              boxSizing: "border-box",
-              width: drawerWidth,
-            },
-          }}
-          open
-        >
-          {drawer}
-        </Drawer>
-      </Box>
-      <Box
-        component="main"
-        sx={{
-          flexGrow: 1,
-          p: 3,
-          width: { sm: `calc(100% - ${drawerWidth}px)` },
-        }}
-      >
-        <Toolbar />
-        <RoutePath />
-        <Outlet />
-      </Box>
-    </Box>
+          <SidebarHeader>
+            <span className={collapsed ? "" : "hidden"}>
+              <ReorderIcon sx={iconCollapsed} onClick={handleCollapsed} />
+            </span>
+            <span className={collapsed ? "hidden" : ""}>
+              <ArrowBackIosNewIcon
+                sx={iconCollapsed}
+                onClick={handleCollapsed}
+              />
+            </span>
+          </SidebarHeader>
+          <SidebarContent>
+            <Menu iconShape="round">
+              {listItem?.map((item) => {
+                return NavMenuu(item);
+              })}
+            </Menu>
+          </SidebarContent>
+          <SidebarFooter>
+            <span className={collapsed ? "" : "hidden"}>
+              <ReorderIcon sx={iconCollapsed} onClick={handleCollapsed} />
+            </span>
+            <span className={collapsed ? "hidden" : ""}>
+              <ArrowBackIosNewIcon
+                sx={iconCollapsed}
+                onClick={handleCollapsed}
+              />
+            </span>
+          </SidebarFooter>
+        </ProSidebar>
+        <main>
+          <Grid container direction="row">
+            <Grid item style={{ width: "100%", padding: "3%" }}>
+              {props.children}
+            </Grid>
+          </Grid>
+        </main>
+      </div>
+    </>
   );
 }
 
