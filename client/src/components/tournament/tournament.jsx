@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import {
   TextField,
@@ -14,18 +14,29 @@ import {
   TableCell,
   TableBody,
   IconButton,
+  Tooltip,
+  DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogContentText,
 } from "@mui/material";
 import videoEditingApi from "../../api/video-editing";
 import DeleteIcon from "@mui/icons-material/Delete";
 //import "./tournament.styles.scss";
 import CustomCircularProgress from "../custom/custom-circular-progress";
+import CancelOutlinedIcon from "@mui/icons-material/CancelOutlined";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import CustomSelect from "../flugin/Select";
 import { CustomDatePicker } from "../flugin";
 import { useNavigate } from "react-router-dom";
+import { FileUploader } from "react-drag-drop-files";
 
 const Tournament = () => {
+  const [opendialog, setOpenDialog] = useState(false);
   const [matches, setMatches] = useState([]);
   const [tournaments, setTournaments] = useState([]);
+  const [scroll, setScroll] = useState("paper");
+  const descriptionElementRef = useRef(null);
 
   const [tournament, setTournament] = useState();
   const [matchName, setMatchName] = useState();
@@ -37,6 +48,8 @@ const Tournament = () => {
   const [noti, setNoti] = useState(false);
   const [message, setMessage] = useState();
   const [typeNoti, setTypeNoti] = useState();
+
+  const [file, setFile] = useState(null);
 
   let navigate = useNavigate();
 
@@ -121,9 +134,53 @@ const Tournament = () => {
     };
     deleteMatch(row.id);
   };
-
+  const handleClose = () => {
+    setOpenDialog(false);
+  };
+  const handleFileChange = (file) => {
+    setFile(file);
+    console.log(file);
+  };
   return (
     <>
+      <Dialog
+        open={opendialog}
+        onClose={handleClose}
+        scroll={scroll}
+        // fullWidth={true}
+        // maxWidth="lg"
+      >
+        <DialogTitle
+          sx={{
+            backgroundColor: "#333333",
+            color: "#ffffff",
+            fontSize: "15px",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+          id="scroll-dialog-title"
+        >
+          <h4>Upload json file</h4>
+          <Button variant="contained" onClick={handleClose}>
+            Upload
+          </Button>
+        </DialogTitle>
+        <DialogContent dividers={scroll === "paper"}>
+          <DialogContentText
+            id="scroll-dialog-description"
+            ref={descriptionElementRef}
+            tabIndex={-1}
+          >
+            <FileUploader
+              handleChange={handleFileChange}
+              name="file"
+              types={["JSON"]}
+            />
+          </DialogContentText>
+        </DialogContent>
+      </Dialog>
+
       <Snackbar
         anchorOrigin={{ vertical: "top", horizontal: "right" }}
         open={noti}
@@ -138,6 +195,7 @@ const Tournament = () => {
           {message}
         </Alert>
       </Snackbar>
+
       <Card sx={{ padding: 5, margin: 20, marginTop: 0, marginBottom: 3 }}>
         <Grid
           container
@@ -317,6 +375,14 @@ const Tournament = () => {
               }}
               align="center"
             />
+            <TableCell
+              key={8}
+              sx={{
+                border: "1px solid #76BBD9",
+                padding: 1,
+              }}
+              align="center"
+            />
           </TableRow>
         </TableHead>
         <TableBody>
@@ -400,6 +466,28 @@ const Tournament = () => {
                 </Link>
               </TableCell>
               <TableCell
+                key={9}
+                sx={{
+                  border: "1px solid #76BBD9",
+                  padding: 1,
+                }}
+                align="center"
+              >
+                <Tooltip
+                  key={i}
+                  title="Change/Upload Json file for match"
+                  placement="top"
+                >
+                  <IconButton
+                    onClick={() => {
+                      setOpenDialog(true);
+                    }}
+                  >
+                    <CloudUploadIcon />
+                  </IconButton>
+                </Tooltip>
+              </TableCell>
+              <TableCell
                 key={8}
                 sx={{
                   border: "1px solid #76BBD9",
@@ -407,14 +495,16 @@ const Tournament = () => {
                 }}
                 align="center"
               >
-                <IconButton
-                  aria-label="delete"
-                  onClick={(e) => {
-                    handleDeleteClick(e, match);
-                  }}
-                >
-                  <DeleteIcon />
-                </IconButton>
+                <Tooltip key={i} title="Delete Match" placement="top">
+                  <IconButton
+                    aria-label="delete"
+                    onClick={(e) => {
+                      handleDeleteClick(e, match);
+                    }}
+                  >
+                    <DeleteIcon />
+                  </IconButton>
+                </Tooltip>
               </TableCell>
             </TableRow>
           ))}
@@ -425,7 +515,7 @@ const Tournament = () => {
                   border: "1px solid #76BBD9",
                 }}
                 align="center"
-                colSpan={8}
+                colSpan={9}
               >
                 No data
               </TableCell>

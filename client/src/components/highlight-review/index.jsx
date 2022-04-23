@@ -68,6 +68,7 @@ function HighlightReview() {
             fontSize: "15px",
             display: "flex",
             justifyContent: "space-between",
+            alignItems: "center",
           }}
           id="scroll-dialog-title"
         >
@@ -77,7 +78,6 @@ function HighlightReview() {
           </Button>
         </DialogTitle>
 
-        {/**Dialog xem tờ khai */}
         <DialogContent dividers={scroll === "paper"}>
           <DialogContentText
             id="scroll-dialog-description"
