@@ -7,7 +7,7 @@ const videoEditingApi = {
   },
 
   getMatchById: (params) => {
-    const url = "/VideoEditings/getMatchById/";
+    const url = "/VideoEditings/getMatchById";
     return axiosClient.get(url, { params });
   },
 
@@ -32,8 +32,13 @@ const videoEditingApi = {
   },
 
   deleteMatch: (id) => {
-    const url = `VideoEditings/deleteMatch/${id}`;
+    const url = `/VideoEditings/deleteMatch/${id}`;
     return axiosClient.delete(url);
+  },
+
+  uploadJsonFile: (id, formdata) => {
+    const url = `/VideoEditings/uploadJson/${id}`;
+    return axiosClient.post(url, formdata);
   },
 };
 

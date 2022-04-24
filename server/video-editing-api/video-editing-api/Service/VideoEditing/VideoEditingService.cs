@@ -138,7 +138,9 @@ namespace video_editing_api.Service.VideoEditing
                                MatchName = m.MatchName,
                                Port = m.Port,
                                TournametName = t.Name,
-                               Videos = m.Videos,
+                               //IsUploadJsonFile=m.IsUploadJsonFile,
+                               JsonFile = m.JsonFile,
+                               //Videos = m.Videos,
                            }).FirstOrDefault();
                 return res;
             }
@@ -163,7 +165,8 @@ namespace video_editing_api.Service.VideoEditing
                                MatchName = m.MatchName,
                                Port = m.Port,
                                TournametName = t.Name,
-                               Videos = m.Videos,
+                               IsUploadJsonFile = m.IsUploadJsonFile,
+                               //Videos = m.Videos,
                            }).ToList();
 
                 return res;
@@ -223,7 +226,7 @@ namespace video_editing_api.Service.VideoEditing
                     Url = path,
                     Duration = await getDuration(path)
                 };
-                match.Videos.Add(vr);
+                //match.Videos.Add(vr);
                 _matchInfo.ReplaceOne(m => m.Id == Id, match);
                 return "Succed";
             }
@@ -245,7 +248,7 @@ namespace video_editing_api.Service.VideoEditing
                 string matchName = match.MatchName;
                 string matchTime = match.MactchTime.ToString("dd-MM-yyyy-HH-mm");
 
-                match.Videos.Add(UploadVideoForMatch(file, tournamentName, matchName, matchTime));
+                //match.Videos.Add(UploadVideoForMatch(file, tournamentName, matchName, matchTime));
 
                 _matchInfo.ReplaceOne(m => m.Id == Id, match);
                 return "Succed";
@@ -545,6 +548,28 @@ namespace video_editing_api.Service.VideoEditing
                     MatchInfo = $"({match.MatchName})T({match.MactchTime.ToString("dd-MM-yyyy-hh-mm")})"
                 };
                 await _highlight.InsertOneAsync(hl);
+                return "Succeed";
+            }
+            catch (System.Exception ex)
+            {
+                throw new System.Exception(ex.Message);
+            }
+        }
+
+        public async Task<string> UploadJson(string matchId, IFormFile jsonfile)
+        {
+            try
+            {
+                string textJson = string.Empty;
+                using (var reader = new StreamReader(jsonfile.OpenReadStream()))
+                {
+                    textJson = await reader.ReadToEndAsync();
+                }
+                InputSendServer input = JsonConvert.DeserializeObject<InputSendServer>(textJson);
+                var match = _matchInfo.Find(x => x.Id == matchId).First();
+                match.IsUploadJsonFile = true;
+                match.JsonFile = input;
+                _matchInfo.ReplaceOne(m => m.Id == matchId, match);
                 return "Succeed";
             }
             catch (System.Exception ex)

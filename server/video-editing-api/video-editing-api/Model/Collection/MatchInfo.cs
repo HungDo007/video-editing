@@ -1,6 +1,5 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
 using System;
-using System.Collections.Generic;
 using video_editing_api.Model.InputModel;
 
 namespace video_editing_api.Model.Collection
@@ -19,7 +18,9 @@ namespace video_editing_api.Model.Collection
         public string Channel { get; set; }
         public string Ip { get; set; }
         public string Port { get; set; }
+        public bool IsUploadJsonFile { get; set; } = false;
+        public InputSendServer JsonFile { get; set; }
 
-        public List<VideoResource> Videos { get; set; } = new List<VideoResource>();
+        //public List<VideoResource> Videos { get; set; } = new List<VideoResource>();
     }
 }

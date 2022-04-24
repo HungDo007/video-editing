@@ -1,10 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.IO;
-using System.Net.Http;
-using System.Text;
 using System.Threading.Tasks;
 using video_editing_api.Model;
 using video_editing_api.Model.Collection;
@@ -164,7 +161,7 @@ namespace video_editing_api.Controllers
             }
         }
         [HttpPost("concatHighlight/{matchId}")]
-        public async Task<IActionResult> UpLoadVideo(string matchId, InputSendServer file)
+        public async Task<IActionResult> ConcatVideo(string matchId, InputSendServer file)
         {
             try
             {
@@ -176,6 +173,22 @@ namespace video_editing_api.Controllers
                 return BadRequest(new Response<string>(400, e.Message, null));
             }
         }
+
+
+        [HttpPost("uploadJson/{matchId}")]
+        public async Task<IActionResult> UploadJson(string matchId, IFormFile jsonfile)
+        {
+            try
+            {
+                var res = await _videoEditingService.UploadJson(matchId, jsonfile);
+                return Ok(new Response<string>(200, "", res));
+            }
+            catch (System.Exception e)
+            {
+                return BadRequest(new Response<string>(400, e.Message, null));
+            }
+        }
+
         //[HttpPost("concatHighlight/{matchId}")]
         //public async Task<IActionResult> UpLoadVideo(string matchId, List<TrimVideoHightlightModel> models)
         //{
@@ -255,28 +268,28 @@ namespace video_editing_api.Controllers
 
 
         [HttpPost]
-        public async Task<IActionResult> test123(InputSendServer file)
-        {
-            //string a = string.Empty;
-            //using (var reader = new StreamReader(file.OpenReadStream()))
-            //{
-            //    a = await reader.ReadToEndAsync();
-            //}
-            HttpClient client = new HttpClient();
-            client.BaseAddress = new System.Uri("http://118.69.218.59:7007");
-            //var temp = new
-            //{
-            //    json = a
-            //};
-            var json = JsonConvert.SerializeObject(file);
-            json = json.Replace("E", "e");
-            var httpContent = new StringContent(json, Encoding.UTF8, "application/json");
-            //var response = await client.PostAsJsonAsync("/highlight", temp);
-            var response = await client.PostAsync("/highlight", httpContent);
-            var result = await response.Content.ReadAsStringAsync();
+        //public async Task<IActionResult> test123(InputSendServer file)
+        //{
+        //    //string a = string.Empty;
+        //    //using (var reader = new StreamReader(file.OpenReadStream()))
+        //    //{
+        //    //    a = await reader.ReadToEndAsync();
+        //    //}
+        //    HttpClient client = new HttpClient();
+        //    client.BaseAddress = new System.Uri("http://118.69.218.59:7007");
+        //    //var temp = new
+        //    //{
+        //    //    json = a
+        //    //};
+        //    var json = JsonConvert.SerializeObject(file);
+        //    json = json.Replace("E", "e");
+        //    var httpContent = new StringContent(json, Encoding.UTF8, "application/json");
+        //    //var response = await client.PostAsJsonAsync("/highlight", temp);
+        //    var response = await client.PostAsync("/highlight", httpContent);
+        //    var result = await response.Content.ReadAsStringAsync();
 
-            return Ok();
-        }
+        //    return Ok();
+        //}
 
         private byte[] Convert(IFormFile file)
         {
@@ -291,5 +304,6 @@ namespace video_editing_api.Controllers
             }
             return fileBytes;
         }
+
     }
 }

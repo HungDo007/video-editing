@@ -26,7 +26,7 @@ function CustomDatePicker(props) {
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
       <DesktopDateTimePicker
-        inputFormat="dd/MM/yyyy HH:MM"
+        //inputFormat="dd/MM/yyyy HH:MM"
         value={value}
         onChange={onChange}
         renderInput={(params) => (

@@ -37,7 +37,7 @@ const Tournament = () => {
   const [tournaments, setTournaments] = useState([]);
   const [scroll, setScroll] = useState("paper");
   const descriptionElementRef = useRef(null);
-
+  const [uploadId, setUploadId] = useState();
   const [tournament, setTournament] = useState();
   const [matchName, setMatchName] = useState();
   const [time, setTime] = useState();
@@ -54,6 +54,9 @@ const Tournament = () => {
   let navigate = useNavigate();
 
   const handleDateChange = (date) => {
+    console.log(date);
+    var a = time.toLocaleString("sv", { timeZoneName: "short" });
+    console.log(`${a.substring(0, 10)}T${a.substring(11, 19)}`);
     setTime(date);
   };
 
@@ -76,7 +79,11 @@ const Tournament = () => {
     const payload = {
       tournamentId: tournament.id,
       matchName: matchName,
-      mactchTime: time,
+      mactchTime: `${time
+        .toLocaleString("sv", { timeZoneName: "short" })
+        .substring(0, 10)}T${time
+        .toLocaleString("sv", { timeZoneName: "short" })
+        .substring(11, 19)}.000Z`,
       channel: channel,
       ip: ip,
       port: port,
@@ -99,6 +106,33 @@ const Tournament = () => {
       }
     };
     addTournament();
+  };
+
+  const handleUploadClick = () => {
+    const UploadFile = async () => {
+      try {
+        const formdata = new FormData();
+        formdata.append("jsonfile", file);
+        await videoEditingApi.uploadJsonFile(uploadId, formdata);
+        setNoti(true);
+        setMessage("Saved");
+        setTypeNoti("success");
+        getMatches();
+        setOpenDialog(false);
+      } catch (error) {
+        setNoti(true);
+        setMessage(error.response.description);
+        setTypeNoti("error");
+        console.log(error);
+      }
+    };
+    if (file === null) {
+      setNoti(true);
+      setMessage("Please select file");
+      setTypeNoti("error");
+    } else {
+      UploadFile();
+    }
   };
 
   useEffect(() => {
@@ -162,7 +196,7 @@ const Tournament = () => {
           id="scroll-dialog-title"
         >
           <h4>Upload json file</h4>
-          <Button variant="contained" onClick={handleClose}>
+          <Button variant="contained" onClick={handleUploadClick}>
             Upload
           </Button>
         </DialogTitle>
@@ -251,7 +285,7 @@ const Tournament = () => {
               onChange={(e) => setChannel(e.target.value)}
               fullWidth
               required
-              placeholder="Enter Match Name"
+              placeholder="Enter Channel Name"
             />
           </Grid>
           <Grid item xs={1}>
@@ -427,7 +461,8 @@ const Tournament = () => {
                 }}
                 align="center"
               >
-                {match.mactchTime}
+                {match.mactchTime.substring(0, 10)}{" "}
+                {match.mactchTime.substring(11, 16)}
               </TableCell>
               <TableCell
                 key={5}
@@ -457,13 +492,21 @@ const Tournament = () => {
                 }}
                 align="center"
               >
-                <Link
-                  href="#"
-                  underline="none"
-                  onClick={(e) => handleResultClick(e, match)}
-                >
-                  Result
-                </Link>
+                {match.isUploadJsonFile ? (
+                  <Link
+                    component="button"
+                    href="#"
+                    underline="none"
+                    onClick={(e) => handleResultClick(e, match)}
+                  >
+                    Result
+                  </Link>
+                ) : (
+                  <span>
+                    Don't have video <br />
+                    Upload json file first
+                  </span>
+                )}
               </TableCell>
               <TableCell
                 key={9}
@@ -480,6 +523,8 @@ const Tournament = () => {
                 >
                   <IconButton
                     onClick={() => {
+                      setUploadId(match.id);
+                      setFile(null);
                       setOpenDialog(true);
                     }}
                   >

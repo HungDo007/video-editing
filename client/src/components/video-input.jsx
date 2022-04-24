@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect } from "react";
 import SearchIcon from "@mui/icons-material/Search";
-import data from "../metadata_server.json";
+
 import {
   Box,
   Button,
@@ -18,6 +18,10 @@ import {
   CircularProgress,
   Snackbar,
   Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
 } from "@mui/material";
 
 import ReactPlayer from "react-player";
@@ -27,13 +31,18 @@ import CustomBar from "./custom/custom-bar";
 import { useLocation } from "react-router-dom";
 
 const VideoInput = () => {
+  const [opendialog, setOpenDialog] = useState(false);
   const location = useLocation();
   const videoPlayer = useRef(null);
   const [matchName, setMatchName] = useState();
+  const [scroll, setScroll] = useState("paper");
+  const descriptionElementRef = useRef(null);
 
   const [noti, setNoti] = useState(false);
   const [message, setMessage] = useState();
   const [typeNoti, setTypeNoti] = useState();
+
+  const [filtered, setFiltered] = useState();
 
   const [duration, setDuration] = useState(0);
   const [videoIndex, setVideoIndex] = useState(0);
@@ -72,16 +81,21 @@ const VideoInput = () => {
   }, [videos, rowsPerPage]);
 
   useEffect(() => {
-    const getData = () => {
-      setBody(data);
-      const videos = data.event.map((video) => ({
+    const getData = async () => {
+      console.log(location.state.row.id);
+      const response = await videoEditingApi.getMatchById({
+        Id: location.state.row.id,
+      });
+      console.log(response);
+      setBody(response.data.jsonFile);
+      const videos = response.data.jsonFile.event.map((video) => ({
         ...video,
         selected: false,
         startTime: videoPieceTime[0],
         endTime: videoPieceTime[1],
       }));
       setVideos(videos);
-      setMatchName(data.match_name);
+      setMatchName(response.data.jsonFile.match_name);
     };
 
     getData();
@@ -106,6 +120,17 @@ const VideoInput = () => {
   const handleEditVideo = () => {
     const payload = videos.reduce((filtered, video) => {
       if (video.selected) {
+        filtered.push(video);
+      }
+      return filtered;
+    }, []);
+    setFiltered(payload);
+    setOpenDialog(true);
+  };
+  console.log(filtered);
+  const handleSendServer = () => {
+    const payload = filtered.reduce((filter, video) => {
+      if (video.selected) {
         const newVideoInfo = {
           level: video.level,
           time: video.time,
@@ -114,9 +139,9 @@ const VideoInput = () => {
           players: video.players,
           ts: [video.ts[0] + video.startTime, video.ts[0] + video.endTime],
         };
-        filtered.push(newVideoInfo);
+        filter.push(newVideoInfo);
       }
-      return filtered;
+      return filter;
     }, []);
     const newBody = {
       ...body,
@@ -146,21 +171,212 @@ const VideoInput = () => {
     setOpen(true);
     concatHighlight();
   };
-
+  const handleClose = () => {
+    setOpenDialog(false);
+  };
   const handdelchange = (e, video) => {
     const newVideos = [...videos];
-    const a = newVideos.findIndex((vid) => vid.publicId === video.publicId);
+    const a = newVideos.findIndex((vid) => vid.file_name === video.file_name);
     newVideos[a].selected = e.target.checked;
     setVideos(newVideos);
   };
+  const handleReviewChange = (e, video) => {
+    const newVideos = [...filtered];
+    const a = newVideos.findIndex((vid) => vid.file_name === video.file_name);
+    newVideos[a].selected = e.target.checked;
+    setFiltered(newVideos);
+  };
   return (
     <Box sx={{ padding: "1% 3%" }}>
+      <p>Index of video: {videoIndex + 1} in table</p>
       <Backdrop
         sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }}
         open={open}
       >
         <CircularProgress color="inherit" />
       </Backdrop>
+
+      <Dialog
+        open={opendialog}
+        onClose={handleClose}
+        scroll={scroll}
+        fullWidth={true}
+        maxWidth="lg"
+      >
+        <DialogTitle
+          sx={{
+            backgroundColor: "#333333",
+            color: "#ffffff",
+            fontSize: "15px",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+          id="scroll-dialog-title"
+        >
+          <h4>Concat Video Selected</h4>
+          <Button variant="contained" onClick={handleSendServer}>
+            Upload
+          </Button>
+        </DialogTitle>
+        <DialogContent dividers={scroll === "paper"}>
+          <DialogContentText
+            id="scroll-dialog-description"
+            ref={descriptionElementRef}
+            tabIndex={-1}
+          >
+            <Table>
+              <TableHead>
+                <TableRow sx={{ backgroundColor: "#CEEBF9" }}>
+                  <TableCell
+                    key={0}
+                    sx={{
+                      border: "1px solid #76BBD9",
+                      padding: 1,
+                    }}
+                    align="center"
+                  >
+                    <b>STT</b>
+                  </TableCell>
+                  <TableCell
+                    key={1}
+                    sx={{
+                      border: "1px solid #76BBD9",
+                      padding: 1,
+                    }}
+                    align="center"
+                  >
+                    <b>Name</b>
+                  </TableCell>
+                  <TableCell
+                    key={2}
+                    sx={{
+                      border: "1px solid #76BBD9",
+                      padding: 1,
+                    }}
+                    align="center"
+                  >
+                    <b>Times</b>
+                  </TableCell>
+                  <TableCell
+                    key={3}
+                    sx={{
+                      border: "1px solid #76BBD9",
+                      padding: 1,
+                    }}
+                    align="center"
+                  >
+                    <b>Start</b>
+                  </TableCell>
+                  <TableCell
+                    key={4}
+                    sx={{
+                      border: "1px solid #76BBD9",
+                      padding: 1,
+                    }}
+                    align="center"
+                  >
+                    <b>End</b>
+                  </TableCell>
+                  <TableCell
+                    key={5}
+                    sx={{
+                      border: "1px solid #76BBD9",
+                      padding: 1,
+                    }}
+                    align="center"
+                  >
+                    <b>Select</b>
+                  </TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {/* style={ {minHeight: '45px' } } */}
+                {filtered?.map((video, i) => (
+                  <TableRow key={i}>
+                    <TableCell
+                      key={1}
+                      sx={{
+                        border: "1px solid #76BBD9",
+                        padding: 1,
+                      }}
+                      align="center"
+                    >
+                      {i + 1}
+                    </TableCell>
+                    <TableCell
+                      key={2}
+                      sx={{
+                        border: "1px solid #76BBD9",
+                        padding: 1,
+                      }}
+                      align="center"
+                    >
+                      {video.event}
+                    </TableCell>
+                    <TableCell
+                      key={4}
+                      sx={{
+                        border: "1px solid #76BBD9",
+                        padding: 1,
+                      }}
+                      align="center"
+                    >
+                      {video.time.substring(0, 2)}m{video.time.substring(2, 4)}s
+                    </TableCell>
+                    <TableCell
+                      key={3}
+                      sx={{
+                        border: "1px solid #76BBD9",
+                        padding: 1,
+                      }}
+                      align="center"
+                    >
+                      {video.startTime}
+                    </TableCell>
+                    <TableCell
+                      key={6}
+                      sx={{
+                        border: "1px solid #76BBD9",
+                        padding: 1,
+                      }}
+                      align="center"
+                    >
+                      {video.endTime}
+                    </TableCell>
+                    <TableCell
+                      key={7}
+                      sx={{
+                        border: "1px solid #76BBD9",
+                        padding: 1,
+                      }}
+                      align="center"
+                    >
+                      <Checkbox
+                        checked={video.selected}
+                        onChange={(e) => handleReviewChange(e, video)}
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {(filtered === undefined || filtered.length === 0) && (
+                  <TableRow>
+                    <TableCell
+                      sx={{
+                        border: "1px solid #76BBD9",
+                      }}
+                      align="center"
+                      colSpan={6}
+                    >
+                      No data
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </DialogContentText>
+        </DialogContent>
+      </Dialog>
 
       <Snackbar
         anchorOrigin={{ vertical: "top", horizontal: "right" }}
@@ -179,7 +395,11 @@ const VideoInput = () => {
 
       <ReactPlayer
         ref={videoPlayer}
-        url={videos[videoIndex] ? videos[videoIndex].file_name : null}
+        url={
+          videos[page * rowsPerPage + videoIndex]
+            ? videos[page * rowsPerPage + videoIndex].file_name
+            : null
+        }
         onDuration={handleDuration}
         controls
         width="100%"
