@@ -591,5 +591,31 @@ namespace video_editing_api.Service.VideoEditing
                 throw new System.Exception(e.Message);
             }
         }
+
+        public async Task<List<HighlightVideo>> GetHighlightVideosForMatch(string matchId)
+        {
+            try
+            {
+                //var a = 
+                //var b = await _highlight.Find(hl => hl.MatchId == matchId).FirstOrDefaultAsync();
+                return await _highlight.Find(hl => hl.MatchId == matchId).ToListAsync();
+            }
+            catch (System.Exception e)
+            {
+                throw new System.Exception(e.Message);
+            }
+        }
+
+        public async Task<HighlightVideo> GetHighlightVideosById(string highlightId)
+        {
+            try
+            {
+                return await _highlight.Find(hl => hl.Id == highlightId).FirstOrDefaultAsync();
+            }
+            catch (System.Exception e)
+            {
+                throw new System.Exception(e.Message);
+            }
+        }
     }
 }

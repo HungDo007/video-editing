@@ -30,6 +30,8 @@ namespace video_editing_api.Service.VideoEditing
         Task<bool> DeleteHighlight(string id);
 
         Task<List<HighlightVideo>> GetHighlightVideos();
+        Task<List<HighlightVideo>> GetHighlightVideosForMatch(string matchId);
+        Task<HighlightVideo> GetHighlightVideosById(string highlightId);
 
         Task<string> UploadVideoForMatch(string Id, IFormFile file);
         Task<bool> Up(string matchId, List<TrimVideoHightlightModel> models);

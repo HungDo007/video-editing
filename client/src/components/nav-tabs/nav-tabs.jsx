@@ -24,11 +24,11 @@ function ResponsiveDrawer(props) {
   const [listItem, setListItem] = React.useState(() => {
     const listItem = [
       { name: "Match", url: "/", icon: <AirplayIcon /> },
-      {
-        name: "Highlight",
-        url: "/highlight-review",
-        icon: <PreviewIcon />,
-      },
+      // {
+      //   name: "Highlight",
+      //   url: "/highlight-review",
+      //   icon: <PreviewIcon />,
+      // },
     ];
     return listItem;
   });

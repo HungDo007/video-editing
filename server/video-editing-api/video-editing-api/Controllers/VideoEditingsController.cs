@@ -159,13 +159,39 @@ namespace video_editing_api.Controllers
             }
         }
 
-        [HttpGet("getHighligth")]
+        [HttpGet("getHighlight")]
         public async Task<IActionResult> GeHighligth()
         {
             try
             {
                 var res = await _videoEditingService.GetHighlightVideos();
                 return Ok(new Response<List<HighlightVideo>>(200, "", res));
+            }
+            catch (System.Exception e)
+            {
+                return BadRequest(new Response<List<HighlightVideo>>(400, e.Message, null));
+            }
+        }
+        [HttpGet("getHighlightOfMatch/{matchId}")]
+        public async Task<IActionResult> GeHighligthOfMatch(string matchId)
+        {
+            try
+            {
+                var res = await _videoEditingService.GetHighlightVideosForMatch(matchId);
+                return Ok(new Response<List<HighlightVideo>>(200, "", res));
+            }
+            catch (System.Exception e)
+            {
+                return BadRequest(new Response<List<HighlightVideo>>(400, e.Message, null));
+            }
+        }
+        [HttpGet("getHighligthById/{highlightId}")]
+        public async Task<IActionResult> GeHighligth(string highlightId)
+        {
+            try
+            {
+                var res = await _videoEditingService.GetHighlightVideosById(highlightId);
+                return Ok(new Response<HighlightVideo>(200, "", res));
             }
             catch (System.Exception e)
             {

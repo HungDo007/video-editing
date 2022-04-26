@@ -28,11 +28,13 @@ import { TablePagination } from "./flugin";
 import videoEditingApi from "../api/video-editing";
 import CustomBar from "./custom/custom-bar";
 import { useLocation } from "react-router-dom";
+import HighlightReview from "./highlight-review";
 
 const VideoInput = () => {
   const [opendialog, setOpenDialog] = useState(false);
   const location = useLocation();
   const videoPlayer = useRef(null);
+  const [flag, setFlag] = useState(true);
   const [matchName, setMatchName] = useState();
   const [scroll, setScroll] = useState("paper");
   const descriptionElementRef = useRef(null);
@@ -53,6 +55,8 @@ const VideoInput = () => {
   const [open, setOpen] = useState(false);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [highlights, setHighlights] = useState();
+
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };
@@ -60,6 +64,17 @@ const VideoInput = () => {
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
+  };
+
+  const getHighlight = async () => {
+    try {
+      var response = await videoEditingApi.getHighlightOfMatch(
+        location.state.row.id
+      );
+      setHighlights(response.data);
+    } catch (error) {
+      console.log(error.response);
+    }
   };
 
   const handleSearchChange = (e) => {
@@ -95,8 +110,7 @@ const VideoInput = () => {
       }
     }, 500);
   };
-  console.log(videoSrc);
-  console.log(videos);
+
   useEffect(() => {
     setRPP(rowsPerPage === -1 ? videos?.length + 1 : rowsPerPage);
   }, [videos, rowsPerPage]);
@@ -135,6 +149,7 @@ const VideoInput = () => {
     };
 
     getData();
+    getHighlight();
   }, []);
 
   useEffect(() => {
@@ -196,7 +211,6 @@ const VideoInput = () => {
       ...body,
       event: payload,
     };
-    console.log(newBody);
     const concatHighlight = async () => {
       try {
         const response = await videoEditingApi.concatHighlight(
@@ -207,8 +221,9 @@ const VideoInput = () => {
         console.log(response);
         setOpen(false);
         setNoti(true);
-        setMessage("Concat Succeed, View result in function Highlight");
+        setMessage("Concat Succeed");
         setTypeNoti("success");
+        getHighlight();
       } catch (error) {
         setOpen(false);
         setNoti(true);
@@ -244,7 +259,6 @@ const VideoInput = () => {
 
   return (
     <Box sx={{ padding: "1% 3%" }}>
-      <p>Index of video: {videoIndex + 1} in table</p>
       <Backdrop
         sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }}
         open={open}
@@ -270,7 +284,7 @@ const VideoInput = () => {
           }}
           id="scroll-dialog-title"
         >
-          <h4>Concat Video Selected</h4>
+          <b>Concat Video Selected</b>
           <TextField
             sx={{
               width: "50%",
@@ -296,6 +310,7 @@ const VideoInput = () => {
             id="scroll-dialog-description"
             ref={descriptionElementRef}
             tabIndex={-1}
+            minHeight="60vh"
           >
             <Table>
               <TableHead>
@@ -689,11 +704,15 @@ const VideoInput = () => {
           )}
         </TableBody>
       </Table>
-      <Box sx={{ textAlign: "center", marginTop: 5 }}>
+      <Box sx={{ textAlign: "center", margin: 2 }}>
         <Button variant="contained" onClick={handleEditVideo}>
           Finish
         </Button>
       </Box>
+      <div
+        style={{ height: 3, backgroundColor: "black", marginBottom: "15px" }}
+      ></div>
+      <HighlightReview getHighlight={getHighlight} highlights={highlights} />
     </Box>
   );
 };

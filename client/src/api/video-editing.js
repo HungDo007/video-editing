@@ -32,9 +32,18 @@ const videoEditingApi = {
   },
 
   getHighlight: () => {
-    const url = "/VideoEditings/getHighligth";
+    const url = "/VideoEditings/getHighlight";
     return axiosClient.get(url);
   },
+
+  getHighlightOfMatch: (matchId) => {
+    console.log("vo ne", matchId);
+    const url = `/VideoEditings/getHighlightOfMatch/${matchId}`;
+    const a = axiosClient.get(url);
+    console.log(a);
+    return a;
+  },
+
   deleteHighlight: (id) => {
     const url = `/VideoEditings/deleteHighlight/${id}`;
     return axiosClient.delete(url);

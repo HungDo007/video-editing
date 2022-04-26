@@ -22,8 +22,9 @@ import videoEditingApi from "../../api/video-editing";
 import ReactPlayer from "react-player";
 import DeleteIcon from "@mui/icons-material/Delete";
 
-function HighlightReview() {
-  const [highlights, setHighlights] = useState();
+function HighlightReview(props) {
+  const { highlights, getHighlight } = props;
+  //const [highlights, setHighlights] = useState();
   const [source, setSource] = useState();
   const [name, setName] = useState();
 
@@ -38,17 +39,18 @@ function HighlightReview() {
 
   const [scroll, setScroll] = useState("paper");
   const descriptionElementRef = React.useRef(null);
-  const getHighlight = async () => {
-    try {
-      var response = await videoEditingApi.getHighlight();
-      setHighlights(response.data);
-    } catch (error) {
-      console.log(error.response);
-    }
-  };
-  useEffect(() => {
-    getHighlight();
-  }, []);
+  // const getHighlight = async () => {
+  //   if (matchId === undefined) return;
+  //   try {
+  //     var response = await videoEditingApi.getHighlightOfMatch(matchId);
+  //     setHighlights(response.data);
+  //   } catch (error) {
+  //     console.log(error.response);
+  //   }
+  // };
+  // useEffect(() => {
+  //   getHighlight();
+  // }, []);
 
   const handleViewClick = (e, url, name) => {
     setName(name);
@@ -134,6 +136,17 @@ function HighlightReview() {
 
       <Table>
         <TableHead>
+          <TableRow sx={{ backgroundColor: "#CEEBF9" }}>
+            <TableCell
+              sx={{
+                border: "1px solid #76BBD9",
+              }}
+              align="center"
+              colSpan={7}
+            >
+              <b>Highlight</b>
+            </TableCell>
+          </TableRow>
           <TableRow sx={{ backgroundColor: "#CEEBF9" }}>
             <TableCell
               key={0}
@@ -318,7 +331,7 @@ function HighlightReview() {
                   border: "1px solid #76BBD9",
                 }}
                 align="center"
-                colSpan={5}
+                colSpan={7}
               >
                 No data
               </TableCell>
