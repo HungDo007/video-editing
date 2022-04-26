@@ -216,6 +216,7 @@ const VideoInput = () => {
         setTypeNoti("error");
       }
     };
+    setOpenDialog(false);
     setOpen(true);
     concatHighlight();
   };
