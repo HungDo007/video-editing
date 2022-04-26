@@ -4,7 +4,6 @@ import SearchIcon from "@mui/icons-material/Search";
 import {
   Box,
   Button,
-  Typography,
   Checkbox,
   Slider,
   Table,
@@ -37,13 +36,13 @@ const VideoInput = () => {
   const [matchName, setMatchName] = useState();
   const [scroll, setScroll] = useState("paper");
   const descriptionElementRef = useRef(null);
-
+  const [hlDescription, setHlDescription] = useState("");
   const [noti, setNoti] = useState(false);
   const [message, setMessage] = useState();
   const [typeNoti, setTypeNoti] = useState();
-
-  const [filtered, setFiltered] = useState();
-
+  const [videoSrc, setVideoSrc] = useState([]);
+  const [filtered, setFiltered] = useState([]);
+  const [dis, setDis] = useState(true);
   const [duration, setDuration] = useState(0);
   const [videoIndex, setVideoIndex] = useState(0);
   const [body, setBody] = useState();
@@ -71,14 +70,51 @@ const VideoInput = () => {
     }
     typingTimeoutRef.current = setTimeout(() => {
       if (value !== "") {
-        console.log(value);
+        const payload = videoSrc.reduce((filter, video) => {
+          if (video.event.includes(value)) {
+            const newVideoInfo = {
+              level: video.level,
+              time: video.time,
+              event: video.event,
+              file_name: video.file_name,
+              players: video.players,
+              ts: [video.ts[0] + video.startTime, video.ts[0] + video.endTime],
+            };
+            filter.push(newVideoInfo);
+          }
+          return filter;
+        }, []);
+        setVideos(payload);
+      } else {
+        const payload = videoSrc.reduce((filter, video) => {
+          filter.push(video);
+          return filter;
+        }, []);
+        setVideos(payload);
+        setVideos(payload);
       }
     }, 500);
   };
-
+  console.log(videoSrc);
+  console.log(videos);
   useEffect(() => {
     setRPP(rowsPerPage === -1 ? videos?.length + 1 : rowsPerPage);
   }, [videos, rowsPerPage]);
+
+  useEffect(() => {
+    const a = filtered.filter((fil) => {
+      if (fil.selected) {
+        return true;
+      }
+      return false;
+    }).length;
+    console.log(a);
+    if (a > 0) {
+      setDis(false);
+    } else {
+      setDis(true);
+    }
+  }, [filtered]);
 
   useEffect(() => {
     const getData = async () => {
@@ -86,7 +122,7 @@ const VideoInput = () => {
       const response = await videoEditingApi.getMatchById({
         Id: location.state.row.id,
       });
-      console.log(response);
+
       setBody(response.data.jsonFile);
       const videos = response.data.jsonFile.event.map((video) => ({
         ...video,
@@ -94,12 +130,20 @@ const VideoInput = () => {
         startTime: videoPieceTime[0],
         endTime: videoPieceTime[1],
       }));
-      setVideos(videos);
+      setVideoSrc(videos);
       setMatchName(response.data.jsonFile.match_name);
     };
 
     getData();
   }, []);
+
+  useEffect(() => {
+    const payload = videoSrc.reduce((filtered, video) => {
+      filtered.push(video);
+      return filtered;
+    }, []);
+    setVideos(payload);
+  }, [videoSrc?.length]);
 
   const handleDuration = (duration) => {
     setDuration(duration);
@@ -108,17 +152,22 @@ const VideoInput = () => {
   const handleSlideChange = (event, newValue) => {
     setVideoPieceTime(newValue);
     const newVideos = [...videos];
-
+    const newVideoSrc = [...videoSrc];
     newVideos[page * rowsPerPage + videoIndex].startTime = newValue[0];
     newVideos[page * rowsPerPage + videoIndex].endTime = newValue[1];
     newVideos[page * rowsPerPage + videoIndex].selected = true;
+    const vdSrc = newVideoSrc.findIndex(
+      (vid) =>
+        vid.file_name === newVideos[page * rowsPerPage + videoIndex].file_name
+    );
     setVideos(newVideos);
-
+    newVideoSrc[vdSrc].selected = true;
+    setVideoSrc(newVideoSrc);
     videoPlayer.current.seekTo(newValue[0], "seconds");
   };
 
   const handleEditVideo = () => {
-    const payload = videos.reduce((filtered, video) => {
+    const payload = videoSrc.reduce((filtered, video) => {
       if (video.selected) {
         filtered.push(video);
       }
@@ -127,7 +176,7 @@ const VideoInput = () => {
     setFiltered(payload);
     setOpenDialog(true);
   };
-  console.log(filtered);
+
   const handleSendServer = () => {
     const payload = filtered.reduce((filter, video) => {
       if (video.selected) {
@@ -152,6 +201,7 @@ const VideoInput = () => {
       try {
         const response = await videoEditingApi.concatHighlight(
           location.state.row.id,
+          hlDescription,
           newBody
         );
         console.log(response);
@@ -159,8 +209,6 @@ const VideoInput = () => {
         setNoti(true);
         setMessage("Concat Succeed, View result in function Highlight");
         setTypeNoti("success");
-        // setVideoResult(response.data);
-        // setOpenDialog(true);
       } catch (error) {
         setOpen(false);
         setNoti(true);
@@ -176,9 +224,15 @@ const VideoInput = () => {
   };
   const handdelchange = (e, video) => {
     const newVideos = [...videos];
-    const a = newVideos.findIndex((vid) => vid.file_name === video.file_name);
-    newVideos[a].selected = e.target.checked;
+    const newVideoSrc = [...videoSrc];
+    const vd = newVideos.findIndex((vid) => vid.file_name === video.file_name);
+    const vdSrc = newVideoSrc.findIndex(
+      (vid) => vid.file_name === video.file_name
+    );
+    newVideos[vd].selected = e.target.checked;
+    newVideoSrc[vdSrc].selected = e.target.checked;
     setVideos(newVideos);
+    setVideoSrc(newVideoSrc);
   };
   const handleReviewChange = (e, video) => {
     const newVideos = [...filtered];
@@ -186,6 +240,7 @@ const VideoInput = () => {
     newVideos[a].selected = e.target.checked;
     setFiltered(newVideos);
   };
+
   return (
     <Box sx={{ padding: "1% 3%" }}>
       <p>Index of video: {videoIndex + 1} in table</p>
@@ -215,7 +270,23 @@ const VideoInput = () => {
           id="scroll-dialog-title"
         >
           <h4>Concat Video Selected</h4>
-          <Button variant="contained" onClick={handleSendServer}>
+          <TextField
+            sx={{
+              width: "50%",
+              "& fieldset ": {
+                borderColor: "white",
+              },
+            }}
+            InputProps={{
+              sx: { color: "white" },
+            }}
+            value={hlDescription}
+            onChange={(e) => setHlDescription(e.target.value)}
+            multiline
+            small
+            placeholder="Enter description for video highlight"
+          />
+          <Button variant="contained" onClick={handleSendServer} disabled={dis}>
             Upload
           </Button>
         </DialogTitle>

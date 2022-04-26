@@ -21,16 +21,24 @@ const videoEditingApi = {
     return axiosClient.post(url, data);
   },
 
-  concatHighlight: (matchId, data) => {
-    const url = `/VideoEditings/concatHighlight/${matchId}`;
-    return axiosClient.post(url, data);
+  concatHighlight: (matchId, hlDescription, data) => {
+    const url = `/VideoEditings/concatHighlight`;
+    const body = {
+      matchId: matchId,
+      description: hlDescription,
+      jsonFile: data,
+    };
+    return axiosClient.post(url, body);
   },
 
   getHighlight: () => {
     const url = "/VideoEditings/getHighligth";
     return axiosClient.get(url);
   },
-
+  deleteHighlight: (id) => {
+    const url = `/VideoEditings/deleteHighlight/${id}`;
+    return axiosClient.delete(url);
+  },
   deleteMatch: (id) => {
     const url = `/VideoEditings/deleteMatch/${id}`;
     return axiosClient.delete(url);

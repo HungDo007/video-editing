@@ -25,7 +25,10 @@ namespace video_editing_api.Service.VideoEditing
 
 
         string UploadVideo(string Id, IFormFile file);
-        Task<string> ConcatVideoOfMatch(string matchId, InputSendServer file);
+        Task<string> ConcatVideoOfMatch(ConcatModel concatModel);
+
+        Task<bool> DeleteHighlight(string id);
+
         Task<List<HighlightVideo>> GetHighlightVideos();
 
         Task<string> UploadVideoForMatch(string Id, IFormFile file);

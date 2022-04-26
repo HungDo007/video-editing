@@ -523,16 +523,16 @@ namespace video_editing_api.Service.VideoEditing
             }
         }
 
-        public async Task<string> ConcatVideoOfMatch(string matchId, InputSendServer file)
+        public async Task<string> ConcatVideoOfMatch(ConcatModel concatModel)
         {
 
             try
             {
-                var match = _matchInfo.Find(x => x.Id == matchId).First();
+                var match = _matchInfo.Find(x => x.Id == concatModel.MatchId).First();
 
                 HttpClient client = new HttpClient();
                 client.BaseAddress = new System.Uri("http://118.69.218.59:7007");
-                var json = JsonConvert.SerializeObject(file);
+                var json = JsonConvert.SerializeObject(concatModel.JsonFile);
                 json = json.Replace("E", "e");
                 var httpContent = new StringContent(json, Encoding.UTF8, "application/json");
                 var response = await client.PostAsync("/highlight", httpContent);
@@ -542,7 +542,8 @@ namespace video_editing_api.Service.VideoEditing
 
                 HighlightVideo hl = new HighlightVideo()
                 {
-                    MatchId = matchId,
+                    MatchId = concatModel.MatchId,
+                    Description = concatModel.Description,
                     mp4 = model.mp4,
                     ts = model.ts,
                     MatchInfo = $"({match.MatchName})T({match.MactchTime.ToString("dd-MM-yyyy-hh-mm")})"
@@ -575,6 +576,19 @@ namespace video_editing_api.Service.VideoEditing
             catch (System.Exception ex)
             {
                 throw new System.Exception(ex.Message);
+            }
+        }
+
+        public async Task<bool> DeleteHighlight(string id)
+        {
+            try
+            {
+                await _highlight.DeleteOneAsync(hl => hl.Id == id);
+                return true;
+            }
+            catch (System.Exception e)
+            {
+                throw new System.Exception(e.Message);
             }
         }
     }

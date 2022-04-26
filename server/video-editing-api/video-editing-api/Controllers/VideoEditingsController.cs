@@ -145,7 +145,19 @@ namespace video_editing_api.Controllers
             }
         }
 
-
+        [HttpDelete("deleteHighlight/{id}")]
+        public async Task<IActionResult> DeleteHighlight(string id)
+        {
+            try
+            {
+                var result = await _videoEditingService.DeleteHighlight(id);
+                return Ok(new Response<bool>(200, "", result));
+            }
+            catch (System.Exception e)
+            {
+                return BadRequest(new Response<string>(400, e.Message, null));
+            }
+        }
 
         [HttpGet("getHighligth")]
         public async Task<IActionResult> GeHighligth()
@@ -160,12 +172,12 @@ namespace video_editing_api.Controllers
                 return BadRequest(new Response<List<HighlightVideo>>(400, e.Message, null));
             }
         }
-        [HttpPost("concatHighlight/{matchId}")]
-        public async Task<IActionResult> ConcatVideo(string matchId, InputSendServer file)
+        [HttpPost("concatHighlight")]
+        public async Task<IActionResult> ConcatVideo(ConcatModel concatModel)
         {
             try
             {
-                var res = await _videoEditingService.ConcatVideoOfMatch(matchId, file);
+                var res = await _videoEditingService.ConcatVideoOfMatch(concatModel);
                 return Ok(new Response<string>(200, "", res));
             }
             catch (System.Exception e)

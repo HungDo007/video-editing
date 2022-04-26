@@ -15,9 +15,12 @@ import {
   DialogTitle,
   DialogContent,
   DialogContentText,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import videoEditingApi from "../../api/video-editing";
 import ReactPlayer from "react-player";
+import DeleteIcon from "@mui/icons-material/Delete";
 
 function HighlightReview() {
   const [highlights, setHighlights] = useState();
@@ -28,18 +31,22 @@ function HighlightReview() {
   const handleClose = () => {
     setOpenDialog(false);
   };
+
+  const [noti, setNoti] = useState(false);
+  const [message, setMessage] = useState();
+  const [typeNoti, setTypeNoti] = useState();
+
   const [scroll, setScroll] = useState("paper");
   const descriptionElementRef = React.useRef(null);
-
+  const getHighlight = async () => {
+    try {
+      var response = await videoEditingApi.getHighlight();
+      setHighlights(response.data);
+    } catch (error) {
+      console.log(error.response);
+    }
+  };
   useEffect(() => {
-    const getHighlight = async () => {
-      try {
-        var response = await videoEditingApi.getHighlight();
-        setHighlights(response.data);
-      } catch (error) {
-        console.log(error.response);
-      }
-    };
     getHighlight();
   }, []);
 
@@ -49,8 +56,38 @@ function HighlightReview() {
     setSource(url);
   };
 
+  const handleDeleteClick = (e, row) => {
+    const deleteMatch = async (id) => {
+      try {
+        await videoEditingApi.deleteHighlight(id);
+        setNoti(true);
+        setMessage("Delete Succeed");
+        setTypeNoti("success");
+        getHighlight();
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    deleteMatch(row.id);
+  };
+
   return (
     <>
+      <Snackbar
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+        open={noti}
+        autoHideDuration={5000}
+        onClose={() => setNoti(false)}
+      >
+        <Alert
+          onClose={() => setNoti(false)}
+          severity={typeNoti}
+          sx={{ width: "100%" }}
+        >
+          {message}
+        </Alert>
+      </Snackbar>
+
       <Dialog
         open={opendialog}
         onClose={handleClose}
@@ -129,7 +166,25 @@ function HighlightReview() {
               <b>Times</b>
             </TableCell>
             <TableCell
+              key={12}
+              sx={{
+                border: "1px solid #76BBD9",
+                padding: 1,
+              }}
+              align="center"
+            >
+              <b>Description</b>
+            </TableCell>
+            <TableCell
               key={3}
+              sx={{
+                border: "1px solid #76BBD9",
+                padding: 1,
+              }}
+              align="center"
+            />
+            <TableCell
+              key={41}
               sx={{
                 border: "1px solid #76BBD9",
                 padding: 1,
@@ -187,6 +242,16 @@ function HighlightReview() {
                 )}
               </TableCell>
               <TableCell
+                key={13}
+                sx={{
+                  border: "1px solid #76BBD9",
+                  padding: 1,
+                }}
+                align="center"
+              >
+                {highlight.description}
+              </TableCell>
+              <TableCell
                 key={7}
                 sx={{
                   border: "1px solid #76BBD9",
@@ -222,6 +287,25 @@ function HighlightReview() {
                 <Tooltip title="Download" placement="right">
                   <IconButton href={highlight.ts} target="_blank">
                     <CloudDownloadIcon />
+                  </IconButton>
+                </Tooltip>
+              </TableCell>
+              <TableCell
+                key={8}
+                sx={{
+                  border: "1px solid #76BBD9",
+                  padding: 1,
+                }}
+                align="center"
+              >
+                <Tooltip key={i} title="Delete Match" placement="top">
+                  <IconButton
+                    aria-label="delete"
+                    onClick={(e) => {
+                      handleDeleteClick(e, highlight);
+                    }}
+                  >
+                    <DeleteIcon />
                   </IconButton>
                 </Tooltip>
               </TableCell>
