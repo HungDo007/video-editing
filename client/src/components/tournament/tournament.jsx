@@ -40,7 +40,7 @@ const Tournament = () => {
   const [uploadId, setUploadId] = useState();
   const [tournament, setTournament] = useState();
   const [matchName, setMatchName] = useState();
-  const [time, setTime] = useState();
+  const [time, setTime] = useState(new Date());
   const [channel, setChannel] = useState();
   const [ip, setIp] = useState();
   const [port, setPort] = useState();
@@ -76,14 +76,15 @@ const Tournament = () => {
 
   const handleSubmit = (event) => {
     event.preventDefault();
+
     const payload = {
       tournamentId: tournament.id,
       matchName: matchName,
       mactchTime: `${time
         .toLocaleString("sv", { timeZoneName: "short" })
-        .substring(0, 10)}T${time
-        .toLocaleString("sv", { timeZoneName: "short" })
-        .substring(11, 19)}.000Z`,
+        .substring(0, 10)}T${("0" + time.getHours()).slice(-2)}:${(
+        "0" + time.getMinutes()
+      ).slice(-2)}:${("0" + time.getSeconds()).slice(-2)}.000Z`,
       channel: channel,
       ip: ip,
       port: port,
