@@ -18,6 +18,7 @@ import {
   SidebarHeader,
   SubMenu,
 } from "react-pro-sidebar";
+import Header from "./header";
 
 function ResponsiveDrawer(props) {
   const [collapsed, setCollapsed] = React.useState(true);
@@ -103,6 +104,7 @@ function ResponsiveDrawer(props) {
           </SidebarFooter>
         </ProSidebar>
         <main>
+          <Header />
           <Grid container direction="row">
             <Grid item style={{ width: "100%", padding: "3%" }}>
               {props.children}

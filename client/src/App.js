@@ -1,14 +1,10 @@
-import NavTabs from "./components/nav-tabs/nav-tabs";
-
 import "./App.css";
-import RoutePath from "./components/route-path/route-path";
+import RootRouters from "./components/route-path/RootRoutePath";
 
 function App() {
   return (
     <div className="App">
-      <NavTabs>
-        <RoutePath />
-      </NavTabs>
+      <RootRouters />
     </div>
   );
 }
