@@ -34,6 +34,7 @@ function Header() {
   let navigate = useNavigate();
   const handleLogout = () => {
     Cookies.remove("Token");
+    localStorage.removeItem("fullName");
     navigate("/login");
   };
   return (

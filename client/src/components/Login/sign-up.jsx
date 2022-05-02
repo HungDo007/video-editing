@@ -11,9 +11,36 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import background from "./bg.jpg";
+import { userApi } from "../../api";
+
+function isAllPresent(str) {
+  // Regex to check if a string
+  // contains uppercase, lowercase
+  // special character & numeric value
+  var pattern = new RegExp(
+    "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[-+_!@#$%^&*.,?]).+$"
+  );
+
+  // If the string is empty
+  // then print No
+  if (!str || str.length < 8) {
+    //không đử độ dài
+    return true;
+  }
+
+  // Print Yes If the string matches
+  // with the Regex
+  if (pattern.test(str)) {
+    //thỏa điều kiện
+    return false;
+  } else {
+    //không thỏa đk
+    return true;
+  }
+}
 
 const style = {
   backgroundImage: `url(${background})`,
@@ -32,11 +59,16 @@ function SignUp() {
   const [suc, setSuc] = useState(false);
   const [time, setTime] = useState(3);
   let navigate = useNavigate();
+  const [fullName, setFullName] = useState("");
   const [message, setMessage] = useState("");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [errPassword, setErrPassword] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState();
+  const [errConfirmPassword, setConfirmErrPassword] = useState(false);
+
+  const [errForm, setErrForm] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const handleClickShowPassword = () => setShowPassword(!showPassword);
@@ -54,23 +86,52 @@ function SignUp() {
     }
     setErr(false);
   };
+
+  useEffect(() => {
+    if (errPassword || errConfirmPassword) {
+      setErrForm(true);
+    } else {
+      setErrForm(false);
+    }
+  }, [errPassword, errConfirmPassword]);
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    setLoading(true);
-
-    setTimeout(() => {
-      setLoading(false);
-      setSuc(true);
-      setTimeout(() => {
-        setTime(2);
-        setTimeout(() => {
-          setTime(1);
+    if (!errForm) {
+      setLoading(true);
+      const body = {
+        username,
+        email,
+        fullName,
+        password,
+      };
+      const signUp = async () => {
+        try {
+          await userApi.signUp(body);
           setTimeout(() => {
-            navigate("/login");
+            setLoading(false);
+            setSuc(true);
+            setTimeout(() => {
+              setTime(2);
+              setTimeout(() => {
+                setTime(1);
+                setTimeout(() => {
+                  navigate("/login");
+                }, 1000);
+              }, 1000);
+            }, 1000);
           }, 1000);
-        }, 1000);
-      }, 1000);
-    }, 1000);
+        } catch (error) {
+          setLoading(false);
+          setErr(true);
+          setMessage(error.response.data.description);
+        }
+      };
+      signUp();
+    } else {
+      setErr(true);
+      setMessage("Please meet the conditions");
+    }
   };
   return (
     <div style={style}>
@@ -156,6 +217,16 @@ function SignUp() {
               onChange={(e) => setEmail(e.target.value)}
             />
           </Grid>
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              label="Full Name"
+              variant="outlined"
+              required
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+            />
+          </Grid>
           <Grid item xs={6}>
             <TextField
               label="Password"
@@ -164,7 +235,17 @@ function SignUp() {
               required
               type={showPassword ? "text" : "password"}
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                setErrPassword(isAllPresent(e.target.value));
+                if (confirmPassword !== undefined) setConfirmErrPassword(true);
+              }}
+              error={errPassword}
+              helperText={
+                errPassword
+                  ? "Password must contain at least one numeric character, uppercase letter, lowercase character and special character"
+                  : ""
+              }
               InputProps={{
                 // <-- This is where the toggle button is added.
                 endAdornment: (
@@ -189,7 +270,12 @@ function SignUp() {
               required
               type={showPassword ? "text" : "password"}
               value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
+              error={errConfirmPassword}
+              helperText={errConfirmPassword ? "Two passwords don't match" : ""}
+              onChange={(e) => {
+                setConfirmPassword(e.target.value);
+                setConfirmErrPassword(password !== e.target.value);
+              }}
               InputProps={{
                 // <-- This is where the toggle button is added.
                 endAdornment: (

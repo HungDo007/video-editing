@@ -5,6 +5,7 @@ import ReorderIcon from "@mui/icons-material/Reorder";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import AirplayIcon from "@mui/icons-material/Airplay";
 import PreviewIcon from "@mui/icons-material/Preview";
+import ScrollToTop from "react-scroll-to-top";
 
 import { Grid } from "@mui/material";
 
@@ -106,10 +107,11 @@ function ResponsiveDrawer(props) {
         <main>
           <Header />
           <Grid container direction="row">
-            <Grid item style={{ width: "100%", padding: "3%" }}>
+            <Grid item style={{ width: "100%", padding: "2% 5%" }}>
               {props.children}
             </Grid>
           </Grid>
+          <ScrollToTop smooth style={{ right: "20px", bottom: "20px" }} />
         </main>
       </div>
     </>

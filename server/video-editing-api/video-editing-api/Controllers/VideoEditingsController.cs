@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.IO;
@@ -12,6 +13,7 @@ namespace video_editing_api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class VideoEditingsController : ControllerBase
     {
         private readonly IVideoEditingService _videoEditingService;
@@ -97,7 +99,7 @@ namespace video_editing_api.Controllers
         {
             try
             {
-                var result = await _videoEditingService.GetMatchInfo(Id);
+                var result = await _videoEditingService.GetInfoOfMatch(Id);
                 return Ok(new Response<MatchInfo>(200, "", result));
             }
             catch (System.Exception e)
@@ -110,7 +112,8 @@ namespace video_editing_api.Controllers
         {
             try
             {
-                var result = await _videoEditingService.GetMatchInfo();
+                var username = User.Identity.Name;
+                var result = await _videoEditingService.GetMatchInfo(username);
                 return Ok(new Response<List<MatchInfo>>(200, "", result));
             }
             catch (System.Exception e)
@@ -123,7 +126,8 @@ namespace video_editing_api.Controllers
         {
             try
             {
-                var result = await _videoEditingService.AddMatchInfo(matchInfo);
+                var username = User.Identity.Name;
+                var result = await _videoEditingService.AddMatchInfo(username, matchInfo);
                 return Ok(new Response<string>(200, "", result));
             }
             catch (System.Exception e)

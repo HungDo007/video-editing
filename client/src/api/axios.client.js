@@ -1,5 +1,6 @@
 import axios from "axios";
 import queryString from "query-string";
+import Cookies from "js-cookie";
 
 //set up default config here
 
@@ -13,10 +14,10 @@ const axiosClient = axios.create({
 
 axiosClient.interceptors.request.use(async (config) => {
   //handle token here
-  //   const token = localStorage.getItem("jwtToken");
-  //   if (token) {
-  //     config.headers.Authorization = `Bearer ${token}`;
-  //   }
+  const token = Cookies.get("Token");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
   return config;
 });
 

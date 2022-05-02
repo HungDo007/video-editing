@@ -15,6 +15,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import background from "./bg.jpg";
 import Cookies from "js-cookie";
+import { userApi } from "../../api";
 
 const style = {
   backgroundImage: `url(${background})`,
@@ -49,12 +50,26 @@ function Login() {
   const handleSubmit = (e) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      Cookies.set("Token", "testtoken");
-      localStorage.setItem("fullName", "User Test");
-      navigate("/");
-    }, 1000);
+
+    const login = async () => {
+      try {
+        const body = {
+          username,
+          password,
+        };
+        var response = await userApi.signIn(body);
+        setLoading(false);
+        Cookies.set("Token", response.data.token);
+        localStorage.setItem("fullName", response.data.fullName);
+        navigate("/");
+      } catch (error) {
+        setLoading(false);
+        setErr(true);
+        setMessage(error.response.data.description);
+        //console.log(error.response.data.description);
+      }
+    };
+    login();
   };
 
   return (

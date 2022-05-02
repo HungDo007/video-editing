@@ -121,7 +121,7 @@ namespace video_editing_api.Service.VideoEditing
 
 
         #region MatchInfo
-        public async Task<MatchInfo> GetMatchInfo(string id)
+        public async Task<MatchInfo> GetInfoOfMatch(string id)
         {
             try
             {
@@ -149,12 +149,13 @@ namespace video_editing_api.Service.VideoEditing
                 throw new System.Exception(e.Message);
             }
         }
-        public async Task<List<MatchInfo>> GetMatchInfo()
+        public async Task<List<MatchInfo>> GetMatchInfo(string username)
         {
             try
             {
                 var res = (from m in _matchInfo.AsQueryable()
                            join t in _tournament.AsQueryable() on m.TournamentId equals t.Id
+                           where m.Username == username
                            select new MatchInfo
                            {
                                Id = m.Id,
@@ -176,10 +177,11 @@ namespace video_editing_api.Service.VideoEditing
                 throw new System.Exception(e.Message);
             }
         }
-        public async Task<string> AddMatchInfo(MatchInfo matchInfo)
+        public async Task<string> AddMatchInfo(string username, MatchInfo matchInfo)
         {
             try
             {
+                matchInfo.Username = username;
                 await _matchInfo.InsertOneAsync(matchInfo);
                 return "Succeed";
             }

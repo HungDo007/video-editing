@@ -11,7 +11,9 @@ namespace video_editing_api.Model.Collection
         [BsonRepresentation(MongoDB.Bson.BsonType.ObjectId)]
         public string Id { get; set; }
         [BsonRepresentation(MongoDB.Bson.BsonType.ObjectId)]
+
         public string TournamentId { get; set; }
+        public string Username { get; set; }
         public string TournametName { get; set; }
         public string MatchName { get; set; }
         public DateTime MactchTime { get; set; }
