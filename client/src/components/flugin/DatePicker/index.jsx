@@ -16,7 +16,7 @@ import { TextField } from "@mui/material";
 // }
 
 function CustomDatePicker(props) {
-  const { value, onChange } = props;
+  const { value, onChange, variant } = props;
 
   // const preHandleChange=(e)=>{
   //     const a = convert(e)
@@ -35,6 +35,7 @@ function CustomDatePicker(props) {
             inputProps={{
               ...params.inputProps,
             }}
+            variant={variant}
             size="small"
             fullWidth
           />

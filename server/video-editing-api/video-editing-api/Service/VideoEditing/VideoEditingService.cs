@@ -182,7 +182,16 @@ namespace video_editing_api.Service.VideoEditing
             try
             {
                 matchInfo.Username = username;
-                await _matchInfo.InsertOneAsync(matchInfo);
+                if (matchInfo.TournamentId != null)
+                    await _matchInfo.InsertOneAsync(matchInfo);
+                else
+                {
+                    var tournament = new Tournament() { Name = matchInfo.TournametName };
+                    await _tournament.InsertOneAsync(tournament);
+                    var idTournament = tournament.Id;
+                    matchInfo.TournamentId = idTournament;
+                    await _matchInfo.InsertOneAsync(matchInfo);
+                }
                 return "Succeed";
             }
             catch (System.Exception e)

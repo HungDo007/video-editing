@@ -19,9 +19,13 @@ import {
   Dialog,
   DialogContent,
   DialogContentText,
+  Autocomplete,
+  InputAdornment,
 } from "@mui/material";
 import videoEditingApi from "../../api/video-editing";
 import DeleteIcon from "@mui/icons-material/Delete";
+import AddIcon from "@mui/icons-material/Add";
+import ArrowLeftIcon from "@mui/icons-material/ArrowLeft";
 //import "./tournament.styles.scss";
 import CustomCircularProgress from "../custom/custom-circular-progress";
 import CancelOutlinedIcon from "@mui/icons-material/CancelOutlined";
@@ -35,6 +39,7 @@ const Tournament = () => {
   const [opendialog, setOpenDialog] = useState(false);
   const [matches, setMatches] = useState([]);
   const [tournaments, setTournaments] = useState([]);
+  const [tournamentName, setTournamentName] = useState();
   const [scroll, setScroll] = useState("paper");
   const descriptionElementRef = useRef(null);
   const [uploadId, setUploadId] = useState();
@@ -45,6 +50,7 @@ const Tournament = () => {
   const [ip, setIp] = useState();
   const [port, setPort] = useState();
 
+  const [hidden, setHidden] = useState(true);
   const [noti, setNoti] = useState(false);
   const [message, setMessage] = useState();
   const [typeNoti, setTypeNoti] = useState();
@@ -54,20 +60,18 @@ const Tournament = () => {
   let navigate = useNavigate();
 
   const handleDateChange = (date) => {
-    console.log(date);
-    var a = time.toLocaleString("sv", { timeZoneName: "short" });
-    console.log(`${a.substring(0, 10)}T${a.substring(11, 19)}`);
+    // var a = time.toLocaleString("sv", { timeZoneName: "short" });
+    // console.log(`${a.substring(0, 10)}T${a.substring(11, 19)}`);
     setTime(date);
   };
 
   const handleTournamentChange = (e, value) => {
     setTournament(value);
   };
-
+  console.log(tournament);
   const getMatches = async () => {
     try {
       const response = await videoEditingApi.getMatches();
-      console.log(response.data);
       setMatches(response.data);
     } catch (error) {
       console.log(error);
@@ -76,9 +80,11 @@ const Tournament = () => {
 
   const handleSubmit = (event) => {
     event.preventDefault();
-
+    var a = hidden ? tournament.id : null;
+    var b = hidden ? null : tournamentName;
     const payload = {
-      tournamentId: tournament.id,
+      tournamentId: a,
+      tournametName: b,
       matchName: matchName,
       mactchTime: `${time
         .toLocaleString("sv", { timeZoneName: "short" })
@@ -174,7 +180,6 @@ const Tournament = () => {
   };
   const handleFileChange = (file) => {
     setFile(file);
-    console.log(file);
   };
   return (
     <>
@@ -242,24 +247,81 @@ const Tournament = () => {
           <Grid item xs={3}>
             Tournament
           </Grid>
-          <Grid item xs={9}>
-            <CustomSelect
-              options={tournaments}
-              labelRender="name"
-              value={tournament}
-              require={true}
-              placeholder="Select or enter Tournament"
-              onChange={handleTournamentChange}
-            />
-          </Grid>
 
+          <Grid item xs={9}>
+            <div hidden={!hidden}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                }}
+              >
+                <Tooltip title="Add new option for Tournament" placement="top">
+                  <IconButton
+                    color="primary"
+                    onClick={() => setHidden(!hidden)}
+                  >
+                    <AddIcon />
+                  </IconButton>
+                </Tooltip>
+                <Autocomplete
+                  options={tournaments ? tournaments : []}
+                  size="small"
+                  value={tournament || null}
+                  fullWidth
+                  getOptionLabel={(option) => option["name"] || ""}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      placeholder="Select or enter Tournament"
+                      variant="standard"
+                      required={hidden}
+                      inputProps={{
+                        ...params.inputProps,
+                      }}
+                    />
+                  )}
+                  onChange={handleTournamentChange}
+                />
+              </div>
+            </div>
+            <div hidden={hidden}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                }}
+              >
+                <Tooltip title="Back to select Tournament" placement="top">
+                  <IconButton
+                    color="primary"
+                    onClick={() => setHidden(!hidden)}
+                  >
+                    <ArrowLeftIcon />
+                  </IconButton>
+                </Tooltip>
+                <TextField
+                  value={tournamentName}
+                  variant="standard"
+                  size="small"
+                  onChange={(e) => setTournamentName(e.target.value)}
+                  fullWidth
+                  required={!hidden}
+                  placeholder="Enter Tournament Name"
+                />
+              </div>
+            </div>
+          </Grid>
+          {/* <Grid item xs={0.5}>
+            
+          </Grid> */}
           <Grid item xs={3}>
             Match
           </Grid>
           <Grid item xs={9}>
             <TextField
               value={matchName}
-              variant="outlined"
+              variant="standard"
               size="small"
               onChange={(e) => setMatchName(e.target.value)}
               fullWidth
@@ -272,7 +334,11 @@ const Tournament = () => {
             Time
           </Grid>
           <Grid item xs={9}>
-            <CustomDatePicker value={time} onChange={handleDateChange} />
+            <CustomDatePicker
+              variant="standard"
+              value={time}
+              onChange={handleDateChange}
+            />
           </Grid>
 
           <Grid item xs={3}>
@@ -281,7 +347,7 @@ const Tournament = () => {
           <Grid item xs={9}>
             <TextField
               value={channel}
-              variant="outlined"
+              variant="standard"
               size="small"
               onChange={(e) => setChannel(e.target.value)}
               fullWidth
@@ -295,7 +361,7 @@ const Tournament = () => {
           <Grid item xs={5}>
             <TextField
               value={ip}
-              variant="outlined"
+              variant="standard"
               size="small"
               onChange={(e) => setIp(e.target.value)}
               fullWidth
@@ -310,7 +376,7 @@ const Tournament = () => {
           <Grid item xs={3}>
             <TextField
               value={port}
-              variant="outlined"
+              variant="standard"
               size="small"
               onChange={(e) => setPort(e.target.value)}
               fullWidth
