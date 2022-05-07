@@ -2,8 +2,9 @@ import { Tooltip } from "@mui/material";
 import "./custom-bar.styles.scss";
 
 //const CustomBar = ({ videos, duration, setIndex }) => {
-const CustomBar = ({ videos, setIndex }) => {
+const CustomBar = ({ idx, videos, setIndex }) => {
   const handleClick = (index) => {
+    console.log(index);
     setIndex(index);
   };
   return (
@@ -29,6 +30,7 @@ const CustomBar = ({ videos, setIndex }) => {
                 className="bar-item"
                 style={{
                   // marginLeft: "20px",
+                  backgroundColor: index === idx ? "red" : "inherit",
                   position: "relative",
                   //left: `${percent}%`,
                 }}

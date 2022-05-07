@@ -32,7 +32,7 @@ function TablePagination(props) {
         value={rowsPerPage}
         onChange={handleChangeRowsPerPage}
         size="small"
-        style={{ fontSize: "0.7rem" }}
+        style={{ fontSize: "0.9rem" }}
       >
         <MenuItem value={5}>5</MenuItem>
         <MenuItem value={10}>10</MenuItem>
@@ -46,12 +46,12 @@ function TablePagination(props) {
         <IconButton onClick={handleBackButtonClick} disabled={page === 0}>
           <KeyboardArrowLeft />
         </IconButton>
-        <small>
-          {page + 1}/
-          {Math.max(0, Math.ceil(count / rowsPerPage)) === 0
-            ? 1
-            : Math.max(0, Math.ceil(count / rowsPerPage))}
-        </small>
+        {/* <small> */}
+        {page + 1}/
+        {Math.max(0, Math.ceil(count / rowsPerPage)) === 0
+          ? 1
+          : Math.max(0, Math.ceil(count / rowsPerPage))}
+        {/* </small> */}
         <IconButton
           onClick={handleNextButtonClick}
           disabled={page >= Math.ceil(count / rowsPerPage) - 1}
@@ -64,8 +64,9 @@ function TablePagination(props) {
         >
           <LastPageIcon />
         </IconButton>
-
-        <small>Total: {count}</small>
+        {/* <small> */}
+        Total: {count}
+        {/* </small> */}
       </Box>
     </div>
   );

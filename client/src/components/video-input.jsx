@@ -239,6 +239,7 @@ const VideoInput = () => {
     setOpenDialog(false);
   };
   const handdelchange = (e, video) => {
+    console.log("fff");
     const newVideos = [...videos];
     const newVideoSrc = [...videoSrc];
     const vd = newVideos.findIndex((vid) => vid.file_name === video.file_name);
@@ -257,6 +258,9 @@ const VideoInput = () => {
     setFiltered(newVideos);
   };
 
+  const handleTableClick = (index) => {
+    setVideoIndex(index);
+  };
   return (
     <Box sx={{ padding: "1% 3%" }}>
       <Backdrop
@@ -516,6 +520,7 @@ const VideoInput = () => {
       </Box>
       <CustomBar
         videos={videos?.slice(page * rPP, page * rPP + rPP)}
+        idx={videoIndex}
         setIndex={setVideoIndex}
       />
       <Table>
@@ -623,7 +628,13 @@ const VideoInput = () => {
         <TableBody>
           {/* style={ {minHeight: '45px' } } */}
           {videos?.slice(page * rPP, page * rPP + rPP).map((video, i) => (
-            <TableRow key={i}>
+            <TableRow
+              key={i}
+              onClick={() => setVideoIndex(i)}
+              style={{
+                backgroundColor: i === videoIndex ? "#FD8E5E" : "white",
+              }}
+            >
               <TableCell
                 key={1}
                 sx={{
