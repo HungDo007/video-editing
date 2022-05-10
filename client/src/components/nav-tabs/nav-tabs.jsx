@@ -107,7 +107,7 @@ function ResponsiveDrawer(props) {
         <main>
           <Header />
           <Grid container direction="row">
-            <Grid item style={{ width: "100%", padding: "2% 5%" }}>
+            <Grid item style={{ width: "100%", padding: "2% 4%" }}>
               {props.children}
             </Grid>
           </Grid>

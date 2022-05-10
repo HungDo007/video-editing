@@ -125,6 +125,7 @@ function HighlightReview(props) {
           >
             <ReactPlayer
               ref={null}
+              playing={true}
               url={source}
               controls
               width="100%"

@@ -17,10 +17,12 @@ import {
   CircularProgress,
   Snackbar,
   Alert,
+  Grid,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogContentText,
+  TableContainer,
 } from "@mui/material";
 
 import ReactPlayer from "react-player";
@@ -34,8 +36,6 @@ const VideoInput = () => {
   const [opendialog, setOpenDialog] = useState(false);
   const location = useLocation();
   const videoPlayer = useRef(null);
-  const [flag, setFlag] = useState(true);
-  const [matchName, setMatchName] = useState();
   const [scroll, setScroll] = useState("paper");
   const descriptionElementRef = useRef(null);
   const [hlDescription, setHlDescription] = useState("");
@@ -61,6 +61,7 @@ const VideoInput = () => {
     setPage(newPage);
   };
 
+  console.log(videos);
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
@@ -93,8 +94,12 @@ const VideoInput = () => {
               event: video.event,
               file_name: video.file_name,
               players: video.players,
-              ts: [video.ts[0] + video.startTime, video.ts[0] + video.endTime],
+              selected: false,
+              endTime: 0,
+              startTime: 0,
+              ts: [video.ts[0], video.ts[1]],
             };
+            //console.log(newVideoInfo);
             filter.push(newVideoInfo);
           }
           return filter;
@@ -102,13 +107,22 @@ const VideoInput = () => {
         setVideos(payload);
       } else {
         const payload = videoSrc.reduce((filter, video) => {
+          //console.log(video);
           filter.push(video);
           return filter;
         }, []);
         setVideos(payload);
-        setVideos(payload);
+        //setVideos(payload);
       }
     }, 500);
+  };
+
+  const formatTimeSlice = (time) => {
+    if (time) {
+      return ("0" + time).slice(-4, -2) + ":" + ("0" + time).slice(-2);
+    } else {
+      return "";
+    }
   };
 
   useEffect(() => {
@@ -122,7 +136,6 @@ const VideoInput = () => {
       }
       return false;
     }).length;
-    console.log(a);
     if (a > 0) {
       setDis(false);
     } else {
@@ -132,7 +145,6 @@ const VideoInput = () => {
 
   useEffect(() => {
     const getData = async () => {
-      console.log(location.state.row.id);
       const response = await videoEditingApi.getMatchById({
         Id: location.state.row.id,
       });
@@ -141,11 +153,10 @@ const VideoInput = () => {
       const videos = response.data.jsonFile.event.map((video) => ({
         ...video,
         selected: false,
-        startTime: videoPieceTime[0],
-        endTime: videoPieceTime[1],
+        startTime: 0,
+        endTime: 0,
       }));
       setVideoSrc(videos);
-      setMatchName(response.data.jsonFile.match_name);
     };
 
     getData();
@@ -211,6 +222,7 @@ const VideoInput = () => {
       ...body,
       event: payload,
     };
+
     const concatHighlight = async () => {
       try {
         const response = await videoEditingApi.concatHighlight(
@@ -238,8 +250,8 @@ const VideoInput = () => {
   const handleClose = () => {
     setOpenDialog(false);
   };
+
   const handdelchange = (e, video) => {
-    console.log("fff");
     const newVideos = [...videos];
     const newVideoSrc = [...videoSrc];
     const vd = newVideos.findIndex((vid) => vid.file_name === video.file_name);
@@ -251,6 +263,7 @@ const VideoInput = () => {
     setVideos(newVideos);
     setVideoSrc(newVideoSrc);
   };
+
   const handleReviewChange = (e, video) => {
     const newVideos = [...filtered];
     const a = newVideos.findIndex((vid) => vid.file_name === video.file_name);
@@ -258,11 +271,8 @@ const VideoInput = () => {
     setFiltered(newVideos);
   };
 
-  const handleTableClick = (index) => {
-    setVideoIndex(index);
-  };
   return (
-    <Box sx={{ padding: "1% 3%" }}>
+    <>
       <Backdrop
         sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }}
         open={open}
@@ -306,7 +316,7 @@ const VideoInput = () => {
             placeholder="Enter description for video highlight"
           />
           <Button variant="contained" onClick={handleSendServer} disabled={dis}>
-            Upload
+            Finish
           </Button>
         </DialogTitle>
         <DialogContent dividers={scroll === "paper"}>
@@ -484,57 +494,215 @@ const VideoInput = () => {
         </Alert>
       </Snackbar>
 
-      <ReactPlayer
-        ref={videoPlayer}
-        url={
-          videos[page * rowsPerPage + videoIndex]
-            ? videos[page * rowsPerPage + videoIndex].file_name
-            : null
-        }
-        onDuration={handleDuration}
-        controls
-        width="100%"
-        height="auto"
-      />
-      <Box sx={{ display: "flex" }}>
-        <Slider
-          min={0}
-          max={duration}
-          value={videoPieceTime}
-          valueLabelDisplay="auto"
-          valueLabelFormat={(s) =>
-            new Date(s * 1000).toISOString().substr(11, 8)
-          }
-          onChange={handleSlideChange}
-        />
-      </Box>
-      <Box
-        sx={{
-          marginBottom: 2,
-          display: "flex",
-          justifyContent: "space-between",
-        }}
-      >
-        <div>0:00</div>
-        <div>{new Date(duration * 1000).toISOString().substr(11, 8)}</div>
-      </Box>
-      <CustomBar
-        videos={videos?.slice(page * rPP, page * rPP + rPP)}
-        idx={videoIndex}
-        setIndex={setVideoIndex}
-      />
-      <Table>
-        <TableHead>
-          <TableRow sx={{ backgroundColor: "#CEEBF9" }}>
-            <TableCell
-              sx={{
-                border: "1px solid #76BBD9",
-                padding: 1,
-              }}
-              colSpan={6}
+      <Grid container spacing={2}>
+        <Grid item xs={8}>
+          <Grid item xs={12}>
+            <ReactPlayer
+              ref={videoPlayer}
+              url={
+                videos[page * rowsPerPage + videoIndex]
+                  ? videos[page * rowsPerPage + videoIndex].file_name
+                  : null
+              }
+              onDuration={handleDuration}
+              controls
+              playing={true}
+              width="100%"
+              height="auto"
+            />
+          </Grid>
+          <Grid item xs={12} display="flex" spacing={2} alignItems="center">
+            <Grid item xs={10}>
+              <Box sx={{ display: "flex" }}>
+                <Slider
+                  min={0}
+                  max={duration}
+                  value={videoPieceTime}
+                  valueLabelDisplay="auto"
+                  valueLabelFormat={(s) =>
+                    new Date(s * 1000).toISOString().substr(11, 8)
+                  }
+                  onChange={handleSlideChange}
+                />
+              </Box>
+              <Box
+                sx={{
+                  marginBottom: 2,
+                  display: "flex",
+                  justifyContent: "space-between",
+                }}
+              >
+                {/* <div>0:00</div>
+        <div>{new Date(duration * 1000).toISOString().substr(11, 8)}</div> */}
+                <div>
+                  {formatTimeSlice(
+                    videos[page * rowsPerPage + videoIndex]?.ts[0]
+                  )}
+                </div>
+                <div>
+                  {formatTimeSlice(
+                    videos[page * rowsPerPage + videoIndex]?.ts[1]
+                  )}
+                </div>
+              </Box>
+            </Grid>
+            <Grid
+              item
+              xs={2}
+              display="flex"
+              justifyContent="center"
+              padding="5px"
             >
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <div style={{ minWidth: "40%" }}>
+              <Button variant="contained">Trim</Button>
+            </Grid>
+          </Grid>
+          <CustomBar
+            videos={videos?.slice(page * rPP, page * rPP + rPP)}
+            idx={videoIndex}
+            setIndex={setVideoIndex}
+          />
+          <Grid item xs={12}></Grid>
+        </Grid>
+        <Grid item xs={4}>
+          <TableContainer style={{ maxHeight: "90vh" }}>
+            <Table stickyHeader>
+              <TableHead>
+                <TableRow sx={{ backgroundColor: "#CEEBF9" }}>
+                  <TableCell
+                    sx={{
+                      border: "1px solid #76BBD9",
+                      padding: 1,
+                    }}
+                    colSpan={3}
+                  >
+                    {/* <div
+                    style={{ display: "flex", justifyContent: "space-between" }}
+                  >
+                    <div style={{ minWidth: "40%" }}>
+                      <TextField
+                        id="input-with-icon-textfield"
+                        InputProps={{
+                          endAdornment: (
+                            <InputAdornment position="start">
+                              <SearchIcon />
+                            </InputAdornment>
+                          ),
+                        }}
+                        fullWidth
+                        onChange={handleSearchChange}
+                        variant="standard"
+                        placeholder="Enter text to search"
+                      />
+                    </div>
+                    <div>
+                      <TablePagination
+                        rowsPerPage={rowsPerPage}
+                        handleChangeRowsPerPage={handleChangeRowsPerPage}
+                        count={videos ? videos.length : 0}
+                        page={page}
+                        onPageChange={handleChangePage}
+                      />
+                    </div>
+                  </div> */}
+
+                    <TextField
+                      id="input-with-icon-textfield"
+                      InputProps={{
+                        endAdornment: (
+                          <InputAdornment position="start">
+                            <SearchIcon />
+                          </InputAdornment>
+                        ),
+                      }}
+                      fullWidth
+                      onChange={handleSearchChange}
+                      variant="standard"
+                      placeholder="Enter text to search"
+                    />
+                  </TableCell>
+                  {/* <TableCell
+                  sx={{
+                    border: "1px solid #76BBD9",
+                    padding: 1,
+                  }}
+                  colSpan={4}
+                >
+                  <div
+                    style={{ display: "flex", justifyContent: "space-between" }}
+                  >
+                    <div style={{ minWidth: "40%" }}>
+                      <TextField
+                        id="input-with-icon-textfield"
+                        InputProps={{
+                          endAdornment: (
+                            <InputAdornment position="start">
+                              <SearchIcon />
+                            </InputAdornment>
+                          ),
+                        }}
+                        fullWidth
+                        onChange={handleSearchChange}
+                        variant="standard"
+                        placeholder="Enter text to search"
+                      />
+                    </div>
+                    <div>
+                      <TablePagination
+                        rowsPerPage={rowsPerPage}
+                        handleChangeRowsPerPage={handleChangeRowsPerPage}
+                        count={videos ? videos.length : 0}
+                        page={page}
+                        onPageChange={handleChangePage}
+                      />
+                    </div>
+                  </div>
+                  <TablePagination
+                    rowsPerPage={rowsPerPage}
+                    handleChangeRowsPerPage={handleChangeRowsPerPage}
+                    count={videos ? videos.length : 0}
+                    page={page}
+                    onPageChange={handleChangePage}
+                  />
+                </TableCell> */}
+                </TableRow>
+                <TableRow sx={{ backgroundColor: "#CEEBF9" }}>
+                  {/* <TableCell
+                  sx={{
+                    border: "1px solid #76BBD9",
+                    padding: 1,
+                  }}
+                  colSpan={4}
+                >
+                  <div
+                    style={{ display: "flex", justifyContent: "space-between" }}
+                  >
+                    <div style={{ minWidth: "40%" }}>
+                      <TextField
+                        id="input-with-icon-textfield"
+                        InputProps={{
+                          endAdornment: (
+                            <InputAdornment position="start">
+                              <SearchIcon />
+                            </InputAdornment>
+                          ),
+                        }}
+                        fullWidth
+                        onChange={handleSearchChange}
+                        variant="standard"
+                        placeholder="Enter text to search"
+                      />
+                    </div>
+                    <div>
+                      <TablePagination
+                        rowsPerPage={rowsPerPage}
+                        handleChangeRowsPerPage={handleChangeRowsPerPage}
+                        count={videos ? videos.length : 0}
+                        page={page}
+                        onPageChange={handleChangePage}
+                      />
+                    </div>
+                  </div>
+
                   <TextField
                     id="input-with-icon-textfield"
                     InputProps={{
@@ -549,182 +717,219 @@ const VideoInput = () => {
                     variant="standard"
                     placeholder="Enter text to search"
                   />
-                </div>
-                <div>
-                  <TablePagination
-                    rowsPerPage={rowsPerPage}
-                    handleChangeRowsPerPage={handleChangeRowsPerPage}
-                    count={videos ? videos.length : 0}
-                    page={page}
-                    onPageChange={handleChangePage}
-                  />
-                </div>
-              </div>
-            </TableCell>
-          </TableRow>
-          <TableRow sx={{ backgroundColor: "#CEEBF9" }}>
-            <TableCell
-              key={0}
-              sx={{
-                border: "1px solid #76BBD9",
-                padding: 1,
-              }}
-              align="center"
-            >
-              <b>STT</b>
-            </TableCell>
-            <TableCell
-              key={1}
-              sx={{
-                border: "1px solid #76BBD9",
-                padding: 1,
-              }}
-              align="center"
-            >
-              <b>Name</b>
-            </TableCell>
-            <TableCell
-              key={2}
-              sx={{
-                border: "1px solid #76BBD9",
-                padding: 1,
-              }}
-              align="center"
-            >
-              <b>Times</b>
-            </TableCell>
-            <TableCell
-              key={3}
-              sx={{
-                border: "1px solid #76BBD9",
-                padding: 1,
-              }}
-              align="center"
-            >
-              <b>Start</b>
-            </TableCell>
-            <TableCell
-              key={4}
-              sx={{
-                border: "1px solid #76BBD9",
-                padding: 1,
-              }}
-              align="center"
-            >
-              <b>End</b>
-            </TableCell>
-            <TableCell
-              key={5}
-              sx={{
-                border: "1px solid #76BBD9",
-                padding: 1,
-              }}
-              align="center"
-            >
-              <b>Select</b>
-            </TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {/* style={ {minHeight: '45px' } } */}
-          {videos?.slice(page * rPP, page * rPP + rPP).map((video, i) => (
-            <TableRow
-              key={i}
-              onClick={() => setVideoIndex(i)}
-              style={{
-                backgroundColor: i === videoIndex ? "#FD8E5E" : "white",
-              }}
-            >
-              <TableCell
-                key={1}
-                sx={{
-                  border: "1px solid #76BBD9",
-                  padding: 1,
-                }}
-                align="center"
-              >
-                {i + 1}
-              </TableCell>
-              <TableCell
-                key={2}
-                sx={{
-                  border: "1px solid #76BBD9",
-                  padding: 1,
-                }}
-                align="center"
-              >
-                {video.event}
-              </TableCell>
-              <TableCell
-                key={4}
-                sx={{
-                  border: "1px solid #76BBD9",
-                  padding: 1,
-                }}
-                align="center"
-              >
-                {video.time.substring(0, 2)}m{video.time.substring(2, 4)}s
-              </TableCell>
-              <TableCell
-                key={3}
-                sx={{
-                  border: "1px solid #76BBD9",
-                  padding: 1,
-                }}
-                align="center"
-              >
-                {video.startTime}
-              </TableCell>
-              <TableCell
-                key={6}
-                sx={{
-                  border: "1px solid #76BBD9",
-                  padding: 1,
-                }}
-                align="center"
-              >
-                {video.endTime}
-              </TableCell>
-              <TableCell
-                key={7}
-                sx={{
-                  border: "1px solid #76BBD9",
-                  padding: 1,
-                }}
-                align="center"
-              >
-                <Checkbox
-                  checked={video.selected}
-                  onChange={(e) => handdelchange(e, video)}
-                />
-              </TableCell>
-            </TableRow>
-          ))}
-          {(videos === undefined || videos.length === 0) && (
-            <TableRow>
-              <TableCell
-                sx={{
-                  border: "1px solid #76BBD9",
-                }}
-                align="center"
-                colSpan={6}
-              >
-                No data
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
+                </TableCell> */}
+                  <TableCell
+                    sx={{
+                      border: "1px solid #76BBD9",
+                      padding: 1,
+                    }}
+                    colSpan={3}
+                  >
+                    {/* <div
+                    style={{ display: "flex", justifyContent: "space-between" }}
+                  >
+                    <div style={{ minWidth: "40%" }}>
+                      <TextField
+                        id="input-with-icon-textfield"
+                        InputProps={{
+                          endAdornment: (
+                            <InputAdornment position="start">
+                              <SearchIcon />
+                            </InputAdornment>
+                          ),
+                        }}
+                        fullWidth
+                        onChange={handleSearchChange}
+                        variant="standard"
+                        placeholder="Enter text to search"
+                      />
+                    </div>
+                    <div>
+                      <TablePagination
+                        rowsPerPage={rowsPerPage}
+                        handleChangeRowsPerPage={handleChangeRowsPerPage}
+                        count={videos ? videos.length : 0}
+                        page={page}
+                        onPageChange={handleChangePage}
+                      />
+                    </div>
+                  </div> */}
+                    <TablePagination
+                      rowsPerPage={rowsPerPage}
+                      handleChangeRowsPerPage={handleChangeRowsPerPage}
+                      count={videos ? videos.length : 0}
+                      page={page}
+                      onPageChange={handleChangePage}
+                    />
+                  </TableCell>
+                </TableRow>
+                <TableRow sx={{ backgroundColor: "#CEEBF9", height: "58px" }}>
+                  <TableCell
+                    key={0}
+                    sx={{
+                      border: "1px solid #76BBD9",
+                      padding: 1,
+                    }}
+                    align="center"
+                  >
+                    <b>STT</b>
+                  </TableCell>
+                  <TableCell
+                    key={1}
+                    sx={{
+                      border: "1px solid #76BBD9",
+                      padding: 1,
+                    }}
+                    align="center"
+                  >
+                    <b>Name</b>
+                  </TableCell>
+                  <TableCell
+                    key={2}
+                    sx={{
+                      border: "1px solid #76BBD9",
+                      padding: 1,
+                    }}
+                    align="center"
+                  >
+                    <b>Times</b>
+                  </TableCell>
+                  {/* <TableCell
+                  key={3}
+                  sx={{
+                    border: "1px solid #76BBD9",
+                    padding: 1,
+                  }}
+                  align="center"
+                >
+                  <b>Start</b>
+                </TableCell>
+                <TableCell
+                  key={4}
+                  sx={{
+                    border: "1px solid #76BBD9",
+                    padding: 1,
+                  }}
+                  align="center"
+                >
+                  <b>End</b>
+                </TableCell> */}
+                  {/* <TableCell
+                  key={5}
+                  sx={{
+                    border: "1px solid #76BBD9",
+                    padding: 1,
+                  }}
+                  align="center"
+                >
+                  <b>Select</b>
+                </TableCell> */}
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {/* style={ {minHeight: '45px' } } */}
+                {videos?.slice(page * rPP, page * rPP + rPP).map((video, i) => (
+                  <TableRow
+                    key={i}
+                    onClick={() => setVideoIndex(i)}
+                    style={{
+                      backgroundColor: i === videoIndex ? "#FD8E5E" : "white",
+                    }}
+                  >
+                    <TableCell
+                      key={1}
+                      sx={{
+                        border: "1px solid #76BBD9",
+                        padding: 1,
+                      }}
+                      align="center"
+                    >
+                      {i + 1}
+                    </TableCell>
+                    <TableCell
+                      key={2}
+                      sx={{
+                        border: "1px solid #76BBD9",
+                        padding: 1,
+                      }}
+                      align="center"
+                    >
+                      {video.event}
+                    </TableCell>
+                    <TableCell
+                      key={4}
+                      sx={{
+                        border: "1px solid #76BBD9",
+                        padding: 1,
+                      }}
+                      align="center"
+                    >
+                      {video.time.substring(0, 2)}m{video.time.substring(2, 4)}s
+                    </TableCell>
+                    {/* <TableCell
+                    key={3}
+                    sx={{
+                      border: "1px solid #76BBD9",
+                      padding: 1,
+                    }}
+                    align="center"
+                  >
+                    {video.startTime}
+                  </TableCell>
+                  <TableCell
+                    key={6}
+                    sx={{
+                      border: "1px solid #76BBD9",
+                      padding: 1,
+                    }}
+                    align="center"
+                  >
+                    {video.endTime}
+                  </TableCell> */}
+                    {/* <TableCell
+                    key={7}
+                    sx={{
+                      border: "1px solid #76BBD9",
+                      padding: 1,
+                    }}
+                    align="center"
+                  >
+                    <Checkbox
+                      checked={video.selected}
+                      onChange={(e) => handdelchange(e, video)}
+                    />
+                  </TableCell> */}
+                  </TableRow>
+                ))}
+                {(videos === undefined || videos.length === 0) && (
+                  <TableRow>
+                    <TableCell
+                      sx={{
+                        border: "1px solid #76BBD9",
+                      }}
+                      align="center"
+                      colSpan={6}
+                    >
+                      No data
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Grid>
+      </Grid>
+
       <Box sx={{ textAlign: "center", margin: 2 }}>
         <Button variant="contained" onClick={handleEditVideo}>
-          Finish
+          Review
         </Button>
       </Box>
       <div
         style={{ height: 3, backgroundColor: "black", marginBottom: "15px" }}
       ></div>
       <HighlightReview getHighlight={getHighlight} highlights={highlights} />
-    </Box>
+    </>
   );
 };
 

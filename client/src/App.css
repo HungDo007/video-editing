@@ -21,3 +21,6 @@ th {
   padding: 8px;
   min-width: 100px;
 }
+.MuiTableCell-head {
+  background-color: #ceebf9 !important;
+}
