@@ -16,10 +16,7 @@ table {
 }
 td,
 th {
-  border: 2px solid #dddddd;
   text-align: center;
-  padding: 8px;
-  min-width: 100px;
 }
 .MuiTableCell-head {
   background-color: #ceebf9 !important;

@@ -1,5 +1,4 @@
 import { useRef, useState, useEffect } from "react";
-import SearchIcon from "@mui/icons-material/Search";
 
 import {
   Box,
@@ -12,7 +11,6 @@ import {
   TableHead,
   TableRow,
   TextField,
-  InputAdornment,
   Backdrop,
   CircularProgress,
   Snackbar,
@@ -22,15 +20,23 @@ import {
   DialogTitle,
   DialogContent,
   DialogContentText,
-  TableContainer,
 } from "@mui/material";
 
 import ReactPlayer from "react-player";
-import { TablePagination } from "./flugin";
 import videoEditingApi from "../api/video-editing";
 import CustomBar from "./custom/custom-bar";
 import { useLocation } from "react-router-dom";
 import HighlightReview from "./highlight-review";
+import TableEditVideo from "./TableEditVideo";
+
+export const formatTimeSlice = (time) => {
+  var mind = time % (60 * 60);
+  var minutes = Math.floor(time / 60);
+
+  var secd = mind % 60;
+  var seconds = Math.ceil(secd);
+  return minutes + ":" + ("0" + seconds).slice(-2);
+};
 
 const VideoInput = () => {
   const [opendialog, setOpenDialog] = useState(false);
@@ -38,6 +44,9 @@ const VideoInput = () => {
   const videoPlayer = useRef(null);
   const [scroll, setScroll] = useState("paper");
   const descriptionElementRef = useRef(null);
+  const [isTrimmed, setIsTrimmed] = useState(true);
+  const [rowSelected, setRowSelected] = useState();
+
   const [hlDescription, setHlDescription] = useState("");
   const [noti, setNoti] = useState(false);
   const [message, setMessage] = useState();
@@ -57,16 +66,6 @@ const VideoInput = () => {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [highlights, setHighlights] = useState();
 
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
-  };
-
-  console.log(videos);
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
-
   const getHighlight = async () => {
     try {
       var response = await videoEditingApi.getHighlightOfMatch(
@@ -78,56 +77,10 @@ const VideoInput = () => {
     }
   };
 
-  const handleSearchChange = (e) => {
-    const value = e.target.value;
-
-    if (typingTimeoutRef.current) {
-      clearTimeout(typingTimeoutRef.current);
-    }
-    typingTimeoutRef.current = setTimeout(() => {
-      if (value !== "") {
-        const payload = videoSrc.reduce((filter, video) => {
-          if (video.event.includes(value)) {
-            const newVideoInfo = {
-              level: video.level,
-              time: video.time,
-              event: video.event,
-              file_name: video.file_name,
-              players: video.players,
-              selected: false,
-              endTime: 0,
-              startTime: 0,
-              ts: [video.ts[0], video.ts[1]],
-            };
-            //console.log(newVideoInfo);
-            filter.push(newVideoInfo);
-          }
-          return filter;
-        }, []);
-        setVideos(payload);
-      } else {
-        const payload = videoSrc.reduce((filter, video) => {
-          //console.log(video);
-          filter.push(video);
-          return filter;
-        }, []);
-        setVideos(payload);
-        //setVideos(payload);
-      }
-    }, 500);
-  };
-
-  const formatTimeSlice = (time) => {
-    if (time) {
-      return ("0" + time).slice(-4, -2) + ":" + ("0" + time).slice(-2);
-    } else {
-      return "";
-    }
-  };
-
   useEffect(() => {
-    setRPP(rowsPerPage === -1 ? videos?.length + 1 : rowsPerPage);
-  }, [videos, rowsPerPage]);
+    console.log(rowSelected);
+    setVideoPieceTime([rowSelected?.startTime, rowSelected?.endTime]);
+  }, [duration]);
 
   useEffect(() => {
     const a = filtered.filter((fil) => {
@@ -150,48 +103,40 @@ const VideoInput = () => {
       });
 
       setBody(response.data.jsonFile);
-      const videos = response.data.jsonFile.event.map((video) => ({
+      const videos = response.data.jsonFile.event.map((video, i) => ({
         ...video,
-        selected: false,
+        selected: i === 0 ? 1 : -1,
         startTime: 0,
-        endTime: 0,
+        endTime: video.ts[1] - video.ts[0],
       }));
       setVideoSrc(videos);
+      setRowSelected(videos[0]);
     };
 
     getData();
     getHighlight();
   }, []);
 
-  useEffect(() => {
-    const payload = videoSrc.reduce((filtered, video) => {
-      filtered.push(video);
-      return filtered;
-    }, []);
-    setVideos(payload);
-  }, [videoSrc?.length]);
-
   const handleDuration = (duration) => {
     setDuration(duration);
   };
 
   const handleSlideChange = (event, newValue) => {
+    console.log(newValue);
     setVideoPieceTime(newValue);
-    const newVideos = [...videos];
     const newVideoSrc = [...videoSrc];
-    newVideos[page * rowsPerPage + videoIndex].startTime = newValue[0];
-    newVideos[page * rowsPerPage + videoIndex].endTime = newValue[1];
-    newVideos[page * rowsPerPage + videoIndex].selected = true;
-    const vdSrc = newVideoSrc.findIndex(
-      (vid) =>
-        vid.file_name === newVideos[page * rowsPerPage + videoIndex].file_name
-    );
-    setVideos(newVideos);
-    newVideoSrc[vdSrc].selected = true;
+    const a = { ...rowSelected };
+    a.startTime = newValue[0];
+    a.endTime = newValue[1];
+    const vdSrc = newVideoSrc.findIndex((vid) => vid.file_name === a.file_name);
+    setRowSelected(a);
+    newVideoSrc[vdSrc] = a;
+    console.log(newVideoSrc);
     setVideoSrc(newVideoSrc);
+
     videoPlayer.current.seekTo(newValue[0], "seconds");
   };
-
+  //console.log(videoSrc);
   const handleEditVideo = () => {
     const payload = videoSrc.reduce((filtered, video) => {
       if (video.selected) {
@@ -269,6 +214,32 @@ const VideoInput = () => {
     const a = newVideos.findIndex((vid) => vid.file_name === video.file_name);
     newVideos[a].selected = e.target.checked;
     setFiltered(newVideos);
+  };
+
+  const onTableClick = (row) => {
+    console.log(row);
+    setRowSelected(row);
+    const newVideoSrc = [...videoSrc];
+    const vdSrc = newVideoSrc.findIndex(
+      (vid) => vid.file_name === row.file_name
+    );
+    if (row.selected !== 0) {
+      setIsTrimmed(true);
+      newVideoSrc[vdSrc].selected = 1;
+    } else {
+      setIsTrimmed(false);
+    }
+    setVideoSrc(newVideoSrc);
+  };
+
+  const handleNotQualifiedOrTrimmedClick = () => {
+    const newVideoSrc = [...videoSrc];
+    const vdSrc = newVideoSrc.findIndex(
+      (vid) => vid.file_name === rowSelected.file_name
+    );
+    newVideoSrc[vdSrc].selected = isTrimmed ? 0 : 1;
+    setIsTrimmed(!isTrimmed);
+    setVideoSrc(newVideoSrc);
   };
 
   return (
@@ -499,11 +470,7 @@ const VideoInput = () => {
           <Grid item xs={12}>
             <ReactPlayer
               ref={videoPlayer}
-              url={
-                videos[page * rowsPerPage + videoIndex]
-                  ? videos[page * rowsPerPage + videoIndex].file_name
-                  : null
-              }
+              url={rowSelected?.file_name}
               onDuration={handleDuration}
               controls
               playing={true}
@@ -511,7 +478,7 @@ const VideoInput = () => {
               height="auto"
             />
           </Grid>
-          <Grid item xs={12} display="flex" spacing={2} alignItems="center">
+          <Grid item xs={12} display="flex" alignItems="center">
             <Grid item xs={10}>
               <Box sx={{ display: "flex" }}>
                 <Slider
@@ -519,9 +486,12 @@ const VideoInput = () => {
                   max={duration}
                   value={videoPieceTime}
                   valueLabelDisplay="auto"
-                  valueLabelFormat={(s) =>
-                    new Date(s * 1000).toISOString().substr(11, 8)
-                  }
+                  valueLabelFormat={(s) => {
+                    const a = s + rowSelected?.ts[0];
+
+                    return formatTimeSlice(a);
+                    // new Date(a * 1000).toISOString().substr(11, 8);
+                  }}
                   onChange={handleSlideChange}
                 />
               </Box>
@@ -532,18 +502,8 @@ const VideoInput = () => {
                   justifyContent: "space-between",
                 }}
               >
-                {/* <div>0:00</div>
-        <div>{new Date(duration * 1000).toISOString().substr(11, 8)}</div> */}
-                <div>
-                  {formatTimeSlice(
-                    videos[page * rowsPerPage + videoIndex]?.ts[0]
-                  )}
-                </div>
-                <div>
-                  {formatTimeSlice(
-                    videos[page * rowsPerPage + videoIndex]?.ts[1]
-                  )}
-                </div>
+                <div>{formatTimeSlice(rowSelected?.ts[0])}</div>
+                <div>{formatTimeSlice(rowSelected?.ts[1])}</div>
               </Box>
             </Grid>
             <Grid
@@ -553,370 +513,24 @@ const VideoInput = () => {
               justifyContent="center"
               padding="5px"
             >
-              <Button variant="contained">Trim</Button>
+              <Button
+                variant="contained"
+                color={isTrimmed ? "error" : "info"}
+                onClick={handleNotQualifiedOrTrimmedClick}
+              >
+                {isTrimmed ? "Not qualified" : "Trimmed"}
+              </Button>
             </Grid>
           </Grid>
-          <CustomBar
+          {/* <CustomBar
             videos={videos?.slice(page * rPP, page * rPP + rPP)}
             idx={videoIndex}
             setIndex={setVideoIndex}
-          />
+          /> */}
           <Grid item xs={12}></Grid>
         </Grid>
         <Grid item xs={4}>
-          <TableContainer style={{ maxHeight: "90vh" }}>
-            <Table stickyHeader>
-              <TableHead>
-                <TableRow sx={{ backgroundColor: "#CEEBF9" }}>
-                  <TableCell
-                    sx={{
-                      border: "1px solid #76BBD9",
-                      padding: 1,
-                    }}
-                    colSpan={3}
-                  >
-                    {/* <div
-                    style={{ display: "flex", justifyContent: "space-between" }}
-                  >
-                    <div style={{ minWidth: "40%" }}>
-                      <TextField
-                        id="input-with-icon-textfield"
-                        InputProps={{
-                          endAdornment: (
-                            <InputAdornment position="start">
-                              <SearchIcon />
-                            </InputAdornment>
-                          ),
-                        }}
-                        fullWidth
-                        onChange={handleSearchChange}
-                        variant="standard"
-                        placeholder="Enter text to search"
-                      />
-                    </div>
-                    <div>
-                      <TablePagination
-                        rowsPerPage={rowsPerPage}
-                        handleChangeRowsPerPage={handleChangeRowsPerPage}
-                        count={videos ? videos.length : 0}
-                        page={page}
-                        onPageChange={handleChangePage}
-                      />
-                    </div>
-                  </div> */}
-
-                    <TextField
-                      id="input-with-icon-textfield"
-                      InputProps={{
-                        endAdornment: (
-                          <InputAdornment position="start">
-                            <SearchIcon />
-                          </InputAdornment>
-                        ),
-                      }}
-                      fullWidth
-                      onChange={handleSearchChange}
-                      variant="standard"
-                      placeholder="Enter text to search"
-                    />
-                  </TableCell>
-                  {/* <TableCell
-                  sx={{
-                    border: "1px solid #76BBD9",
-                    padding: 1,
-                  }}
-                  colSpan={4}
-                >
-                  <div
-                    style={{ display: "flex", justifyContent: "space-between" }}
-                  >
-                    <div style={{ minWidth: "40%" }}>
-                      <TextField
-                        id="input-with-icon-textfield"
-                        InputProps={{
-                          endAdornment: (
-                            <InputAdornment position="start">
-                              <SearchIcon />
-                            </InputAdornment>
-                          ),
-                        }}
-                        fullWidth
-                        onChange={handleSearchChange}
-                        variant="standard"
-                        placeholder="Enter text to search"
-                      />
-                    </div>
-                    <div>
-                      <TablePagination
-                        rowsPerPage={rowsPerPage}
-                        handleChangeRowsPerPage={handleChangeRowsPerPage}
-                        count={videos ? videos.length : 0}
-                        page={page}
-                        onPageChange={handleChangePage}
-                      />
-                    </div>
-                  </div>
-                  <TablePagination
-                    rowsPerPage={rowsPerPage}
-                    handleChangeRowsPerPage={handleChangeRowsPerPage}
-                    count={videos ? videos.length : 0}
-                    page={page}
-                    onPageChange={handleChangePage}
-                  />
-                </TableCell> */}
-                </TableRow>
-                <TableRow sx={{ backgroundColor: "#CEEBF9" }}>
-                  {/* <TableCell
-                  sx={{
-                    border: "1px solid #76BBD9",
-                    padding: 1,
-                  }}
-                  colSpan={4}
-                >
-                  <div
-                    style={{ display: "flex", justifyContent: "space-between" }}
-                  >
-                    <div style={{ minWidth: "40%" }}>
-                      <TextField
-                        id="input-with-icon-textfield"
-                        InputProps={{
-                          endAdornment: (
-                            <InputAdornment position="start">
-                              <SearchIcon />
-                            </InputAdornment>
-                          ),
-                        }}
-                        fullWidth
-                        onChange={handleSearchChange}
-                        variant="standard"
-                        placeholder="Enter text to search"
-                      />
-                    </div>
-                    <div>
-                      <TablePagination
-                        rowsPerPage={rowsPerPage}
-                        handleChangeRowsPerPage={handleChangeRowsPerPage}
-                        count={videos ? videos.length : 0}
-                        page={page}
-                        onPageChange={handleChangePage}
-                      />
-                    </div>
-                  </div>
-
-                  <TextField
-                    id="input-with-icon-textfield"
-                    InputProps={{
-                      endAdornment: (
-                        <InputAdornment position="start">
-                          <SearchIcon />
-                        </InputAdornment>
-                      ),
-                    }}
-                    fullWidth
-                    onChange={handleSearchChange}
-                    variant="standard"
-                    placeholder="Enter text to search"
-                  />
-                </TableCell> */}
-                  <TableCell
-                    sx={{
-                      border: "1px solid #76BBD9",
-                      padding: 1,
-                    }}
-                    colSpan={3}
-                  >
-                    {/* <div
-                    style={{ display: "flex", justifyContent: "space-between" }}
-                  >
-                    <div style={{ minWidth: "40%" }}>
-                      <TextField
-                        id="input-with-icon-textfield"
-                        InputProps={{
-                          endAdornment: (
-                            <InputAdornment position="start">
-                              <SearchIcon />
-                            </InputAdornment>
-                          ),
-                        }}
-                        fullWidth
-                        onChange={handleSearchChange}
-                        variant="standard"
-                        placeholder="Enter text to search"
-                      />
-                    </div>
-                    <div>
-                      <TablePagination
-                        rowsPerPage={rowsPerPage}
-                        handleChangeRowsPerPage={handleChangeRowsPerPage}
-                        count={videos ? videos.length : 0}
-                        page={page}
-                        onPageChange={handleChangePage}
-                      />
-                    </div>
-                  </div> */}
-                    <TablePagination
-                      rowsPerPage={rowsPerPage}
-                      handleChangeRowsPerPage={handleChangeRowsPerPage}
-                      count={videos ? videos.length : 0}
-                      page={page}
-                      onPageChange={handleChangePage}
-                    />
-                  </TableCell>
-                </TableRow>
-                <TableRow sx={{ backgroundColor: "#CEEBF9", height: "58px" }}>
-                  <TableCell
-                    key={0}
-                    sx={{
-                      border: "1px solid #76BBD9",
-                      padding: 1,
-                    }}
-                    align="center"
-                  >
-                    <b>STT</b>
-                  </TableCell>
-                  <TableCell
-                    key={1}
-                    sx={{
-                      border: "1px solid #76BBD9",
-                      padding: 1,
-                    }}
-                    align="center"
-                  >
-                    <b>Name</b>
-                  </TableCell>
-                  <TableCell
-                    key={2}
-                    sx={{
-                      border: "1px solid #76BBD9",
-                      padding: 1,
-                    }}
-                    align="center"
-                  >
-                    <b>Times</b>
-                  </TableCell>
-                  {/* <TableCell
-                  key={3}
-                  sx={{
-                    border: "1px solid #76BBD9",
-                    padding: 1,
-                  }}
-                  align="center"
-                >
-                  <b>Start</b>
-                </TableCell>
-                <TableCell
-                  key={4}
-                  sx={{
-                    border: "1px solid #76BBD9",
-                    padding: 1,
-                  }}
-                  align="center"
-                >
-                  <b>End</b>
-                </TableCell> */}
-                  {/* <TableCell
-                  key={5}
-                  sx={{
-                    border: "1px solid #76BBD9",
-                    padding: 1,
-                  }}
-                  align="center"
-                >
-                  <b>Select</b>
-                </TableCell> */}
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {/* style={ {minHeight: '45px' } } */}
-                {videos?.slice(page * rPP, page * rPP + rPP).map((video, i) => (
-                  <TableRow
-                    key={i}
-                    onClick={() => setVideoIndex(i)}
-                    style={{
-                      backgroundColor: i === videoIndex ? "#FD8E5E" : "white",
-                    }}
-                  >
-                    <TableCell
-                      key={1}
-                      sx={{
-                        border: "1px solid #76BBD9",
-                        padding: 1,
-                      }}
-                      align="center"
-                    >
-                      {i + 1}
-                    </TableCell>
-                    <TableCell
-                      key={2}
-                      sx={{
-                        border: "1px solid #76BBD9",
-                        padding: 1,
-                      }}
-                      align="center"
-                    >
-                      {video.event}
-                    </TableCell>
-                    <TableCell
-                      key={4}
-                      sx={{
-                        border: "1px solid #76BBD9",
-                        padding: 1,
-                      }}
-                      align="center"
-                    >
-                      {video.time.substring(0, 2)}m{video.time.substring(2, 4)}s
-                    </TableCell>
-                    {/* <TableCell
-                    key={3}
-                    sx={{
-                      border: "1px solid #76BBD9",
-                      padding: 1,
-                    }}
-                    align="center"
-                  >
-                    {video.startTime}
-                  </TableCell>
-                  <TableCell
-                    key={6}
-                    sx={{
-                      border: "1px solid #76BBD9",
-                      padding: 1,
-                    }}
-                    align="center"
-                  >
-                    {video.endTime}
-                  </TableCell> */}
-                    {/* <TableCell
-                    key={7}
-                    sx={{
-                      border: "1px solid #76BBD9",
-                      padding: 1,
-                    }}
-                    align="center"
-                  >
-                    <Checkbox
-                      checked={video.selected}
-                      onChange={(e) => handdelchange(e, video)}
-                    />
-                  </TableCell> */}
-                  </TableRow>
-                ))}
-                {(videos === undefined || videos.length === 0) && (
-                  <TableRow>
-                    <TableCell
-                      sx={{
-                        border: "1px solid #76BBD9",
-                      }}
-                      align="center"
-                      colSpan={6}
-                    >
-                      No data
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
+          <TableEditVideo data={videoSrc} onTableClick={onTableClick} />
         </Grid>
       </Grid>
 

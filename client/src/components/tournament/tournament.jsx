@@ -256,14 +256,11 @@ const Tournament = () => {
                   alignItems: "center",
                 }}
               >
-                <Tooltip title="Add new option for Tournament" placement="top">
-                  <IconButton
-                    color="primary"
-                    onClick={() => setHidden(!hidden)}
-                  >
-                    <AddIcon />
-                  </IconButton>
-                </Tooltip>
+                {/* <Tooltip title="Add new option for Tournament" placement="top"> */}
+                <IconButton color="primary" onClick={() => setHidden(!hidden)}>
+                  <AddIcon />
+                </IconButton>
+                {/* </Tooltip> */}
                 <Autocomplete
                   options={tournaments ? tournaments : []}
                   size="small"
@@ -273,7 +270,7 @@ const Tournament = () => {
                   renderInput={(params) => (
                     <TextField
                       {...params}
-                      placeholder="Select or enter Tournament"
+                      placeholder="Select Tournament"
                       variant="standard"
                       required={hidden}
                       inputProps={{
@@ -292,14 +289,11 @@ const Tournament = () => {
                   alignItems: "center",
                 }}
               >
-                <Tooltip title="Back to select Tournament" placement="top">
-                  <IconButton
-                    color="primary"
-                    onClick={() => setHidden(!hidden)}
-                  >
-                    <ArrowLeftIcon />
-                  </IconButton>
-                </Tooltip>
+                {/* <Tooltip title="Back to select Tournament" placement="top"> */}
+                <IconButton color="primary" onClick={() => setHidden(!hidden)}>
+                  <ArrowLeftIcon />
+                </IconButton>
+                {/* </Tooltip> */}
                 <TextField
                   value={tournamentName}
                   variant="standard"

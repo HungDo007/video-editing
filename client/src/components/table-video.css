@@ -1,0 +1,21 @@
+.ant-table .ant-table-tbody > tr.ant-table-row:hover > td {
+  background-color: unset;
+}
+
+.table-row-selected {
+  background-color: rgb(253 142 94);
+}
+.ant-table-thead tr .ant-table-cell {
+  background-color: #ceebf9;
+  text-align: center;
+}
+.ant-table-thead th.ant-table-column-sort {
+  background: #ceebf9 !important;
+}
+
+.ant-table-thead th.ant-table-column-has-sorters:hover {
+  background: #ceebf9 !important;
+}
+td.ant-table-column-sort {
+  background: unset !important;
+}

@@ -29,6 +29,11 @@ axiosClient.interceptors.response.use(
     return response;
   },
   (error) => {
+    if (error.response.status == 401) {
+      Cookies.remove("Token");
+      window.location = "/login";
+    }
+    //return Promise.reject(error.response.data);
     return Promise.reject(error);
   }
 );
