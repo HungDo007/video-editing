@@ -139,11 +139,12 @@ const VideoInput = () => {
   //console.log(videoSrc);
   const handleEditVideo = () => {
     const payload = videoSrc.reduce((filtered, video) => {
-      if (video.selected) {
+      if (video.selected === 1) {
         filtered.push(video);
       }
       return filtered;
     }, []);
+    console.log(payload);
     setFiltered(payload);
     setOpenDialog(true);
   };
@@ -175,16 +176,16 @@ const VideoInput = () => {
           hlDescription,
           newBody
         );
-        console.log(response);
         setOpen(false);
         setNoti(true);
         setMessage("Concat Succeed");
         setTypeNoti("success");
         getHighlight();
       } catch (error) {
+        console.log(error.response.data.description);
         setOpen(false);
         setNoti(true);
-        setMessage(error.response.description);
+        setMessage(error.response.data.description);
         setTypeNoti("error");
       }
     };
@@ -212,7 +213,7 @@ const VideoInput = () => {
   const handleReviewChange = (e, video) => {
     const newVideos = [...filtered];
     const a = newVideos.findIndex((vid) => vid.file_name === video.file_name);
-    newVideos[a].selected = e.target.checked;
+    newVideos[a].selected = e.target.checked ? 1 : 0;
     setFiltered(newVideos);
   };
 
@@ -404,7 +405,7 @@ const VideoInput = () => {
                       }}
                       align="center"
                     >
-                      {video.startTime}
+                      {formatTimeSlice(video.ts[0] + video.startTime)}
                     </TableCell>
                     <TableCell
                       key={6}
@@ -414,7 +415,7 @@ const VideoInput = () => {
                       }}
                       align="center"
                     >
-                      {video.endTime}
+                      {formatTimeSlice(video.ts[0] + video.endTime)}
                     </TableCell>
                     <TableCell
                       key={7}
