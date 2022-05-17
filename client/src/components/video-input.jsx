@@ -55,15 +55,13 @@ const VideoInput = () => {
   const [filtered, setFiltered] = useState([]);
   const [dis, setDis] = useState(true);
   const [duration, setDuration] = useState(0);
-  const [videoIndex, setVideoIndex] = useState(0);
+
   const [body, setBody] = useState();
   const [videos, setVideos] = useState([]);
   const [videoPieceTime, setVideoPieceTime] = useState([0, 0]);
-  const typingTimeoutRef = useRef(null);
-  const [rPP, setRPP] = useState(0);
+
   const [open, setOpen] = useState(false);
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+
   const [highlights, setHighlights] = useState();
 
   const getHighlight = async () => {
@@ -78,9 +76,8 @@ const VideoInput = () => {
   };
 
   useEffect(() => {
-    console.log(rowSelected);
     setVideoPieceTime([rowSelected?.startTime, rowSelected?.endTime]);
-  }, [duration]);
+  }, [rowSelected]);
 
   useEffect(() => {
     const a = filtered.filter((fil) => {
@@ -261,8 +258,7 @@ const VideoInput = () => {
       >
         <DialogTitle
           sx={{
-            backgroundColor: "#333333",
-            color: "#ffffff",
+            backgroundColor: "#CEEBF9",
             fontSize: "15px",
             display: "flex",
             justifyContent: "space-between",
@@ -274,18 +270,12 @@ const VideoInput = () => {
           <TextField
             sx={{
               width: "50%",
-              "& fieldset ": {
-                borderColor: "white",
-              },
             }}
-            InputProps={{
-              sx: { color: "white" },
-            }}
+            label="Enter description for video highlight"
             value={hlDescription}
             onChange={(e) => setHlDescription(e.target.value)}
             multiline
             small
-            placeholder="Enter description for video highlight"
           />
           <Button variant="contained" onClick={handleSendServer} disabled={dis}>
             Finish

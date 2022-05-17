@@ -159,6 +159,9 @@ function TableEditVideo(props) {
     setSumTrimTime(sum);
   }, [data]);
 
+  function showTotal(total) {
+    return `Total ${total} videos`;
+  }
   return (
     <Table
       rowClassName={(record, index) =>
@@ -175,6 +178,7 @@ function TableEditVideo(props) {
       }}
       columns={columns}
       dataSource={data}
+      pagination={{ showTotal: showTotal, showSizeChanger: true }}
       footer={() => {
         return "Total Trimmed: " + formatTimeSlice(sumTrimTime);
       }}

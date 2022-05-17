@@ -102,8 +102,7 @@ function HighlightReview(props) {
       >
         <DialogTitle
           sx={{
-            backgroundColor: "#333333",
-            color: "#ffffff",
+            backgroundColor: "#CEEBF9",
             fontSize: "15px",
             display: "flex",
             justifyContent: "space-between",

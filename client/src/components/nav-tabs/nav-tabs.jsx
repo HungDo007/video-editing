@@ -5,11 +5,14 @@ import ReorderIcon from "@mui/icons-material/Reorder";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import AirplayIcon from "@mui/icons-material/Airplay";
 import PreviewIcon from "@mui/icons-material/Preview";
+import Cookies from "js-cookie";
+import LogoutIcon from "@mui/icons-material/Logout";
 import ScrollToTop from "react-scroll-to-top";
+import imgBG from "./bg-signbar.jpg";
 
-import { Grid } from "@mui/material";
+import { Grid, Tooltip } from "@mui/material";
 
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import {
   Menu,
   MenuItem,
@@ -34,7 +37,12 @@ function ResponsiveDrawer(props) {
     ];
     return listItem;
   });
-
+  let navigate = useNavigate();
+  const handleLogout = () => {
+    Cookies.remove("Token");
+    localStorage.removeItem("fullName");
+    navigate("/login");
+  };
   const handleCollapsed = () => {
     setCollapsed(!collapsed);
   };
@@ -42,6 +50,7 @@ function ResponsiveDrawer(props) {
   const iconCollapsed = {
     fontSize: "xx-large",
     margin: "20px 25px",
+    cursor: "pointer",
   };
 
   const NavMenuu = (item) => {
@@ -69,11 +78,7 @@ function ResponsiveDrawer(props) {
   return (
     <>
       <div className="app">
-        <ProSidebar
-          collapsed={collapsed}
-          breakPoint="md"
-          style={{ height: "initial", minHeight: "100vh" }}
-        >
+        <ProSidebar image={imgBG} collapsed={collapsed} breakPoint="md">
           <SidebarHeader>
             <span className={collapsed ? "" : "hidden"}>
               <ReorderIcon sx={iconCollapsed} onClick={handleCollapsed} />
@@ -92,20 +97,19 @@ function ResponsiveDrawer(props) {
               })}
             </Menu>
           </SidebarContent>
-          <SidebarFooter>
-            <span className={collapsed ? "" : "hidden"}>
-              <ReorderIcon sx={iconCollapsed} onClick={handleCollapsed} />
-            </span>
-            <span className={collapsed ? "hidden" : ""}>
-              <ArrowBackIosNewIcon
-                sx={iconCollapsed}
-                onClick={handleCollapsed}
-              />
-            </span>
+          <SidebarFooter style={{ textAlign: "center" }}>
+            <div style={{ fontSize: 16, padding: 1 }}>
+              WELCOME {localStorage.getItem("fullName")}
+            </div>
+            <div>
+              <Tooltip key={1} title="Logout" placement="right">
+                <LogoutIcon sx={iconCollapsed} onClick={handleLogout} />
+              </Tooltip>
+            </div>
           </SidebarFooter>
         </ProSidebar>
         <main>
-          <Header />
+          {/* <Header /> */}
           <Grid container direction="row">
             <Grid item style={{ width: "100%", padding: "2% 4%" }}>
               {props.children}

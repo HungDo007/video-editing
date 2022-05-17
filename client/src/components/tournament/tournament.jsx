@@ -31,7 +31,7 @@ import CustomCircularProgress from "../custom/custom-circular-progress";
 import CancelOutlinedIcon from "@mui/icons-material/CancelOutlined";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import CustomSelect from "../flugin/Select";
-import { CustomDatePicker } from "../flugin";
+import { ConfirmDialog, CustomDatePicker } from "../flugin";
 import { useNavigate } from "react-router-dom";
 import { FileUploader } from "react-drag-drop-files";
 
@@ -48,6 +48,9 @@ const Tournament = () => {
   const [time, setTime] = useState(new Date());
   const [channel, setChannel] = useState();
   const [ip, setIp] = useState();
+  const [openDConfirm, setOpenDConfirm] = useState(false);
+  const [rowDelete, setRowDelete] = useState();
+
   const [port, setPort] = useState();
 
   const [hidden, setHidden] = useState(true);
@@ -68,7 +71,7 @@ const Tournament = () => {
   const handleTournamentChange = (e, value) => {
     setTournament(value);
   };
-  console.log(tournament);
+
   const getMatches = async () => {
     try {
       const response = await videoEditingApi.getMatches();
@@ -161,10 +164,10 @@ const Tournament = () => {
     console.log(row);
   };
 
-  const handleDeleteClick = (e, row) => {
-    const deleteMatch = async (id) => {
+  const handleDeleteClick = () => {
+    const deleteMatch = async () => {
       try {
-        await videoEditingApi.deleteMatch(id);
+        await videoEditingApi.deleteMatch(rowDelete.id);
         setNoti(true);
         setMessage("Delete Succeed");
         setTypeNoti("success");
@@ -173,16 +176,30 @@ const Tournament = () => {
         console.log(error);
       }
     };
-    deleteMatch(row.id);
+    deleteMatch();
   };
   const handleClose = () => {
     setOpenDialog(false);
+    setOpenDConfirm(false);
   };
   const handleFileChange = (file) => {
     setFile(file);
   };
+
+  const handleConfirmClick = () => {
+    handleDeleteClick();
+    setOpenDConfirm(false);
+  };
   return (
     <>
+      <ConfirmDialog
+        title="Confirm"
+        description="Are you sure to delete the record?"
+        onClose={handleClose}
+        onConfirm={handleConfirmClick}
+        open={openDConfirm}
+      />
+
       <Dialog
         open={opendialog}
         onClose={handleClose}
@@ -192,8 +209,7 @@ const Tournament = () => {
       >
         <DialogTitle
           sx={{
-            backgroundColor: "#333333",
-            color: "#ffffff",
+            backgroundColor: "#CEEBF9",
             fontSize: "15px",
             display: "flex",
             justifyContent: "space-between",
@@ -236,7 +252,7 @@ const Tournament = () => {
         </Alert>
       </Snackbar>
 
-      <Card sx={{ padding: 5, margin: 20, marginTop: 0, marginBottom: 3 }}>
+      <Card sx={{ padding: 5, margin: 40, marginTop: 0, marginBottom: 3 }}>
         <Grid
           container
           spacing={2}
@@ -245,7 +261,7 @@ const Tournament = () => {
           onSubmit={handleSubmit}
         >
           <Grid item xs={3}>
-            Tournament
+            Title
           </Grid>
 
           <Grid item xs={9}>
@@ -270,7 +286,7 @@ const Tournament = () => {
                   renderInput={(params) => (
                     <TextField
                       {...params}
-                      placeholder="Select Tournament"
+                      placeholder="Select Title"
                       variant="standard"
                       required={hidden}
                       inputProps={{
@@ -301,7 +317,7 @@ const Tournament = () => {
                   onChange={(e) => setTournamentName(e.target.value)}
                   fullWidth
                   required={!hidden}
-                  placeholder="Enter Tournament Name"
+                  placeholder="Enter Title Name"
                 />
               </div>
             </div>
@@ -310,7 +326,7 @@ const Tournament = () => {
             
           </Grid> */}
           <Grid item xs={3}>
-            Match
+            Name
           </Grid>
           <Grid item xs={9}>
             <TextField
@@ -320,7 +336,7 @@ const Tournament = () => {
               onChange={(e) => setMatchName(e.target.value)}
               fullWidth
               required
-              placeholder="Enter Match Name"
+              placeholder="Enter Name"
             />
           </Grid>
 
@@ -410,7 +426,7 @@ const Tournament = () => {
               }}
               align="center"
             >
-              <b>Tournament</b>
+              <b>Title</b>
             </TableCell>
             <TableCell
               key={2}
@@ -420,7 +436,7 @@ const Tournament = () => {
               }}
               align="center"
             >
-              <b>Match</b>
+              <b>Name</b>
             </TableCell>
             <TableCell
               key={3}
@@ -558,7 +574,9 @@ const Tournament = () => {
                     component="button"
                     href="#"
                     underline="none"
-                    onClick={(e) => handleResultClick(e, match)}
+                    onClick={(e) => {
+                      handleResultClick(e, match);
+                    }}
                   >
                     Result
                   </Link>
@@ -605,7 +623,8 @@ const Tournament = () => {
                   <IconButton
                     aria-label="delete"
                     onClick={(e) => {
-                      handleDeleteClick(e, match);
+                      setOpenDConfirm(true);
+                      setRowDelete(match);
                     }}
                   >
                     <DeleteIcon />

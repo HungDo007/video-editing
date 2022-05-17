@@ -1,15 +1,17 @@
 import React from "react";
 import Cookies from "js-cookie";
-import { NavLink, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import LogoutIcon from "@mui/icons-material/Logout";
 import { Button, ButtonGroup, Grid } from "@mui/material";
 import Pre from "../flugin/pre";
+import imgBG from "./bg-signbar.jpg";
 
 const style = {
-  //backgroundImage: `url(${ImgBackground})`,
-  backgroundColor: "#1D1D1D",
-  backgroundPosition: "bottom",
+  backgroundImage: `url(${imgBG})`,
+  //backgroundColor: "#1D1D1D",
+  //backgroundPosition: "bottom",
   backgroundRepeat: "no-repeat",
+  backgroundSize: "100% 100%",
   maxHeight: "72px",
   boxShadow:
     "0px 3px 1px -2px rgb(0 0 0 / 20%), 0px 2px 2px 0px rgb(0 0 0 / 14%), 0px 1px 5px 0px rgb(0 0 0 / 12%)",
