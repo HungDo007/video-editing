@@ -10,6 +10,7 @@ import VideoManagement from "../video-analytics/videos-management/videos-managem
 import Tournament from "../tournament/tournament";
 import VideoInput from "../video-input";
 import HighlightReview from "../highlight-review";
+import Film from "../Film";
 
 function RoutePath() {
   return (
@@ -20,6 +21,7 @@ function RoutePath() {
       <Route path="/model/configuration" element={<ModelConfiguration />} />
       <Route path="/video" element={<VideoManagement />} />
       <Route path="/tournament" element={<Tournament />} />
+      <Route path="/film" element={<Film />} />
       <Route path="/video-edit" element={<VideoInput />} />
       <Route path="/highlight-review" element={<HighlightReview />} />
     </Routes>

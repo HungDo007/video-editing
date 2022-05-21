@@ -13,6 +13,18 @@ function TableEditVideo(props) {
   const searchInput = useRef(null);
   const [select, setSelect] = useState(0);
   const [sumTrimTime, setSumTrimTime] = useState();
+
+  const [filterLv, setFilterLv] = useState();
+
+  useEffect(() => {
+    const lvfilter = [...new Set(data.map((item) => item.level))];
+    var a = [];
+    lvfilter.forEach((item) => {
+      return a.push({ text: item, value: item });
+    });
+    setFilterLv(a);
+  }, [data?.length]);
+
   const getColumnSearchProps = (dataIndex) => ({
     filterDropdown: ({
       setSelectedKeys,
@@ -57,13 +69,15 @@ function TableEditVideo(props) {
     filterIcon: (filtered) => (
       <SearchOutlined style={{ color: filtered ? "#1890ff" : "unset" }} />
     ),
-    onFilter: (value, record) =>
-      record[dataIndex]
+    onFilter: (value, record) => {
+      setSelect(-1);
+      return record[dataIndex]
         ? record[dataIndex]
             .toString()
             .toLowerCase()
             .includes(value.toLowerCase())
-        : "",
+        : "";
+    },
     onFilterDropdownVisibleChange: (visible) => {
       if (visible) {
         setTimeout(() => searchInput.current.select(), 100);
@@ -93,27 +107,32 @@ function TableEditVideo(props) {
       title: "Time",
       dataIndex: "time",
       key: "time",
+      width: 120,
       render: (time) => time.substring(0, 2) + "m" + time.substring(2, 4) + "s",
     },
     {
       title: "Event",
       dataIndex: "event",
       key: "event",
+      width: 150,
       ...getColumnSearchProps("event"),
     },
     {
       title: "Level",
       dataIndex: "level",
       key: "level",
-      sorter: {
-        compare: (a, b) => a.level - b.level,
-        multiple: 1,
+      width: 75,
+      filters: filterLv,
+      onFilter: (level, record) => {
+        setSelect(-1);
+        return record.level === level;
       },
     },
     {
       title: "Trim Length",
       dataIndex: "selected",
       key: "Trim Length",
+      width: 100,
       render: (selected, row) => {
         if (selected === 1) return formatTimeSlice(row.endTime - row.startTime);
         else return "-";
@@ -123,6 +142,7 @@ function TableEditVideo(props) {
       title: "Status",
       dataIndex: "selected",
       key: "Trim Length",
+      width: 100,
       render: (selected, row) => {
         if (selected === 1) return "Trimmed";
         else if (selected === 0) return "Not qualified";
@@ -143,6 +163,7 @@ function TableEditVideo(props) {
         },
       ],
       onFilter: (value, record) => {
+        setSelect(-1);
         return record.selected === value;
       },
     },
@@ -160,7 +181,7 @@ function TableEditVideo(props) {
   }, [data]);
 
   function showTotal(total) {
-    return `Total ${total} videos`;
+    return `Total: ${total} videos`;
   }
   return (
     <Table
@@ -182,7 +203,7 @@ function TableEditVideo(props) {
       footer={() => {
         return "Total Trimmed: " + formatTimeSlice(sumTrimTime);
       }}
-      scroll={{ y: "60vh" }}
+      scroll={{ y: "50vh", x: "100%" }}
     />
   );
 }

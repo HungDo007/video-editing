@@ -3,12 +3,12 @@ import "./index.css";
 import "react-pro-sidebar/dist/css/styles.css";
 import ReorderIcon from "@mui/icons-material/Reorder";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
-import AirplayIcon from "@mui/icons-material/Airplay";
-import PreviewIcon from "@mui/icons-material/Preview";
 import Cookies from "js-cookie";
 import LogoutIcon from "@mui/icons-material/Logout";
 import ScrollToTop from "react-scroll-to-top";
 import imgBG from "./bg-signbar.jpg";
+import SportsSoccerIcon from "@mui/icons-material/SportsSoccer";
+import MovieIcon from "@mui/icons-material/Movie";
 
 import { Grid, Tooltip } from "@mui/material";
 
@@ -22,18 +22,17 @@ import {
   SidebarHeader,
   SubMenu,
 } from "react-pro-sidebar";
-import Header from "./header";
 
 function ResponsiveDrawer(props) {
   const [collapsed, setCollapsed] = React.useState(true);
   const [listItem, setListItem] = React.useState(() => {
     const listItem = [
-      { name: "Match", url: "/", icon: <AirplayIcon /> },
-      // {
-      //   name: "Highlight",
-      //   url: "/highlight-review",
-      //   icon: <PreviewIcon />,
-      // },
+      { name: "Soccer", url: "/", icon: <SportsSoccerIcon /> },
+      {
+        name: "Movie",
+        url: "/film",
+        icon: <MovieIcon />,
+      },
     ];
     return listItem;
   });
@@ -109,7 +108,6 @@ function ResponsiveDrawer(props) {
           </SidebarFooter>
         </ProSidebar>
         <main>
-          {/* <Header /> */}
           <Grid container direction="row">
             <Grid item style={{ width: "100%", padding: "2% 4%" }}>
               {props.children}

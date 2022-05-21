@@ -20,6 +20,7 @@ import {
   DialogTitle,
   DialogContent,
   DialogContentText,
+  DialogActions,
 } from "@mui/material";
 
 import ReactPlayer from "react-player";
@@ -215,7 +216,6 @@ const VideoInput = () => {
   };
 
   const onTableClick = (row) => {
-    console.log(row);
     setRowSelected(row);
     const newVideoSrc = [...videoSrc];
     const vdSrc = newVideoSrc.findIndex(
@@ -267,19 +267,6 @@ const VideoInput = () => {
           id="scroll-dialog-title"
         >
           <b>Concat Video Selected</b>
-          <TextField
-            sx={{
-              width: "50%",
-            }}
-            label="Enter description for video highlight"
-            value={hlDescription}
-            onChange={(e) => setHlDescription(e.target.value)}
-            multiline
-            small
-          />
-          <Button variant="contained" onClick={handleSendServer} disabled={dis}>
-            Finish
-          </Button>
         </DialogTitle>
         <DialogContent dividers={scroll === "paper"}>
           <DialogContentText
@@ -439,6 +426,44 @@ const VideoInput = () => {
             </Table>
           </DialogContentText>
         </DialogContent>
+        <DialogActions
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <TextField
+            sx={{
+              width: "50%",
+            }}
+            label="Enter description for video highlight"
+            value={hlDescription}
+            onChange={(e) => setHlDescription(e.target.value)}
+            multiline
+            small
+          />
+          <div>
+            <Button
+              variant="contained"
+              //onClick={handleSendServer}
+              disabled={dis}
+              color="secondary"
+            >
+              Trim not Concat
+            </Button>
+            <Button
+              sx={{
+                marginLeft: "10px",
+              }}
+              variant="contained"
+              onClick={handleSendServer}
+              disabled={dis}
+            >
+              Trim and Concat
+            </Button>
+          </div>
+        </DialogActions>
       </Dialog>
 
       <Snackbar
@@ -457,20 +482,19 @@ const VideoInput = () => {
       </Snackbar>
 
       <Grid container spacing={2}>
-        <Grid item xs={8}>
-          <Grid item xs={12}>
+        <Grid item xs={7}>
+          <Grid item xs={12} display="flex" justifyContent="center">
             <ReactPlayer
               ref={videoPlayer}
               url={rowSelected?.file_name}
               onDuration={handleDuration}
               controls
               playing={true}
-              width="100%"
-              height="auto"
             />
           </Grid>
-          <Grid item xs={12} display="flex" alignItems="center">
-            <Grid item xs={10}>
+
+          <Grid item xs={12} sx={{ display: "flex", justifyContent: "center" }}>
+            <div style={{ width: "100%", maxWidth: "720px" }}>
               <Box sx={{ display: "flex" }}>
                 <Slider
                   min={0}
@@ -496,31 +520,26 @@ const VideoInput = () => {
                 <div>{formatTimeSlice(rowSelected?.ts[0])}</div>
                 <div>{formatTimeSlice(rowSelected?.ts[1])}</div>
               </Box>
-            </Grid>
-            <Grid
-              item
-              xs={2}
-              display="flex"
-              justifyContent="center"
-              padding="5px"
-            >
-              <Button
-                variant="contained"
-                color={isTrimmed ? "error" : "info"}
-                onClick={handleNotQualifiedOrTrimmedClick}
-              >
-                {isTrimmed ? "Not qualified" : "Trimmed"}
-              </Button>
-            </Grid>
+            </div>
           </Grid>
-          {/* <CustomBar
-            videos={videos?.slice(page * rPP, page * rPP + rPP)}
-            idx={videoIndex}
-            setIndex={setVideoIndex}
-          /> */}
+          <Grid
+            item
+            xs={12}
+            display="flex"
+            justifyContent="center"
+            padding="5px"
+          >
+            <Button
+              variant="contained"
+              color={isTrimmed ? "error" : "info"}
+              onClick={handleNotQualifiedOrTrimmedClick}
+            >
+              {isTrimmed ? "Not qualified" : "Trimmed"}
+            </Button>
+          </Grid>
           <Grid item xs={12}></Grid>
         </Grid>
-        <Grid item xs={4}>
+        <Grid item xs={5} overflow="auto">
           <TableEditVideo data={videoSrc} onTableClick={onTableClick} />
         </Grid>
       </Grid>

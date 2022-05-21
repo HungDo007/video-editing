@@ -34,6 +34,7 @@ import CustomSelect from "../flugin/Select";
 import { ConfirmDialog, CustomDatePicker } from "../flugin";
 import { useNavigate } from "react-router-dom";
 import { FileUploader } from "react-drag-drop-files";
+import TableTournament from "./TableTournament";
 
 const Tournament = () => {
   const [opendialog, setOpenDialog] = useState(false);
@@ -145,9 +146,22 @@ const Tournament = () => {
     }
   };
 
+  const handleIconUploadClick = (match) => {
+    setUploadId(match.id);
+    setFile(null);
+    setOpenDialog(true);
+  };
+
+  const handleIconDeleteClick = (match) => {
+    setOpenDConfirm(true);
+    setRowDelete(match);
+  };
+
   useEffect(() => {
+    console.log("sad");
     const getTournaments = async () => {
       try {
+        console.log("dd");
         const response = await videoEditingApi.getTournaments();
         setTournaments(response.data);
       } catch (error) {
@@ -405,249 +419,14 @@ const Tournament = () => {
           </Grid>
         </Grid>
       </Card>
-      <Table>
-        <TableHead>
-          <TableRow sx={{ backgroundColor: "#CEEBF9" }}>
-            <TableCell
-              key={0}
-              sx={{
-                border: "1px solid #76BBD9",
-                padding: 1,
-              }}
-              align="center"
-            >
-              <b>Num</b>
-            </TableCell>
-            <TableCell
-              key={1}
-              sx={{
-                border: "1px solid #76BBD9",
-                padding: 1,
-              }}
-              align="center"
-            >
-              <b>Title</b>
-            </TableCell>
-            <TableCell
-              key={2}
-              sx={{
-                border: "1px solid #76BBD9",
-                padding: 1,
-              }}
-              align="center"
-            >
-              <b>Name</b>
-            </TableCell>
-            <TableCell
-              key={3}
-              sx={{
-                border: "1px solid #76BBD9",
-                padding: 1,
-              }}
-              align="center"
-            >
-              <b>Time</b>
-            </TableCell>
-            <TableCell
-              key={4}
-              sx={{
-                border: "1px solid #76BBD9",
-                padding: 1,
-              }}
-              align="center"
-            >
-              <b>Channel</b>
-            </TableCell>
-            <TableCell
-              key={5}
-              sx={{
-                border: "1px solid #76BBD9",
-                padding: 1,
-              }}
-              align="center"
-            >
-              <b>IP:Port</b>
-            </TableCell>
-            <TableCell
-              key={6}
-              sx={{
-                border: "1px solid #76BBD9",
-                padding: 1,
-              }}
-              align="center"
-            >
-              <b>Video</b>
-            </TableCell>
-            <TableCell
-              key={7}
-              sx={{
-                border: "1px solid #76BBD9",
-                padding: 1,
-              }}
-              align="center"
-            />
-            <TableCell
-              key={8}
-              sx={{
-                border: "1px solid #76BBD9",
-                padding: 1,
-              }}
-              align="center"
-            />
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {/* style={ {minHeight: '45px' } } */}
-          {matches?.map((match, i) => (
-            <TableRow key={i}>
-              <TableCell
-                key={1}
-                sx={{
-                  border: "1px solid #76BBD9",
-                  padding: 1,
-                }}
-                align="center"
-              >
-                {i + 1}
-              </TableCell>
-              <TableCell
-                key={2}
-                sx={{
-                  border: "1px solid #76BBD9",
-                  padding: 1,
-                }}
-                align="center"
-              >
-                {match.tournametName}
-              </TableCell>
-              <TableCell
-                key={3}
-                sx={{
-                  border: "1px solid #76BBD9",
-                  padding: 1,
-                }}
-                align="center"
-              >
-                {match.matchName}
-              </TableCell>
-              <TableCell
-                key={4}
-                sx={{
-                  border: "1px solid #76BBD9",
-                  padding: 1,
-                }}
-                align="center"
-              >
-                {match.mactchTime.substring(0, 10)}{" "}
-                {match.mactchTime.substring(11, 16)}
-              </TableCell>
-              <TableCell
-                key={5}
-                sx={{
-                  border: "1px solid #76BBD9",
-                  padding: 1,
-                }}
-                align="center"
-              >
-                {match.channel}
-              </TableCell>
-              <TableCell
-                key={6}
-                sx={{
-                  border: "1px solid #76BBD9",
-                  padding: 1,
-                }}
-                align="center"
-              >
-                {`${match.ip}:${match.port}`}
-              </TableCell>
-              <TableCell
-                key={7}
-                sx={{
-                  border: "1px solid #76BBD9",
-                  padding: 1,
-                }}
-                align="center"
-              >
-                {match.isUploadJsonFile ? (
-                  <Link
-                    component="button"
-                    href="#"
-                    underline="none"
-                    onClick={(e) => {
-                      handleResultClick(e, match);
-                    }}
-                  >
-                    Result
-                  </Link>
-                ) : (
-                  <span>
-                    Don't have video <br />
-                    Upload json file first
-                  </span>
-                )}
-              </TableCell>
-              <TableCell
-                key={9}
-                sx={{
-                  border: "1px solid #76BBD9",
-                  padding: 1,
-                }}
-                align="center"
-              >
-                <Tooltip
-                  key={i}
-                  title="Change/Upload Json file for match"
-                  placement="top"
-                >
-                  <IconButton
-                    onClick={() => {
-                      setUploadId(match.id);
-                      setFile(null);
-                      setOpenDialog(true);
-                    }}
-                  >
-                    <CloudUploadIcon />
-                  </IconButton>
-                </Tooltip>
-              </TableCell>
-              <TableCell
-                key={8}
-                sx={{
-                  border: "1px solid #76BBD9",
-                  padding: 1,
-                }}
-                align="center"
-              >
-                <Tooltip key={i} title="Delete Match" placement="top">
-                  <IconButton
-                    aria-label="delete"
-                    onClick={(e) => {
-                      setOpenDConfirm(true);
-                      setRowDelete(match);
-                    }}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </Tooltip>
-              </TableCell>
-            </TableRow>
-          ))}
-          {(matches === undefined || matches.length === 0) && (
-            <TableRow>
-              <TableCell
-                sx={{
-                  border: "1px solid #76BBD9",
-                }}
-                align="center"
-                colSpan={9}
-              >
-                No data
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
+
+      <TableTournament
+        data={matches}
+        titleSearch={tournaments}
+        handleResultClick={handleResultClick}
+        handleIconUploadClick={handleIconUploadClick}
+        handleIconDeleteClick={handleIconDeleteClick}
+      />
     </>
   );
 };

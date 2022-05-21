@@ -21,16 +21,21 @@ import {
 import videoEditingApi from "../../api/video-editing";
 import ReactPlayer from "react-player";
 import DeleteIcon from "@mui/icons-material/Delete";
+import TableHighlight from "./TableHighlight";
+import { ConfirmDialog } from "../flugin";
 
 function HighlightReview(props) {
   const { highlights, getHighlight } = props;
   //const [highlights, setHighlights] = useState();
   const [source, setSource] = useState();
   const [name, setName] = useState();
+  const [openDConfirm, setOpenDConfirm] = useState(false);
+  const [rowDelete, setRowDelete] = useState();
 
   const [opendialog, setOpenDialog] = useState(false);
   const handleClose = () => {
     setOpenDialog(false);
+    setOpenDConfirm(false);
   };
 
   const [noti, setNoti] = useState(false);
@@ -39,26 +44,16 @@ function HighlightReview(props) {
 
   const [scroll, setScroll] = useState("paper");
   const descriptionElementRef = React.useRef(null);
-  // const getHighlight = async () => {
-  //   if (matchId === undefined) return;
-  //   try {
-  //     var response = await videoEditingApi.getHighlightOfMatch(matchId);
-  //     setHighlights(response.data);
-  //   } catch (error) {
-  //     console.log(error.response);
-  //   }
-  // };
-  // useEffect(() => {
-  //   getHighlight();
-  // }, []);
 
-  const handleViewClick = (e, url, name) => {
-    setName(name);
+  const handleViewClick = (highlight) => {
+    setName(
+      highlight.matchInfo?.substring(1, highlight.matchInfo.indexOf(")"))
+    );
     setOpenDialog(true);
-    setSource(url);
+    setSource(highlight.mp4);
   };
 
-  const handleDeleteClick = (e, row) => {
+  const handleDeleteClick = () => {
     const deleteMatch = async (id) => {
       try {
         await videoEditingApi.deleteHighlight(id);
@@ -70,11 +65,28 @@ function HighlightReview(props) {
         console.log(error);
       }
     };
-    deleteMatch(row.id);
+    deleteMatch(rowDelete.id);
   };
 
+  const handleConfirmClick = () => {
+    handleDeleteClick();
+    setOpenDConfirm(false);
+  };
+
+  const handleIconDeleteClick = (highlight) => {
+    setRowDelete(highlight);
+    setOpenDConfirm(true);
+  };
   return (
     <>
+      <ConfirmDialog
+        title="Confirm"
+        description="Are you sure to delete the record?"
+        onClose={handleClose}
+        onConfirm={handleConfirmClick}
+        open={openDConfirm}
+      />
+
       <Snackbar
         anchorOrigin={{ vertical: "top", horizontal: "right" }}
         open={noti}
@@ -96,8 +108,6 @@ function HighlightReview(props) {
         scroll={scroll}
         aria-labelledby="scroll-dialog-title"
         aria-describedby="scroll-dialog-description"
-        fullScreen
-        fullWidth={true}
         maxWidth="lg"
       >
         <DialogTitle
@@ -122,223 +132,16 @@ function HighlightReview(props) {
             ref={descriptionElementRef}
             tabIndex={-1}
           >
-            <ReactPlayer
-              ref={null}
-              playing={true}
-              url={source}
-              controls
-              width="100%"
-              height="auto"
-            />
+            <ReactPlayer ref={null} playing={true} url={source} controls />
           </DialogContentText>
         </DialogContent>
       </Dialog>
 
-      <Table>
-        <TableHead>
-          <TableRow sx={{ backgroundColor: "#CEEBF9" }}>
-            <TableCell
-              sx={{
-                border: "1px solid #76BBD9",
-              }}
-              align="center"
-              colSpan={7}
-            >
-              <b>Highlight</b>
-            </TableCell>
-          </TableRow>
-          <TableRow sx={{ backgroundColor: "#CEEBF9" }}>
-            <TableCell
-              key={0}
-              sx={{
-                border: "1px solid #76BBD9",
-                padding: 1,
-              }}
-              align="center"
-            >
-              <b>Num</b>
-            </TableCell>
-            <TableCell
-              key={1}
-              sx={{
-                border: "1px solid #76BBD9",
-                padding: 1,
-              }}
-              align="center"
-            >
-              <b>Match</b>
-            </TableCell>
-            <TableCell
-              key={2}
-              sx={{
-                border: "1px solid #76BBD9",
-                padding: 1,
-              }}
-              align="center"
-            >
-              <b>Times</b>
-            </TableCell>
-            <TableCell
-              key={12}
-              sx={{
-                border: "1px solid #76BBD9",
-                padding: 1,
-              }}
-              align="center"
-            >
-              <b>Description</b>
-            </TableCell>
-            <TableCell
-              key={3}
-              sx={{
-                border: "1px solid #76BBD9",
-                padding: 1,
-              }}
-              align="center"
-            />
-            <TableCell
-              key={41}
-              sx={{
-                border: "1px solid #76BBD9",
-                padding: 1,
-              }}
-              align="center"
-            />
-            <TableCell
-              key={4}
-              sx={{
-                border: "1px solid #76BBD9",
-                padding: 1,
-              }}
-              align="center"
-            />
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {/* style={ {minHeight: '45px' } } */}
-          {highlights?.map((highlight, i) => (
-            <TableRow key={i}>
-              <TableCell
-                key={1}
-                sx={{
-                  border: "1px solid #76BBD9",
-                  padding: 1,
-                }}
-                align="center"
-              >
-                {i + 1}
-              </TableCell>
-              <TableCell
-                key={2}
-                sx={{
-                  border: "1px solid #76BBD9",
-                  padding: 1,
-                }}
-                align="center"
-              >
-                {highlight.matchInfo?.substring(
-                  1,
-                  highlight.matchInfo.indexOf(")")
-                )}
-              </TableCell>
-              <TableCell
-                key={3}
-                sx={{
-                  border: "1px solid #76BBD9",
-                  padding: 1,
-                }}
-                align="center"
-              >
-                {highlight.matchInfo?.substring(
-                  highlight.matchInfo.indexOf(")") + 3,
-                  highlight.matchInfo.indexOf(")") + 13
-                )}
-              </TableCell>
-              <TableCell
-                key={13}
-                sx={{
-                  border: "1px solid #76BBD9",
-                  padding: 1,
-                }}
-                align="center"
-              >
-                {highlight.description}
-              </TableCell>
-              <TableCell
-                key={7}
-                sx={{
-                  border: "1px solid #76BBD9",
-                  padding: 1,
-                }}
-                align="center"
-              >
-                <Tooltip title="View" placement="right">
-                  <IconButton
-                    onClick={(e) =>
-                      handleViewClick(
-                        e,
-                        highlight.mp4,
-                        highlight.matchInfo?.substring(
-                          1,
-                          highlight.matchInfo.indexOf(")")
-                        )
-                      )
-                    }
-                  >
-                    <VideoLibraryIcon />
-                  </IconButton>
-                </Tooltip>
-              </TableCell>
-              <TableCell
-                key={8}
-                sx={{
-                  border: "1px solid #76BBD9",
-                  padding: 1,
-                }}
-                align="center"
-              >
-                <Tooltip title="Download" placement="right">
-                  <IconButton href={highlight.ts} target="_blank">
-                    <CloudDownloadIcon />
-                  </IconButton>
-                </Tooltip>
-              </TableCell>
-              <TableCell
-                key={8}
-                sx={{
-                  border: "1px solid #76BBD9",
-                  padding: 1,
-                }}
-                align="center"
-              >
-                <Tooltip key={i} title="Delete Match" placement="top">
-                  <IconButton
-                    aria-label="delete"
-                    onClick={(e) => {
-                      handleDeleteClick(e, highlight);
-                    }}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </Tooltip>
-              </TableCell>
-            </TableRow>
-          ))}
-          {(highlights === undefined || highlights.length === 0) && (
-            <TableRow>
-              <TableCell
-                sx={{
-                  border: "1px solid #76BBD9",
-                }}
-                align="center"
-                colSpan={7}
-              >
-                No data
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
+      <TableHighlight
+        data={highlights}
+        handleViewClick={handleViewClick}
+        handleIconDeleteClick={handleIconDeleteClick}
+      />
     </>
   );
 }
