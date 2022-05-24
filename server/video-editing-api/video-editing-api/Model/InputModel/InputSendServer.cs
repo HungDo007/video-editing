@@ -25,6 +25,7 @@ namespace video_editing_api.Model.InputModel
         public string file_name { get; set; }
         public List<string> players { get; set; }
         public List<int> ts { get; set; }
+        public int mainpoint { get; set; }
 
     }
 }

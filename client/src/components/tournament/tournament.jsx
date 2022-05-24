@@ -7,30 +7,17 @@ import {
   Grid,
   Snackbar,
   Alert,
-  Link,
-  Table,
-  TableHead,
-  TableRow,
-  TableCell,
-  TableBody,
   IconButton,
-  Tooltip,
   DialogTitle,
   Dialog,
   DialogContent,
   DialogContentText,
   Autocomplete,
-  InputAdornment,
 } from "@mui/material";
 import videoEditingApi from "../../api/video-editing";
-import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import ArrowLeftIcon from "@mui/icons-material/ArrowLeft";
 //import "./tournament.styles.scss";
-import CustomCircularProgress from "../custom/custom-circular-progress";
-import CancelOutlinedIcon from "@mui/icons-material/CancelOutlined";
-import CloudUploadIcon from "@mui/icons-material/CloudUpload";
-import CustomSelect from "../flugin/Select";
 import { ConfirmDialog, CustomDatePicker } from "../flugin";
 import { useNavigate } from "react-router-dom";
 import { FileUploader } from "react-drag-drop-files";
@@ -214,13 +201,7 @@ const Tournament = () => {
         open={openDConfirm}
       />
 
-      <Dialog
-        open={opendialog}
-        onClose={handleClose}
-        scroll={scroll}
-        // fullWidth={true}
-        // maxWidth="lg"
-      >
+      <Dialog open={opendialog} onClose={handleClose} scroll={scroll}>
         <DialogTitle
           sx={{
             backgroundColor: "#CEEBF9",

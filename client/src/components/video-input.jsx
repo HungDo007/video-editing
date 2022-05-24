@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 
 import {
   Box,
@@ -25,7 +25,6 @@ import {
 
 import ReactPlayer from "react-player";
 import videoEditingApi from "../api/video-editing";
-import CustomBar from "./custom/custom-bar";
 import { useLocation } from "react-router-dom";
 import HighlightReview from "./highlight-review";
 import TableEditVideo from "./TableEditVideo";
@@ -58,8 +57,12 @@ const VideoInput = () => {
   const [duration, setDuration] = useState(0);
 
   const [body, setBody] = useState();
-  const [videos, setVideos] = useState([]);
   const [videoPieceTime, setVideoPieceTime] = useState([0, 0]);
+  const previousVideoPieceTime = useRef(videoPieceTime);
+  console.log(rowSelected);
+  useEffect(() => {
+    previousVideoPieceTime.current = videoPieceTime;
+  }, [videoPieceTime]);
 
   const [open, setOpen] = useState(false);
 
@@ -78,6 +81,10 @@ const VideoInput = () => {
 
   useEffect(() => {
     setVideoPieceTime([rowSelected?.startTime, rowSelected?.endTime]);
+    videoPlayer.current.seekTo(
+      rowSelected?.mainpoint - rowSelected?.ts[0],
+      "seconds"
+    );
   }, [rowSelected]);
 
   useEffect(() => {
@@ -101,10 +108,14 @@ const VideoInput = () => {
       });
 
       setBody(response.data.jsonFile);
+      console.log(response.data.jsonFile.event);
       const videos = response.data.jsonFile.event.map((video, i) => ({
         ...video,
         selected: i === 0 ? 1 : -1,
-        startTime: 0,
+        startTime:
+          video.mainpoint - video.ts[0] < video.ts[1] - video.ts[0]
+            ? video.mainpoint - video.ts[0]
+            : video.ts[1] - video.ts[0],
         endTime: video.ts[1] - video.ts[0],
       }));
       setVideoSrc(videos);
@@ -121,6 +132,10 @@ const VideoInput = () => {
 
   const handleSlideChange = (event, newValue) => {
     console.log(newValue);
+    console.log(previousVideoPieceTime);
+    let indexSeekTo;
+    if (newValue[0] !== previousVideoPieceTime.current[0]) indexSeekTo = 0;
+    else indexSeekTo = 1;
     setVideoPieceTime(newValue);
     const newVideoSrc = [...videoSrc];
     const a = { ...rowSelected };
@@ -129,12 +144,11 @@ const VideoInput = () => {
     const vdSrc = newVideoSrc.findIndex((vid) => vid.file_name === a.file_name);
     setRowSelected(a);
     newVideoSrc[vdSrc] = a;
-    console.log(newVideoSrc);
     setVideoSrc(newVideoSrc);
-
-    videoPlayer.current.seekTo(newValue[0], "seconds");
+    console.log(indexSeekTo);
+    videoPlayer.current.seekTo(newValue[indexSeekTo], "seconds");
   };
-  //console.log(videoSrc);
+
   const handleEditVideo = () => {
     const payload = videoSrc.reduce((filtered, video) => {
       if (video.selected === 1) {
@@ -142,7 +156,6 @@ const VideoInput = () => {
       }
       return filtered;
     }, []);
-    console.log(payload);
     setFiltered(payload);
     setOpenDialog(true);
   };
@@ -195,19 +208,6 @@ const VideoInput = () => {
     setOpenDialog(false);
   };
 
-  const handdelchange = (e, video) => {
-    const newVideos = [...videos];
-    const newVideoSrc = [...videoSrc];
-    const vd = newVideos.findIndex((vid) => vid.file_name === video.file_name);
-    const vdSrc = newVideoSrc.findIndex(
-      (vid) => vid.file_name === video.file_name
-    );
-    newVideos[vd].selected = e.target.checked;
-    newVideoSrc[vdSrc].selected = e.target.checked;
-    setVideos(newVideos);
-    setVideoSrc(newVideoSrc);
-  };
-
   const handleReviewChange = (e, video) => {
     const newVideos = [...filtered];
     const a = newVideos.findIndex((vid) => vid.file_name === video.file_name);
@@ -239,6 +239,17 @@ const VideoInput = () => {
     setIsTrimmed(!isTrimmed);
     setVideoSrc(newVideoSrc);
   };
+  const [isReady, setIsReady] = useState(false);
+  const onReady = useCallback(
+    (rowSelected) => {
+      if (!isReady) {
+        const timeToStart = rowSelected?.mainpoint - rowSelected?.ts[0];
+        videoPlayer.current.seekTo(timeToStart, "seconds");
+        setIsReady(true);
+      }
+    },
+    [isReady]
+  );
 
   return (
     <>
@@ -489,6 +500,7 @@ const VideoInput = () => {
               url={rowSelected?.file_name}
               onDuration={handleDuration}
               controls
+              onReady={() => onReady(rowSelected)}
               playing={true}
             />
           </Grid>
@@ -502,10 +514,7 @@ const VideoInput = () => {
                   value={videoPieceTime}
                   valueLabelDisplay="auto"
                   valueLabelFormat={(s) => {
-                    const a = s + rowSelected?.ts[0];
-
-                    return formatTimeSlice(a);
-                    // new Date(a * 1000).toISOString().substr(11, 8);
+                    return formatTimeSlice(s);
                   }}
                   onChange={handleSlideChange}
                 />
@@ -517,25 +526,17 @@ const VideoInput = () => {
                   justifyContent: "space-between",
                 }}
               >
-                <div>{formatTimeSlice(rowSelected?.ts[0])}</div>
-                <div>{formatTimeSlice(rowSelected?.ts[1])}</div>
+                <div>{formatTimeSlice(rowSelected?.startTime)}</div>
+                <Button
+                  variant="contained"
+                  color={isTrimmed ? "error" : "info"}
+                  onClick={handleNotQualifiedOrTrimmedClick}
+                >
+                  {isTrimmed ? "Not qualified" : "Trimmed"}
+                </Button>
+                <div>{formatTimeSlice(rowSelected?.endTime)}</div>
               </Box>
             </div>
-          </Grid>
-          <Grid
-            item
-            xs={12}
-            display="flex"
-            justifyContent="center"
-            padding="5px"
-          >
-            <Button
-              variant="contained"
-              color={isTrimmed ? "error" : "info"}
-              onClick={handleNotQualifiedOrTrimmedClick}
-            >
-              {isTrimmed ? "Not qualified" : "Trimmed"}
-            </Button>
           </Grid>
           <Grid item xs={12}></Grid>
         </Grid>

@@ -23,6 +23,7 @@ import ReactPlayer from "react-player";
 import DeleteIcon from "@mui/icons-material/Delete";
 import TableHighlight from "./TableHighlight";
 import { ConfirmDialog } from "../flugin";
+import { Typography } from "antd";
 
 function HighlightReview(props) {
   const { highlights, getHighlight } = props;
@@ -79,6 +80,9 @@ function HighlightReview(props) {
   };
   return (
     <>
+      <Typography.Title level={3} style={{ margin: 0, textAlign: "center" }}>
+        HIGHLIGHT
+      </Typography.Title>
       <ConfirmDialog
         title="Confirm"
         description="Are you sure to delete the record?"
@@ -86,7 +90,6 @@ function HighlightReview(props) {
         onConfirm={handleConfirmClick}
         open={openDConfirm}
       />
-
       <Snackbar
         anchorOrigin={{ vertical: "top", horizontal: "right" }}
         open={noti}
@@ -101,7 +104,6 @@ function HighlightReview(props) {
           {message}
         </Alert>
       </Snackbar>
-
       <Dialog
         open={opendialog}
         onClose={handleClose}
@@ -136,7 +138,6 @@ function HighlightReview(props) {
           </DialogContentText>
         </DialogContent>
       </Dialog>
-
       <TableHighlight
         data={highlights}
         handleViewClick={handleViewClick}

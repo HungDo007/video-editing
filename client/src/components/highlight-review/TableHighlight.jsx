@@ -3,7 +3,7 @@ import ShareIcon from "@mui/icons-material/Share";
 import VideoLibraryIcon from "@mui/icons-material/VideoLibrary";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CloudDownloadIcon from "@mui/icons-material/CloudDownload";
-import { IconButton, Tooltip } from "@mui/material";
+import { IconButton, MenuItem, Select, Tooltip } from "@mui/material";
 import { SearchOutlined } from "@ant-design/icons";
 import Highlighter from "react-highlight-words";
 import { Table, Input, Button, Space } from "antd";
@@ -12,7 +12,6 @@ import "antd/dist/antd.css";
 
 function TableHighlight(props) {
   const { data, handleViewClick, handleIconDeleteClick } = props;
-  console.log(data);
 
   // for search
   const searchInput = useRef(null);
@@ -149,12 +148,15 @@ function TableHighlight(props) {
     {
       render: (row) => {
         return (
+          // <Select IconComponent={() => <ShareIcon />}>
+          //   <MenuItem value={10}>Ten</MenuItem>
+          //   <MenuItem value={20}>Twenty</MenuItem>
+          //   <MenuItem value={30}>Thirty</MenuItem>
+          // </Select>
           <Tooltip key={123} title="Share">
             <IconButton
-              aria-label="delete"
               onClick={(e) => {
                 console.log(row);
-                //handleIconDeleteClick(row);
               }}
             >
               <ShareIcon />
@@ -168,7 +170,6 @@ function TableHighlight(props) {
         return (
           <Tooltip key={123} title="Delete">
             <IconButton
-              aria-label="delete"
               onClick={(e) => {
                 console.log(row);
                 handleIconDeleteClick(row);

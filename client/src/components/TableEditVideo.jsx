@@ -183,6 +183,12 @@ function TableEditVideo(props) {
   function showTotal(total) {
     return `Total: ${total} videos`;
   }
+
+  const onPageChange = (page, pageSize) => {
+    console.log(page, pageSize);
+    onTableClick(data[(page - 1) * pageSize + select]);
+  };
+
   return (
     <Table
       rowClassName={(record, index) =>
@@ -199,7 +205,11 @@ function TableEditVideo(props) {
       }}
       columns={columns}
       dataSource={data}
-      pagination={{ showTotal: showTotal, showSizeChanger: true }}
+      pagination={{
+        showTotal: showTotal,
+        showSizeChanger: true,
+        onChange: onPageChange,
+      }}
       footer={() => {
         return "Total Trimmed: " + formatTimeSlice(sumTrimTime);
       }}

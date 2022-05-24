@@ -113,7 +113,6 @@ function TableTournament(props) {
     {
       title: "Title",
       dataIndex: "tournametName",
-      key: "tournametName",
       filters: titleS,
       onFilter: (value, record) => {
         return record.tournamentId === value;
@@ -122,13 +121,11 @@ function TableTournament(props) {
     {
       title: "Name",
       dataIndex: "matchName",
-      key: "matchName",
       ...getColumnSearchProps("matchName"),
     },
     {
       title: "Time",
       dataIndex: "mactchTime",
-      key: "mactchTime",
       render: (mactchTime) => {
         return mactchTime.substring(0, 10) + " " + mactchTime.substring(11, 16);
       },
@@ -136,13 +133,11 @@ function TableTournament(props) {
     {
       title: "Channel",
       dataIndex: "channel",
-      key: "channel",
       ...getColumnSearchProps("channel"),
     },
     {
       title: "IP:Port",
       dataIndex: "ip",
-      key: "Trim Length",
       render: (ip, row) => {
         return row.ip + ":" + row.port;
       },
@@ -150,7 +145,6 @@ function TableTournament(props) {
     {
       title: "Video",
       dataIndex: "isUploadJsonFile",
-      key: "isUploadJsonFile",
       render: (isUploadJsonFile, row) => {
         if (isUploadJsonFile)
           return (
