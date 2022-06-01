@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using video_editing_api.Model;
 using video_editing_api.Model.Collection;
 using video_editing_api.Service.DBConnection;
+using video_editing_api.Service.Film;
 using video_editing_api.Service.Storage;
 using video_editing_api.Service.User;
 using video_editing_api.Service.VideoEditing;
@@ -57,6 +58,7 @@ namespace video_editing_api
             services.AddScoped<IVideoEditingService, VideoEditingService>();
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IStorageService, StorageService>();
+            services.AddScoped<IFilmService, FilmService>();
             #endregion
 
             #region Add Authentication

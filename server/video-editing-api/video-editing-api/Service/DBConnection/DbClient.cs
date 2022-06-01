@@ -23,7 +23,7 @@ namespace video_editing_api.Service.DBConnection
                   new SslSettings() { EnabledSslProtocols = SslProtocols.Tls12 };
                 var mongoClient = new MongoClient(settings);
 
-                _database = mongoClient.GetDatabase(_dbConfig.DbName);                
+                _database = mongoClient.GetDatabase(_dbConfig.DbName);
             }
             catch (System.Exception e)
             {
@@ -36,7 +36,7 @@ namespace video_editing_api.Service.DBConnection
             {
                 return _database.GetCollection<Action>(SystemConstants.ActionCollection);
             }
-            catch(System.Exception e)
+            catch (System.Exception e)
             {
                 throw new System.Exception(e.Message);
             }
@@ -71,6 +71,18 @@ namespace video_editing_api.Service.DBConnection
             try
             {
                 return _database.GetCollection<Tournament>(SystemConstants.TournamentCollection);
+            }
+            catch (System.Exception e)
+            {
+                throw new System.Exception(e.Message);
+            }
+        }
+
+        public IMongoCollection<video_editing_api.Model.Collection.Film> GetFilmCollection()
+        {
+            try
+            {
+                return _database.GetCollection<video_editing_api.Model.Collection.Film>(SystemConstants.FilmCollection);
             }
             catch (System.Exception e)
             {

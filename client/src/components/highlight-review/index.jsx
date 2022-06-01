@@ -1,29 +1,23 @@
-import React, { useEffect, useState } from "react";
-import VideoLibraryIcon from "@mui/icons-material/VideoLibrary";
-import CloudDownloadIcon from "@mui/icons-material/CloudDownload";
+import React, { useState } from "react";
 import CancelOutlinedIcon from "@mui/icons-material/CancelOutlined";
 import {
   Button,
-  Table,
-  TableHead,
-  TableRow,
-  TableCell,
-  TableBody,
-  IconButton,
-  Tooltip,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogContentText,
   Snackbar,
   Alert,
+  Backdrop,
+  CircularProgress,
 } from "@mui/material";
 import videoEditingApi from "../../api/video-editing";
 import ReactPlayer from "react-player";
-import DeleteIcon from "@mui/icons-material/Delete";
 import TableHighlight from "./TableHighlight";
 import { ConfirmDialog } from "../flugin";
 import { Typography } from "antd";
+import Axios from "axios";
+import FileDownload from "js-file-download";
 
 function HighlightReview(props) {
   const { highlights, getHighlight } = props;
@@ -32,7 +26,7 @@ function HighlightReview(props) {
   const [name, setName] = useState();
   const [openDConfirm, setOpenDConfirm] = useState(false);
   const [rowDelete, setRowDelete] = useState();
-
+  const [open, setOpen] = useState(false);
   const [opendialog, setOpenDialog] = useState(false);
   const handleClose = () => {
     setOpenDialog(false);
@@ -63,6 +57,9 @@ function HighlightReview(props) {
         setTypeNoti("success");
         getHighlight();
       } catch (error) {
+        setNoti(true);
+        setMessage("Delete Failed");
+        setTypeNoti("error");
         console.log(error);
       }
     };
@@ -78,8 +75,37 @@ function HighlightReview(props) {
     setRowDelete(highlight);
     setOpenDConfirm(true);
   };
+
+  const handleIconDownloadClick = (highlight) => {
+    console.log(highlight);
+    setOpen(true);
+    Axios({
+      url:
+        process.env.REACT_APP_BASE_API_URL +
+        `/VideoEditings/download?url=${highlight.ts}`,
+      method: "GET",
+      responseType: "blob",
+    })
+      .then((res) => {
+        console.log(res);
+        FileDownload(res.data, "video.ts");
+        setOpen(false);
+      })
+      .catch(function (error) {
+        console.log(error);
+        return Promise.reject(error);
+      });
+  };
+
   return (
     <>
+      <Backdrop
+        sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }}
+        open={open}
+      >
+        <CircularProgress color="inherit" />
+      </Backdrop>
+
       <Typography.Title level={3} style={{ margin: 0, textAlign: "center" }}>
         HIGHLIGHT
       </Typography.Title>
@@ -142,6 +168,7 @@ function HighlightReview(props) {
         data={highlights}
         handleViewClick={handleViewClick}
         handleIconDeleteClick={handleIconDeleteClick}
+        handleIconDownloadClick={handleIconDownloadClick}
       />
     </>
   );
