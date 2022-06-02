@@ -10,5 +10,6 @@ namespace video_editing_api.Service.DBConnection
         IMongoCollection<Tournament> GetTournamentCollection();
         IMongoCollection<MatchInfo> GetMatchInfoCollection();
         IMongoCollection<HighlightVideo> GetHighlightVideoCollection();
+        IMongoCollection<video_editing_api.Model.Collection.Film> GetFilmCollection();
     }
 }

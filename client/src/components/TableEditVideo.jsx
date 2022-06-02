@@ -7,7 +7,7 @@ import "antd/dist/antd.css";
 import { formatTimeSlice } from "./video-input";
 
 function TableEditVideo(props) {
-  const { data, onTableClick } = props;
+  const { data, onTableClick, buttonReview } = props;
   const [searchText, setSearchText] = useState();
   const [searchedColumn, setSearchedColumn] = useState();
   const searchInput = useRef(null);
@@ -185,7 +185,6 @@ function TableEditVideo(props) {
   }
 
   const onPageChange = (page, pageSize) => {
-    console.log(page, pageSize);
     onTableClick(data[(page - 1) * pageSize + select]);
   };
 
@@ -211,7 +210,18 @@ function TableEditVideo(props) {
         onChange: onPageChange,
       }}
       footer={() => {
-        return "Total Trimmed: " + formatTimeSlice(sumTrimTime);
+        return (
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            Total Trimmed: {formatTimeSlice(sumTrimTime)}
+            {buttonReview}
+          </div>
+        );
       }}
       scroll={{ y: "50vh", x: "100%" }}
     />

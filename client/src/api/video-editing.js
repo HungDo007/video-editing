@@ -1,4 +1,5 @@
 import axiosClient from "./axios.client";
+import Axios from "axios";
 
 const videoEditingApi = {
   getMatches: () => {
@@ -23,6 +24,16 @@ const videoEditingApi = {
 
   concatHighlight: (matchId, hlDescription, data) => {
     const url = `/VideoEditings/concatHighlight`;
+    const body = {
+      matchId: matchId,
+      description: hlDescription,
+      jsonFile: data,
+    };
+    return axiosClient.post(url, body);
+  },
+
+  notConcatHighlight: (matchId, hlDescription, data) => {
+    const url = `/VideoEditings/notConcatHighlight`;
     const body = {
       matchId: matchId,
       description: hlDescription,

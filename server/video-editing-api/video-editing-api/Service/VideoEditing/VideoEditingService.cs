@@ -5,14 +5,16 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using MongoDB.Driver;
 using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
-using video_editing_api.Model;
 using video_editing_api.Model.Collection;
 using video_editing_api.Model.InputModel;
 using video_editing_api.Service.DBConnection;
@@ -24,7 +26,7 @@ namespace video_editing_api.Service.VideoEditing
 {
     public class VideoEditingService : IVideoEditingService
     {
-        private readonly IMongoCollection<Action> _actions;
+
         private readonly IMongoCollection<Tournament> _tournament;
         private readonly IMongoCollection<MatchInfo> _matchInfo;
         private readonly IMongoCollection<HighlightVideo> _highlight;
@@ -37,7 +39,6 @@ namespace video_editing_api.Service.VideoEditing
         private string _dir;
         public VideoEditingService(IDbClient dbClient, IConfiguration config, IStorageService storageService, IWebHostEnvironment env)
         {
-            _actions = dbClient.GetActionCollection();
             _tournament = dbClient.GetTournamentCollection();
             _matchInfo = dbClient.GetMatchInfoCollection();
             _highlight = dbClient.GetHighlightVideoCollection();
@@ -54,31 +55,7 @@ namespace video_editing_api.Service.VideoEditing
             _cloudinary = new Cloudinary(account);
         }
 
-        #region Action
-        public async Task<List<Action>> GetActions()
-        {
-            try
-            {
-                return await _actions.Find(action => true).ToListAsync();
-            }
-            catch (System.Exception e)
-            {
-                throw new System.Exception(e.Message);
-            }
-        }
-        public async Task<string> AddAction(List<Action> actions)
-        {
-            try
-            {
-                await _actions.InsertManyAsync(actions);
-                return "Succeed";
-            }
-            catch (System.Exception e)
-            {
-                throw new System.Exception(e.Message);
-            }
-        }
-        #endregion
+
 
 
         #region Tournament
@@ -195,9 +172,30 @@ namespace video_editing_api.Service.VideoEditing
                     var idTournament = tournament.Id;
                     matchInfo.TournamentId = idTournament;
                     await _matchInfo.InsertOneAsync(matchInfo);
-
                 }
-                return "Succeed";
+
+                var jsonBody = new
+                {
+                    match_id = matchInfo.Id
+                };
+
+                HttpClient client = new HttpClient();
+                client.Timeout = TimeSpan.FromDays(1);
+                client.BaseAddress = new System.Uri("http://118.69.218.59:7007");
+                var json = JsonConvert.SerializeObject(jsonBody);
+                try
+                {
+                    var httpContent = new StringContent(json, Encoding.UTF8, "application/json");
+                    var response = await client.PostAsync("/savematch", httpContent);
+                    if (response.IsSuccessStatusCode)
+                        return "Succeed";
+                    else
+                        throw new System.Exception(response.Content.ReadAsStringAsync().Result);
+                }
+                catch (System.Exception ex)
+                {
+                    throw new System.Exception(ex.Message);
+                }
             }
             catch (System.Exception e)
             {
@@ -541,12 +539,12 @@ namespace video_editing_api.Service.VideoEditing
 
         public async Task<string> ConcatVideoOfMatch(ConcatModel concatModel)
         {
-
             try
             {
                 var match = _matchInfo.Find(x => x.Id == concatModel.MatchId).First();
 
                 HttpClient client = new HttpClient();
+                client.Timeout = TimeSpan.FromDays(1);
                 client.BaseAddress = new System.Uri("http://118.69.218.59:7007");
                 var json = JsonConvert.SerializeObject(concatModel.JsonFile);
                 json = json.Replace("E", "e");
@@ -562,7 +560,7 @@ namespace video_editing_api.Service.VideoEditing
                     Description = concatModel.Description,
                     mp4 = model.mp4,
                     ts = model.ts,
-                    MatchInfo = $"({match.MatchName})T({match.MactchTime.ToString("dd-MM-yyyy-hh-mm")})"
+                    MatchInfo = $"({match.MatchName})T({DateTime.Now.ToString("dd-MM-yyyy-hh-mm")})"
                 };
                 await _highlight.InsertOneAsync(hl);
                 return "Succeed";
@@ -633,5 +631,98 @@ namespace video_editing_api.Service.VideoEditing
                 throw new System.Exception(e.Message);
             }
         }
+
+        public async Task<byte[]> NotConcatVideoOfMatch(ConcatModel concatModel)
+        {
+            try
+            {
+                HttpClient client = new HttpClient();
+                client.Timeout = TimeSpan.FromDays(1);
+                client.BaseAddress = new System.Uri("http://118.69.218.59:7007");
+                var json = JsonConvert.SerializeObject(concatModel.JsonFile);
+                json = json.Replace("E", "e");
+                var httpContent = new StringContent(json, Encoding.UTF8, "application/json");
+                var response = await client.PostAsync("/highlight_nomerge", httpContent);
+                var result = await response.Content.ReadAsStringAsync();
+
+                var listRes = JsonConvert.DeserializeObject<NotConcatResultModel>(result);
+                var (fileType, archiveData, archiveName) = DownloadFiles(listRes.ts);
+                return archiveData;
+            }
+            catch (System.Exception ex)
+            {
+                throw new System.Exception(ex.Message);
+            }
+        }
+
+        public byte[] Download(string url)
+        {
+            try
+            {
+                byte[] content;
+                using (var client = new WebClient())
+                {
+                    content = client.DownloadData(url);
+                }
+                return content;
+            }
+            catch (System.Exception ex)
+            {
+                throw new System.Exception(ex.Message);
+            }
+        }
+
+        #region Download File  
+        private (string fileType, byte[] archiveData, string archiveName) DownloadFiles(List<string> urls)
+        {
+            var zipName = $"video-{DateTime.Now.ToString("yyyy_MM_dd-HH_mm_ss")}.zip";
+
+            byte[] content;
+
+            using (var memoryStream = new MemoryStream())
+            {
+                using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, false))
+                {
+                    for (int i = 0; i < urls.Count; i++)
+                    {
+                        using (var client = new WebClient())
+                        {
+                            content = client.DownloadData(urls[i]);
+                        }
+                        var theFile = archive.CreateEntry($"video{i + 1}.ts", CompressionLevel.Optimal);
+                        var entryStream = theFile.Open();
+                        using var fileToCompressStream = new MemoryStream(content);
+                        fileToCompressStream.CopyTo(entryStream);
+                        entryStream.Close();
+                    }
+                }
+
+                return ("application/zip", memoryStream.ToArray(), zipName);
+            }
+
+        }
+
+        public async Task<byte[]> DownloadOne(ConcatModel concatModel)
+        {
+            try
+            {
+                HttpClient client = new HttpClient();
+                client.Timeout = TimeSpan.FromDays(1);
+                client.BaseAddress = new System.Uri("http://118.69.218.59:7007");
+                var json = JsonConvert.SerializeObject(concatModel.JsonFile);
+                json = json.Replace("E", "e");
+                var httpContent = new StringContent(json, Encoding.UTF8, "application/json");
+                var response = await client.PostAsync("/highlight", httpContent);
+                var result = await response.Content.ReadAsStringAsync();
+
+                ConcatResultModel model = JsonConvert.DeserializeObject<ConcatResultModel>(result);
+                return Download(model.ts);
+            }
+            catch (System.Exception ex)
+            {
+                throw new System.Exception(ex.Message);
+            }
+        }
+        #endregion
     }
 }

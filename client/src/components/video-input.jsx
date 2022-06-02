@@ -1,5 +1,6 @@
 import { useRef, useState, useEffect, useCallback } from "react";
-
+import Axios from "axios";
+import FileDownload from "js-file-download";
 import {
   Box,
   Button,
@@ -38,6 +39,27 @@ export const formatTimeSlice = (time) => {
   return minutes + ":" + ("0" + seconds).slice(-2);
 };
 
+const reducerObj = (obj) => {
+  const payload = obj.reduce((filter, video) => {
+    if (video.selected) {
+      const newVideoInfo = {
+        level: video.level,
+        time: video.time,
+        event: video.event,
+        file_name: video.file_name,
+        players: video.players,
+        ts: [
+          Math.floor(video.ts[0] + video.startTime),
+          Math.floor(video.ts[0] + video.endTime),
+        ],
+      };
+      filter.push(newVideoInfo);
+    }
+    return filter;
+  }, []);
+  return payload;
+};
+
 const VideoInput = () => {
   const [opendialog, setOpenDialog] = useState(false);
   const location = useLocation();
@@ -59,7 +81,7 @@ const VideoInput = () => {
   const [body, setBody] = useState();
   const [videoPieceTime, setVideoPieceTime] = useState([0, 0]);
   const previousVideoPieceTime = useRef(videoPieceTime);
-  console.log(rowSelected);
+
   useEffect(() => {
     previousVideoPieceTime.current = videoPieceTime;
   }, [videoPieceTime]);
@@ -131,8 +153,6 @@ const VideoInput = () => {
   };
 
   const handleSlideChange = (event, newValue) => {
-    console.log(newValue);
-    console.log(previousVideoPieceTime);
     let indexSeekTo;
     if (newValue[0] !== previousVideoPieceTime.current[0]) indexSeekTo = 0;
     else indexSeekTo = 1;
@@ -161,20 +181,25 @@ const VideoInput = () => {
   };
 
   const handleSendServer = () => {
-    const payload = filtered.reduce((filter, video) => {
-      if (video.selected) {
-        const newVideoInfo = {
-          level: video.level,
-          time: video.time,
-          event: video.event,
-          file_name: video.file_name,
-          players: video.players,
-          ts: [video.ts[0] + video.startTime, video.ts[0] + video.endTime],
-        };
-        filter.push(newVideoInfo);
-      }
-      return filter;
-    }, []);
+    // const payload = filtered.reduce((filter, video) => {
+    //   if (video.selected) {
+    //     const newVideoInfo = {
+    //       level: video.level,
+    //       time: video.time,
+    //       event: video.event,
+    //       file_name: video.file_name,
+    //       players: video.players,
+    //       ts: [
+    //         Math.floor(video.ts[0] + video.startTime),
+    //         Math.floor(video.ts[0] + video.endTime),
+    //       ],
+    //     };
+    //     filter.push(newVideoInfo);
+    //   }
+    //   return filter;
+    // }, []);
+
+    const payload = reducerObj(filtered);
     const newBody = {
       ...body,
       event: payload,
@@ -182,7 +207,7 @@ const VideoInput = () => {
 
     const concatHighlight = async () => {
       try {
-        const response = await videoEditingApi.concatHighlight(
+        await videoEditingApi.concatHighlight(
           location.state.row.id,
           hlDescription,
           newBody
@@ -204,6 +229,111 @@ const VideoInput = () => {
     setOpen(true);
     concatHighlight();
   };
+
+  const handleDownloadOneClick = () => {
+    const payload = reducerObj([rowSelected]);
+    const newBody = {
+      ...body,
+      event: payload,
+    };
+
+    const downloadOne = async () => {
+      try {
+        Axios({
+          url: process.env.REACT_APP_BASE_API_URL + `/VideoEditings/download`,
+          method: "POST",
+          data: {
+            matchId: location.state.row.id,
+            description: hlDescription,
+            jsonFile: newBody,
+          },
+          responseType: "blob",
+        })
+          .then((res) => {
+            console.log(res);
+            FileDownload(res.data, "videos.ts");
+            setOpen(false);
+          })
+          .catch(function (error) {
+            setOpen(false);
+            console.log(error);
+            return Promise.reject(error);
+          });
+      } catch (error) {
+        console.log(error.response.data.description);
+        setOpen(false);
+        setNoti(true);
+        setMessage(error.response.data.description);
+        setTypeNoti("error");
+      }
+    };
+    setOpenDialog(false);
+    setOpen(true);
+    downloadOne();
+  };
+
+  const handleSendServerNotMerge = () => {
+    // const payload = filtered.reduce((filter, video) => {
+    //   if (video.selected) {
+    //     const newVideoInfo = {
+    //       level: video.level,
+    //       time: video.time,
+    //       event: video.event,
+    //       file_name: video.file_name,
+    //       players: video.players,
+    //       ts: [
+    //         Math.floor(video.ts[0] + video.startTime),
+    //         Math.floor(video.ts[0] + video.endTime),
+    //       ],
+    //     };
+    //     filter.push(newVideoInfo);
+    //   }
+    //   return filter;
+    // }, []);
+
+    const payload = reducerObj(filtered);
+    const newBody = {
+      ...body,
+      event: payload,
+    };
+
+    const notConcatHighlight = async () => {
+      try {
+        Axios({
+          url:
+            process.env.REACT_APP_BASE_API_URL +
+            `/VideoEditings/notConcatHighlight`,
+          method: "POST",
+          data: {
+            matchId: location.state.row.id,
+            description: hlDescription,
+            jsonFile: newBody,
+          },
+          responseType: "blob",
+        })
+          .then((res) => {
+            console.log(res);
+            FileDownload(res.data, "videos.zip");
+            setOpen(false);
+          })
+          .catch(function (error) {
+            setOpen(false);
+            console.log(error);
+            return Promise.reject(error);
+          });
+      } catch (error) {
+        console.log(error.response.data.description);
+        setOpen(false);
+        setNoti(true);
+        setMessage(error.response.data.description);
+        setTypeNoti("error");
+      }
+    };
+    setOpenDialog(false);
+    setOpen(true);
+    notConcatHighlight();
+  };
+
   const handleClose = () => {
     setOpenDialog(false);
   };
@@ -277,7 +407,7 @@ const VideoInput = () => {
           }}
           id="scroll-dialog-title"
         >
-          <b>Concat Video Selected</b>
+          <b>Merge Video Selected</b>
         </DialogTitle>
         <DialogContent dividers={scroll === "paper"}>
           <DialogContentText
@@ -437,43 +567,50 @@ const VideoInput = () => {
             </Table>
           </DialogContentText>
         </DialogContent>
-        <DialogActions
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <TextField
+        <DialogActions>
+          <Grid
             sx={{
-              width: "50%",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
             }}
-            label="Enter description for video highlight"
-            value={hlDescription}
-            onChange={(e) => setHlDescription(e.target.value)}
-            multiline
-            small
-          />
-          <div>
-            <Button
-              variant="contained"
-              //onClick={handleSendServer}
-              disabled={dis}
-              color="secondary"
-            >
-              Trim not Concat
-            </Button>
-            <Button
+            container
+            component="form"
+            onSubmit={handleSendServer}
+          >
+            <TextField
               sx={{
-                marginLeft: "10px",
+                width: "50%",
               }}
-              variant="contained"
-              onClick={handleSendServer}
-              disabled={dis}
-            >
-              Trim and Concat
-            </Button>
-          </div>
+              label="Enter description for video highlight"
+              value={hlDescription}
+              onChange={(e) => setHlDescription(e.target.value)}
+              multiline
+              small
+              required
+            />
+            <div>
+              <Button
+                variant="contained"
+                onClick={handleSendServerNotMerge}
+                disabled={dis}
+                color="secondary"
+              >
+                Download
+              </Button>
+              <Button
+                sx={{
+                  marginLeft: "10px",
+                }}
+                variant="contained"
+                //onClick={handleSendServer}
+                type="submit"
+                disabled={dis}
+              >
+                Merge
+              </Button>
+            </div>
+          </Grid>
         </DialogActions>
       </Dialog>
 
@@ -534,6 +671,13 @@ const VideoInput = () => {
                 >
                   {isTrimmed ? "Not qualified" : "Trimmed"}
                 </Button>
+                <Button
+                  variant="contained"
+                  color="info"
+                  onClick={handleDownloadOneClick}
+                >
+                  Download
+                </Button>
                 <div>{formatTimeSlice(rowSelected?.endTime)}</div>
               </Box>
             </div>
@@ -541,15 +685,23 @@ const VideoInput = () => {
           <Grid item xs={12}></Grid>
         </Grid>
         <Grid item xs={5} overflow="auto">
-          <TableEditVideo data={videoSrc} onTableClick={onTableClick} />
+          <TableEditVideo
+            data={videoSrc}
+            onTableClick={onTableClick}
+            buttonReview={
+              <Button variant="contained" onClick={handleEditVideo}>
+                Review
+              </Button>
+            }
+          />
         </Grid>
       </Grid>
 
-      <Box sx={{ textAlign: "center", margin: 2 }}>
+      {/* <Box sx={{ textAlign: "center", margin: 2 }}>
         <Button variant="contained" onClick={handleEditVideo}>
           Review
         </Button>
-      </Box>
+      </Box> */}
       <div
         style={{ height: 3, backgroundColor: "black", marginBottom: "15px" }}
       ></div>

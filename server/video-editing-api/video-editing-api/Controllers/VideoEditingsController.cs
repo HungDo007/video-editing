@@ -24,33 +24,6 @@ namespace video_editing_api.Controllers
         }
 
 
-        //[HttpGet("getAction")]
-        //public async Task<IActionResult> GetActions()
-        //{
-        //    try
-        //    {
-        //        var result = await _videoEditingService.GetActions();
-        //        return Ok(new Response<List<Action>>(200, "", result));
-        //    }
-        //    catch (System.Exception e)
-        //    {
-        //        return BadRequest(new Response<List<Action>>(400, e.Message, null));
-        //    }
-        //}
-        //[HttpPost("addAction")]
-        //public async Task<IActionResult> AddAction([FromBody] List<Action> actions)
-        //{
-        //    try
-        //    {
-        //        var result = await _videoEditingService.AddAction(actions);
-        //        return Ok(new Response<string>(200, "", result));
-        //    }
-        //    catch (System.Exception e)
-        //    {
-        //        return BadRequest(new Response<string>(400, e.Message, null));
-        //    }
-        //}
-
         [HttpGet("getTournamentById")]
         public async Task<IActionResult> GetTournament(string Id)
         {
@@ -215,7 +188,20 @@ namespace video_editing_api.Controllers
                 return BadRequest(new Response<string>(400, e.Message, null));
             }
         }
-
+        [HttpPost("notConcatHighlight")]
+        [AllowAnonymous]
+        public async Task<IActionResult> NotConcatVideo(ConcatModel concatModel)
+        {
+            try
+            {
+                var res = await _videoEditingService.NotConcatVideoOfMatch(concatModel);
+                return File(res, "application/zip", "videos.zip");
+            }
+            catch (System.Exception e)
+            {
+                return BadRequest(new Response<string>(400, e.Message, null));
+            }
+        }
 
         [HttpPost("uploadJson/{matchId}")]
         public async Task<IActionResult> UploadJson(string matchId, IFormFile jsonfile)
@@ -224,6 +210,37 @@ namespace video_editing_api.Controllers
             {
                 var res = await _videoEditingService.UploadJson(matchId, jsonfile);
                 return Ok(new Response<string>(200, "", res));
+            }
+            catch (System.Exception e)
+            {
+                return BadRequest(new Response<string>(400, e.Message, null));
+            }
+        }
+
+
+        [HttpGet("download")]
+        [AllowAnonymous]
+        public IActionResult download(string url)
+        {
+            try
+            {
+                byte[] content = _videoEditingService.Download(url);
+                return File(content, "video/mp2t", "video.ts");
+            }
+            catch (System.Exception e)
+            {
+                return BadRequest(new Response<string>(400, e.Message, null));
+            }
+        }
+
+        [HttpPost("download")]
+        [AllowAnonymous]
+        public async Task<IActionResult> downloadone(ConcatModel concatModel)
+        {
+            try
+            {
+                byte[] content = await _videoEditingService.DownloadOne(concatModel);
+                return File(content, "video/mp2t", "video.ts");
             }
             catch (System.Exception e)
             {

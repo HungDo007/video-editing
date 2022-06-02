@@ -3,7 +3,7 @@ import ShareIcon from "@mui/icons-material/Share";
 import VideoLibraryIcon from "@mui/icons-material/VideoLibrary";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CloudDownloadIcon from "@mui/icons-material/CloudDownload";
-import { IconButton, MenuItem, Select, Tooltip } from "@mui/material";
+import { IconButton, Tooltip } from "@mui/material";
 import { SearchOutlined } from "@ant-design/icons";
 import Highlighter from "react-highlight-words";
 import { Table, Input, Button, Space } from "antd";
@@ -11,7 +11,12 @@ import "../table-video.css";
 import "antd/dist/antd.css";
 
 function TableHighlight(props) {
-  const { data, handleViewClick, handleIconDeleteClick } = props;
+  const {
+    data,
+    handleViewClick,
+    handleIconDeleteClick,
+    handleIconDownloadClick,
+  } = props;
 
   // for search
   const searchInput = useRef(null);
@@ -22,6 +27,7 @@ function TableHighlight(props) {
     setSearchText(selectedKeys[0]);
     setSearchedColumn(dataIndex);
   };
+
   const getColumnSearchProps = (dataIndex) => ({
     filterDropdown: ({
       setSelectedKeys,
@@ -101,7 +107,7 @@ function TableHighlight(props) {
       },
     },
     {
-      title: "Time",
+      title: "Time merge",
       render: (row) => {
         return row.matchInfo?.substring(
           row.matchInfo?.indexOf(")") + 3,
@@ -138,33 +144,28 @@ function TableHighlight(props) {
       render: (row) => {
         return (
           <Tooltip key={123} title="Download">
-            <IconButton href={row.ts} target="_blank">
+            <IconButton onClick={() => handleIconDownloadClick(row)}>
               <CloudDownloadIcon />
             </IconButton>
           </Tooltip>
         );
       },
     },
-    {
-      render: (row) => {
-        return (
-          // <Select IconComponent={() => <ShareIcon />}>
-          //   <MenuItem value={10}>Ten</MenuItem>
-          //   <MenuItem value={20}>Twenty</MenuItem>
-          //   <MenuItem value={30}>Thirty</MenuItem>
-          // </Select>
-          <Tooltip key={123} title="Share">
-            <IconButton
-              onClick={(e) => {
-                console.log(row);
-              }}
-            >
-              <ShareIcon />
-            </IconButton>
-          </Tooltip>
-        );
-      },
-    },
+    // {
+    //   render: (row) => {
+    //     return (
+    //       <Tooltip key={123} title="Share">
+    //         <IconButton
+    //           onClick={(e) => {
+    //             console.log(row);
+    //           }}
+    //         >
+    //           <ShareIcon />
+    //         </IconButton>
+    //       </Tooltip>
+    //     );
+    //   },
+    // },
     {
       render: (row) => {
         return (
