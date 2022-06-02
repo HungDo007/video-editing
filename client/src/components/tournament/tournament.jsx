@@ -200,7 +200,6 @@ const Tournament = () => {
         onConfirm={handleConfirmClick}
         open={openDConfirm}
       />
-
       <Dialog open={opendialog} onClose={handleClose} scroll={scroll}>
         <DialogTitle
           sx={{
@@ -246,8 +245,14 @@ const Tournament = () => {
           {message}
         </Alert>
       </Snackbar>
-
-      <Card sx={{ padding: 5, margin: 40, marginTop: 0, marginBottom: 3 }}>
+      <Card
+        sx={{
+          width: "50%",
+          padding: 5,
+          margin: "auto",
+          marginBottom: 3,
+        }}
+      >
         <Grid
           container
           spacing={2}

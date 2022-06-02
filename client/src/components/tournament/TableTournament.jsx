@@ -170,6 +170,7 @@ function TableTournament(props) {
       },
     },
     {
+      title: "Upload",
       render: (row) => {
         return (
           <Tooltip
@@ -189,6 +190,7 @@ function TableTournament(props) {
       },
     },
     {
+      title: "Delete",
       render: (row) => {
         return (
           <Tooltip key={123} title="Delete Match" placement="top">
