@@ -25,7 +25,7 @@ namespace video_editing_api.Service.VideoEditing
         Task<bool> DeleteMatch(string id);
         Task<string> ConcatVideoOfMatch(ConcatModel concatModel);
 
-        Task<byte[]> NotConcatVideoOfMatch(ConcatModel concatModel);
+        Task<List<string>> NotConcatVideoOfMatch(ConcatModel concatModel);
 
         Task<bool> DeleteHighlight(string id);
         Task<List<HighlightVideo>> GetHighlightVideos();
@@ -34,6 +34,8 @@ namespace video_editing_api.Service.VideoEditing
         Task<string> UploadJson(string matchId, IFormFile jsonfile);
 
         byte[] Download(string url);
-        Task<byte[]> DownloadOne(ConcatModel concatModel);
+        Task<string> DownloadOne(ConcatModel concatModel);
+
+        Task<bool> UpdateLogTrimed(string matchId, EventStorage eventStorage);
     }
 }

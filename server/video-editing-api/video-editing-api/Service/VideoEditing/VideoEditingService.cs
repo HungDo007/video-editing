@@ -1,4 +1,5 @@
-﻿using CloudinaryDotNet;
+﻿using AutoMapper;
+using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -34,17 +35,18 @@ namespace video_editing_api.Service.VideoEditing
         private readonly IStorageService _storageService;
         private readonly Cloudinary _cloudinary;
         private readonly IWebHostEnvironment _env;
+        private readonly IMapper _mapper;
 
 
         private string _dir;
-        public VideoEditingService(IDbClient dbClient, IConfiguration config, IStorageService storageService, IWebHostEnvironment env)
+        public VideoEditingService(IDbClient dbClient, IConfiguration config, IStorageService storageService, IWebHostEnvironment env, IMapper mapper)
         {
             _tournament = dbClient.GetTournamentCollection();
             _matchInfo = dbClient.GetMatchInfoCollection();
             _highlight = dbClient.GetHighlightVideoCollection();
             _dir = env.WebRootPath;
             _storageService = storageService;
-
+            _mapper = mapper;
             _env = env;
             var account = new Account(
                config["Cloudinary:CloudName"],
@@ -543,10 +545,15 @@ namespace video_editing_api.Service.VideoEditing
             {
                 var match = _matchInfo.Find(x => x.Id == concatModel.MatchId).First();
 
+                var inputSend = handlePreSendServer(concatModel.JsonFile);
+                //var inputSend = new InputSendServer<Eventt>();
+                //inputSend = _mapper.Map<InputSendServer<Eventt>>(concatModel.JsonFile);
+
                 HttpClient client = new HttpClient();
                 client.Timeout = TimeSpan.FromDays(1);
                 client.BaseAddress = new System.Uri("http://118.69.218.59:7007");
-                var json = JsonConvert.SerializeObject(concatModel.JsonFile);
+
+                var json = JsonConvert.SerializeObject(inputSend);
                 json = json.Replace("E", "e");
                 var httpContent = new StringContent(json, Encoding.UTF8, "application/json");
                 var response = await client.PostAsync("/highlight", httpContent);
@@ -580,7 +587,23 @@ namespace video_editing_api.Service.VideoEditing
                 {
                     textJson = await reader.ReadToEndAsync();
                 }
-                InputSendServer input = JsonConvert.DeserializeObject<InputSendServer>(textJson);
+                InputSendServer<EventStorage> input = JsonConvert.DeserializeObject<InputSendServer<EventStorage>>(textJson);
+
+                for (var i = 0; i < input.Event.Count; i++)
+                {
+                    if (input.Event[i].ts.Count > 0)
+                    {
+                        var temp = input.Event[i].mainpoint - input.Event[i].ts[0];
+                        input.Event[i].startTime = temp > 0 ? temp : input.Event[i].ts[1];
+                        input.Event[i].endTime = input.Event[i].ts[1] - input.Event[i].ts[0];
+                        input.Event[i].selected = i == 0 ? 1 : -1;
+                    }
+                }
+                foreach (var item in input.Event)
+                {
+
+                }
+
                 var match = _matchInfo.Find(x => x.Id == matchId).First();
                 match.IsUploadJsonFile = true;
                 match.JsonFile = input;
@@ -632,22 +655,29 @@ namespace video_editing_api.Service.VideoEditing
             }
         }
 
-        public async Task<byte[]> NotConcatVideoOfMatch(ConcatModel concatModel)
+        public async Task<List<string>> NotConcatVideoOfMatch(ConcatModel concatModel)
         {
             try
             {
+                var inputSend = handlePreSendServer(concatModel.JsonFile);
+                //var inputSend = new InputSendServer<Eventt>();
+                //inputSend = _mapper.Map<InputSendServer<Eventt>>(concatModel.JsonFile);
+
+
                 HttpClient client = new HttpClient();
                 client.Timeout = TimeSpan.FromDays(1);
                 client.BaseAddress = new System.Uri("http://118.69.218.59:7007");
-                var json = JsonConvert.SerializeObject(concatModel.JsonFile);
+
+                var json = JsonConvert.SerializeObject(inputSend);
                 json = json.Replace("E", "e");
                 var httpContent = new StringContent(json, Encoding.UTF8, "application/json");
                 var response = await client.PostAsync("/highlight_nomerge", httpContent);
                 var result = await response.Content.ReadAsStringAsync();
 
                 var listRes = JsonConvert.DeserializeObject<NotConcatResultModel>(result);
-                var (fileType, archiveData, archiveName) = DownloadFiles(listRes.ts);
-                return archiveData;
+                return listRes.mp4;
+                //var (fileType, archiveData, archiveName) = DownloadFiles(listRes.ts);
+                //return archiveData;
             }
             catch (System.Exception ex)
             {
@@ -702,21 +732,84 @@ namespace video_editing_api.Service.VideoEditing
 
         }
 
-        public async Task<byte[]> DownloadOne(ConcatModel concatModel)
+        public async Task<string> DownloadOne(ConcatModel concatModel)
         {
             try
             {
+                var inputSend = handlePreSendServer(concatModel.JsonFile);
+                //    = new InputSendServer<Eventt>();
+                //inputSend = _mapper.Map<InputSendServer<Eventt>>(concatModel.JsonFile);
+
                 HttpClient client = new HttpClient();
                 client.Timeout = TimeSpan.FromDays(1);
                 client.BaseAddress = new System.Uri("http://118.69.218.59:7007");
-                var json = JsonConvert.SerializeObject(concatModel.JsonFile);
+                var json = JsonConvert.SerializeObject(inputSend);
                 json = json.Replace("E", "e");
                 var httpContent = new StringContent(json, Encoding.UTF8, "application/json");
                 var response = await client.PostAsync("/highlight", httpContent);
                 var result = await response.Content.ReadAsStringAsync();
 
                 ConcatResultModel model = JsonConvert.DeserializeObject<ConcatResultModel>(result);
-                return Download(model.ts);
+                return model.mp4;
+                //return Download(model.ts);
+            }
+            catch (System.Exception ex)
+            {
+                throw new System.Exception(ex.Message);
+            }
+        }
+
+
+        private InputSendServer<Eventt> handlePreSendServer(InputSendServer<EventStorage> input)
+        {
+            try
+            {
+                List<Eventt> eventts = new List<Eventt>();
+
+                var inputSend = new InputSendServer<Eventt>();
+                inputSend = _mapper.Map<InputSendServer<Eventt>>(input);
+
+                foreach (var item in input.Event)
+                {
+                    Eventt eventt = new Eventt()
+                    {
+                        Event = item.Event,
+                        level = item.level,
+                        mainpoint = item.mainpoint,
+                        file_name = item.file_name,
+                        players = item.players,
+                        time = item.time,
+                        ts = new List<int>()
+                    };
+                    eventt.ts.Add((int)(item.ts[0] + item.startTime));
+                    eventt.ts.Add((int)(item.ts[0] + item.endTime));
+
+                    eventts.Add(eventt);
+                }
+                inputSend.Event = eventts;
+                return inputSend;
+
+            }
+            catch (System.Exception ex)
+            {
+                throw new System.Exception(ex.Message);
+            }
+        }
+
+        public async Task<bool> UpdateLogTrimed(string matchId, EventStorage eventStorage)
+        {
+            try
+            {
+                var match = _matchInfo.Find(x => x.Id == matchId).First();
+
+                var ev = match.JsonFile.Event.FindIndex(e => e.file_name == eventStorage.file_name);
+                if (ev == -1)
+                    return false;
+
+                match.JsonFile.Event[ev] = eventStorage;
+
+                _matchInfo.ReplaceOne(m => m.Id == matchId, match);
+                return true;
             }
             catch (System.Exception ex)
             {

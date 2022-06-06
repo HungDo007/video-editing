@@ -2,9 +2,9 @@
 
 namespace video_editing_api.Model.InputModel
 {
-    public class InputSendServer
+    public class InputSendServer<T>
     {
-        public List<Eventt> Event { get; set; }
+        public List<T> Event { get; set; }
         public string match_name { get; set; }
         public string league { get; set; }
         public List<string> teams { get; set; }
@@ -26,6 +26,21 @@ namespace video_editing_api.Model.InputModel
         public List<string> players { get; set; }
         public List<int> ts { get; set; }
         public int mainpoint { get; set; }
+
+    }
+
+    public class EventStorage
+    {
+        public int level { get; set; }
+        public string time { get; set; }
+        public string Event { get; set; }
+        public string file_name { get; set; }
+        public List<string> players { get; set; }
+        public List<int> ts { get; set; }
+        public int mainpoint { get; set; } = 0;
+        public int startTime { get; set; } = 0;
+        public int endTime { get; set; } = 0;
+        public int selected { get; set; } = 0;
 
     }
 }

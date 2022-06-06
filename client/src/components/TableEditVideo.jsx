@@ -15,6 +15,7 @@ function TableEditVideo(props) {
   const [sumTrimTime, setSumTrimTime] = useState();
 
   const [filterLv, setFilterLv] = useState();
+  const [filterEvent, setFilterEvent] = useState();
 
   useEffect(() => {
     const lvfilter = [...new Set(data.map((item) => item.level))];
@@ -23,6 +24,13 @@ function TableEditVideo(props) {
       return a.push({ text: item, value: item });
     });
     setFilterLv(a);
+
+    const evfilter = [...new Set(data.map((item)=>item.event))];
+    var b =[];
+    evfilter.forEach((item)=>{
+      return b.push({text: item, value:item})
+    })
+    setFilterEvent(b);
   }, [data?.length]);
 
   const getColumnSearchProps = (dataIndex) => ({
@@ -115,7 +123,12 @@ function TableEditVideo(props) {
       dataIndex: "event",
       key: "event",
       width: 150,
-      ...getColumnSearchProps("event"),
+      //...getColumnSearchProps("event"),
+      filters: filterEvent,
+      onFilter: (event, record) => {
+        setSelect(-1);
+        return record.event === event;
+      },
     },
     {
       title: "Level",

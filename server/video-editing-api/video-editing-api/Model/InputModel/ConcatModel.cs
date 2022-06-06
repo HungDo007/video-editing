@@ -4,6 +4,6 @@
     {
         public string MatchId { get; set; }
         public string Description { get; set; }
-        public InputSendServer JsonFile { get; set; }
+        public InputSendServer<EventStorage> JsonFile { get; set; }
     }
 }

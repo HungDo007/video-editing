@@ -189,13 +189,13 @@ namespace video_editing_api.Controllers
             }
         }
         [HttpPost("notConcatHighlight")]
-        [AllowAnonymous]
         public async Task<IActionResult> NotConcatVideo(ConcatModel concatModel)
         {
             try
             {
                 var res = await _videoEditingService.NotConcatVideoOfMatch(concatModel);
-                return File(res, "application/zip", "videos.zip");
+                return Ok(new Response<List<string>>(200, "", res));
+                //return File(res, "application/zip", "videos.zip");
             }
             catch (System.Exception e)
             {
@@ -239,8 +239,26 @@ namespace video_editing_api.Controllers
         {
             try
             {
-                byte[] content = await _videoEditingService.DownloadOne(concatModel);
-                return File(content, "video/mp2t", "video.ts");
+                var res = await _videoEditingService.DownloadOne(concatModel);
+                return Ok(new Response<string>(200, "", res));
+                //return File(content, "video/mp2t", "video.ts");
+            }
+            catch (System.Exception e)
+            {
+                return BadRequest(new Response<string>(400, e.Message, null));
+            }
+        }
+
+        [HttpPost("updateLogTrimmed/{matchId}")]
+        public async Task<IActionResult> updateLogTrimmed(string matchId, EventStorage eventStorage)
+        {
+            try
+            {
+                var res = await _videoEditingService.UpdateLogTrimed(matchId, eventStorage);
+                if (res)
+                    return Ok(new Response<bool>(200, "", res));
+                else
+                    return BadRequest(new Response<bool>(400, "don't find event", false));
             }
             catch (System.Exception e)
             {
