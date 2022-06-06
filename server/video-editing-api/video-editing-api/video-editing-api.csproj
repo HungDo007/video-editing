@@ -9,18 +9,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="ffmpeg\ffmpeg.exe" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Include="ffmpeg\ffmpeg.exe">
-      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="11.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="5.0.9" />
     <PackageReference Include="AspNetCore.Identity.MongoDbCore" Version="3.1.2" />    
