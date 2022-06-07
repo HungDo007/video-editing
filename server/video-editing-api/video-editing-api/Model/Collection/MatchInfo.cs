@@ -21,7 +21,7 @@ namespace video_editing_api.Model.Collection
         public string Ip { get; set; }
         public string Port { get; set; }
         public bool IsUploadJsonFile { get; set; } = false;
-        public InputSendServer JsonFile { get; set; }
+        public InputSendServer<EventStorage> JsonFile { get; set; }
 
         //public List<VideoResource> Videos { get; set; } = new List<VideoResource>();
     }

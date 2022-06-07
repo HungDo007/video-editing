@@ -81,6 +81,7 @@ const VideoInput = () => {
   const [body, setBody] = useState();
   const [videoPieceTime, setVideoPieceTime] = useState([0, 0]);
   const previousVideoPieceTime = useRef(videoPieceTime);
+  const previousDataRow = useRef(rowSelected);
 
   useEffect(() => {
     previousVideoPieceTime.current = videoPieceTime;
@@ -130,25 +131,34 @@ const VideoInput = () => {
       });
 
       setBody(response.data.jsonFile);
-      console.log(response.data.jsonFile.event);
-      const videos = response.data.jsonFile.event.map((video, i) => ({
-        ...video,
-        selected: i === 0 ? 1 : -1,
-        startTime:
-          video.mainpoint - video.ts[0] < video.ts[1] - video.ts[0]
-            ? video.mainpoint - video.ts[0]
-            : video.ts[1] - video.ts[0],
-        endTime: video.ts[1] - video.ts[0],
-      }));
-      setVideoSrc(videos);
-      setRowSelected(videos[0]);
+      setVideoSrc(response.data.jsonFile.event);
+      setRowSelected(response.data.jsonFile.event[0]);
+      setIsTrimmed(
+        response.data.jsonFile.event[0].selected === 1 ? true : false
+      );
     };
 
     getData();
     getHighlight();
   }, []);
 
+  // console.log(previousDataRow.current);
+  // console.log(rowSelected);
+
+  const updateLogTrimmed = async (eventUpdate) => {
+    try {
+      await videoEditingApi.updateLogTrimmed(
+        location.state.row.id,
+        eventUpdate
+      );
+    } catch (error) {}
+  };
+
   const handleDuration = (duration) => {
+    const temp = { ...previousDataRow.current };
+    //send temp to update
+    updateLogTrimmed(temp);
+    previousDataRow.current = rowSelected;
     setDuration(duration);
   };
 
@@ -165,11 +175,13 @@ const VideoInput = () => {
     setRowSelected(a);
     newVideoSrc[vdSrc] = a;
     setVideoSrc(newVideoSrc);
-    console.log(indexSeekTo);
+    //console.log(indexSeekTo);
     videoPlayer.current.seekTo(newValue[indexSeekTo], "seconds");
   };
 
   const handleEditVideo = () => {
+    const temp = { ...previousDataRow.current };
+    updateLogTrimmed(temp);
     const payload = videoSrc.reduce((filtered, video) => {
       if (video.selected === 1) {
         filtered.push(video);
@@ -180,29 +192,12 @@ const VideoInput = () => {
     setOpenDialog(true);
   };
 
-  const handleSendServer = () => {
-    // const payload = filtered.reduce((filter, video) => {
-    //   if (video.selected) {
-    //     const newVideoInfo = {
-    //       level: video.level,
-    //       time: video.time,
-    //       event: video.event,
-    //       file_name: video.file_name,
-    //       players: video.players,
-    //       ts: [
-    //         Math.floor(video.ts[0] + video.startTime),
-    //         Math.floor(video.ts[0] + video.endTime),
-    //       ],
-    //     };
-    //     filter.push(newVideoInfo);
-    //   }
-    //   return filter;
-    // }, []);
-
-    const payload = reducerObj(filtered);
+  const handleSendServer = (e) => {
+    e.preventDefault();
+    //const payload = reducerObj(filtered);
     const newBody = {
       ...body,
-      event: payload,
+      event: filtered,
     };
 
     const concatHighlight = async () => {
@@ -218,7 +213,6 @@ const VideoInput = () => {
         setTypeNoti("success");
         getHighlight();
       } catch (error) {
-        console.log(error.response.data.description);
         setOpen(false);
         setNoti(true);
         setMessage(error.response.data.description);
@@ -231,107 +225,155 @@ const VideoInput = () => {
   };
 
   const handleDownloadOneClick = () => {
-    const payload = reducerObj([rowSelected]);
+    const payload = [rowSelected];
     const newBody = {
       ...body,
       event: payload,
     };
+    //console.log(newBody);
 
     const downloadOne = async () => {
       try {
-        Axios({
-          url: process.env.REACT_APP_BASE_API_URL + `/VideoEditings/download`,
-          method: "POST",
-          data: {
-            matchId: location.state.row.id,
-            description: hlDescription,
-            jsonFile: newBody,
-          },
-          responseType: "blob",
-        })
-          .then((res) => {
-            console.log(res);
-            FileDownload(res.data, "videos.ts");
-            setOpen(false);
-          })
-          .catch(function (error) {
-            setOpen(false);
-            console.log(error);
-            return Promise.reject(error);
-          });
-      } catch (error) {
-        console.log(error.response.data.description);
+        var response = await videoEditingApi.downloadOne(
+          location.state.row.id,
+          hlDescription,
+          newBody
+        );
         setOpen(false);
+        // Create blob link to download
+        const link = document.createElement("a");
+        link.href = response.data.replace("raw", "download");
+        // Append to html link element page
+        document.body.appendChild(link);
+        // Start download
+        link.click();
+        // Clean up and remove the link
+        link.parentNode.removeChild(link);
+      } catch (error) {
         setNoti(true);
         setMessage(error.response.data.description);
         setTypeNoti("error");
       }
     };
-    setOpenDialog(false);
     setOpen(true);
     downloadOne();
+    // const downloadOne = async () => {
+    //   try {
+    //     Axios({
+    //       url: process.env.REACT_APP_BASE_API_URL + `/VideoEditings/download`,
+    //       method: "POST",
+    //       data: {
+    //         matchId: location.state.row.id,
+    //         description: hlDescription,
+    //         jsonFile: newBody,
+    //       },
+    //       responseType: "blob",
+    //     })
+    //       .then((res) => {
+    //         FileDownload(res.data, "videos.ts");
+    //         setOpen(false);
+    //       })
+    //       .catch(function (error) {
+    //         setOpen(false);
+    //         return Promise.reject(error);
+    //       });
+    //   } catch (error) {
+    //     setOpen(false);
+    //     setNoti(true);
+    //     setMessage(error.response.data.description);
+    //     setTypeNoti("error");
+    //   }
+    // };
+    // setOpenDialog(false);
+    // setOpen(true);
+    // downloadOne();
   };
 
-  const handleSendServerNotMerge = () => {
-    // const payload = filtered.reduce((filter, video) => {
-    //   if (video.selected) {
-    //     const newVideoInfo = {
-    //       level: video.level,
-    //       time: video.time,
-    //       event: video.event,
-    //       file_name: video.file_name,
-    //       players: video.players,
-    //       ts: [
-    //         Math.floor(video.ts[0] + video.startTime),
-    //         Math.floor(video.ts[0] + video.endTime),
-    //       ],
-    //     };
-    //     filter.push(newVideoInfo);
-    //   }
-    //   return filter;
-    // }, []);
+  function download_files(files) {
+    function download_next(i) {
+      if (i >= files.length) {
+        return;
+      }
+      var link = document.createElement("a");
+      document.body.appendChild(link);
+      link.setAttribute("href", files[i].replace("raw", "download"));
+      link.click();
 
-    const payload = reducerObj(filtered);
+      // Delete the temporary link.
+      document.body.removeChild(link);
+      // Download the next file with a small timeout. The timeout is necessary
+      // for IE, which will otherwise only download the first file.
+      setTimeout(function () {
+        download_next(i + 1);
+      }, 1000);
+    }
+    // Initiate the first download.
+    download_next(0);
+  }
+
+  const handleSendServerNotMerge = () => {
+    //const payload = reducerObj(filtered);
     const newBody = {
       ...body,
-      event: payload,
+      event: filtered,
     };
+    console.log(filtered);
 
-    const notConcatHighlight = async () => {
+    const downloadNotMerge = async () => {
       try {
-        Axios({
-          url:
-            process.env.REACT_APP_BASE_API_URL +
-            `/VideoEditings/notConcatHighlight`,
-          method: "POST",
-          data: {
-            matchId: location.state.row.id,
-            description: hlDescription,
-            jsonFile: newBody,
-          },
-          responseType: "blob",
-        })
-          .then((res) => {
-            console.log(res);
-            FileDownload(res.data, "videos.zip");
-            setOpen(false);
-          })
-          .catch(function (error) {
-            setOpen(false);
-            console.log(error);
-            return Promise.reject(error);
-          });
-      } catch (error) {
-        console.log(error.response.data.description);
+        var response = await videoEditingApi.downloadNotMerge(
+          location.state.row.id,
+          hlDescription,
+          newBody
+        );
         setOpen(false);
+        ///Create blob link to download
+
+        download_files(response.data);
+      } catch (error) {
         setNoti(true);
-        setMessage(error.response.data.description);
+        //setMessage(error.response.data.description);
+        setMessage(error);
         setTypeNoti("error");
       }
     };
     setOpenDialog(false);
     setOpen(true);
-    notConcatHighlight();
+    downloadNotMerge();
+
+    //console.log(payload);
+    // const notConcatHighlight = async () => {
+    //   try {
+    //     Axios({
+    //       url:
+    //         process.env.REACT_APP_BASE_API_URL +
+    //         `/VideoEditings/notConcatHighlight`,
+    //       method: "POST",
+    //       data: {
+    //         matchId: location.state.row.id,
+    //         description: hlDescription,
+    //         jsonFile: newBody,
+    //       },
+    //       responseType: "blob",
+    //     })
+    //       .then((res) => {
+    //         FileDownload(res.data, "videos.zip");
+    //         setOpen(false);
+    //       })
+    //       .catch(function (error) {
+    //         setOpen(false);
+    //         return Promise.reject(error);
+    //       });
+    //   } catch (error) {
+    //     setOpen(false);
+    //     setNoti(true);
+    //     setMessage(error.response.data.description);
+    //     setTypeNoti("error");
+    //   }
+    // };
+    // setOpenDialog(false);
+    // setOpen(true);
+    // notConcatHighlight();
   };
 
   const handleClose = () => {
@@ -368,6 +410,7 @@ const VideoInput = () => {
     newVideoSrc[vdSrc].selected = isTrimmed ? 0 : 1;
     setIsTrimmed(!isTrimmed);
     setVideoSrc(newVideoSrc);
+    updateLogTrimmed(newVideoSrc[vdSrc]);
   };
   const [isReady, setIsReady] = useState(false);
   const onReady = useCallback(

@@ -11,12 +11,7 @@ import "../table-video.css";
 import "antd/dist/antd.css";
 
 function TableHighlight(props) {
-  const {
-    data,
-    handleViewClick,
-    handleIconDeleteClick,
-    handleIconDownloadClick,
-  } = props;
+  const { data, handleViewClick, handleIconDeleteClick } = props;
 
   // for search
   const searchInput = useRef(null);
@@ -142,9 +137,13 @@ function TableHighlight(props) {
     },
     {
       render: (row) => {
+        const temp = { ...row };
         return (
           <Tooltip key={123} title="Download">
-            <IconButton onClick={() => handleIconDownloadClick(row)}>
+            <IconButton
+              href={temp.mp4.replace("raw", "download")}
+              target="_blank"
+            >
               <CloudDownloadIcon />
             </IconButton>
           </Tooltip>

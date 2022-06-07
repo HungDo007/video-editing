@@ -65,6 +65,31 @@ const videoEditingApi = {
     const url = `/VideoEditings/uploadJson/${id}`;
     return axiosClient.post(url, formdata);
   },
+
+  updateLogTrimmed: (id, eventStorage) => {
+    const url = `VideoEditings/updateLogTrimmed/${id}`;
+    return axiosClient.post(url, eventStorage);
+  },
+
+  downloadOne: (matchId, hlDescription, data) => {
+    const url = `/VideoEditings/download`;
+    const body = {
+      matchId: matchId,
+      description: hlDescription,
+      jsonFile: data,
+    };
+    return axiosClient.post(url, body);
+  },
+
+  downloadNotMerge: (matchId, hlDescription, data) => {
+    const url = `/VideoEditings/notConcatHighlight`;
+    const body = {
+      matchId: matchId,
+      description: hlDescription,
+      jsonFile: data,
+    };
+    return axiosClient.post(url, body);
+  },
 };
 
 export default videoEditingApi;

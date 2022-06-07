@@ -83,7 +83,7 @@ namespace video_editing_api
                     };
                 });
             #endregion
-
+            services.AddAutoMapper(typeof(AutoMapperProfile).Assembly);
             #region Add Swagger
             services.AddSwaggerGen(c =>
             {

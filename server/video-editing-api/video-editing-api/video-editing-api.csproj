@@ -3,25 +3,17 @@
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
     <RootNamespace>video_editing_api</RootNamespace>
+    <UserSecretsId>645d751c-6dc2-4e5f-b2d9-c7a5458ac1fc</UserSecretsId>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="ffmpeg\ffmpeg.exe" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Include="ffmpeg\ffmpeg.exe">
-      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-
-  <ItemGroup>
+    <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="11.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="5.0.9" />
     <PackageReference Include="AspNetCore.Identity.MongoDbCore" Version="3.1.2" />    
-    <PackageReference Include="CloudinaryDotNet" Version="1.17.0" />
+    <PackageReference Include="CloudinaryDotNet" Version="1.17.0" />    
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.14.0" />
     <PackageReference Include="Minio" Version="4.0.0" />
     <PackageReference Include="MongoDB.Driver" Version="2.15.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="5.6.3" />

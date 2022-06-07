@@ -76,27 +76,6 @@ function HighlightReview(props) {
     setOpenDConfirm(true);
   };
 
-  const handleIconDownloadClick = (highlight) => {
-    console.log(highlight);
-    setOpen(true);
-    Axios({
-      url:
-        process.env.REACT_APP_BASE_API_URL +
-        `/VideoEditings/download?url=${highlight.ts}`,
-      method: "GET",
-      responseType: "blob",
-    })
-      .then((res) => {
-        console.log(res);
-        FileDownload(res.data, "video.ts");
-        setOpen(false);
-      })
-      .catch(function (error) {
-        console.log(error);
-        return Promise.reject(error);
-      });
-  };
-
   return (
     <>
       <Backdrop
@@ -168,7 +147,6 @@ function HighlightReview(props) {
         data={highlights}
         handleViewClick={handleViewClick}
         handleIconDeleteClick={handleIconDeleteClick}
-        handleIconDownloadClick={handleIconDownloadClick}
       />
     </>
   );
