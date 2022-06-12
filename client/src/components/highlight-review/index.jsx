@@ -16,8 +16,6 @@ import ReactPlayer from "react-player";
 import TableHighlight from "./TableHighlight";
 import { ConfirmDialog } from "../flugin";
 import { Typography } from "antd";
-import Axios from "axios";
-import FileDownload from "js-file-download";
 
 function HighlightReview(props) {
   const { highlights, getHighlight } = props;

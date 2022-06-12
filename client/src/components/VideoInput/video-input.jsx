@@ -1,16 +1,8 @@
 import { useRef, useState, useEffect, useCallback } from "react";
-import Axios from "axios";
-import FileDownload from "js-file-download";
 import {
   Box,
   Button,
-  Checkbox,
   Slider,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
   TextField,
   Backdrop,
   CircularProgress,
@@ -22,13 +14,20 @@ import {
   DialogContent,
   DialogContentText,
   DialogActions,
+  Autocomplete,
 } from "@mui/material";
-
+import { Tabs } from "antd";
 import ReactPlayer from "react-player";
-import videoEditingApi from "../api/video-editing";
+import videoEditingApi from "../../api/video-editing";
 import { useLocation } from "react-router-dom";
-import HighlightReview from "./highlight-review";
+import HighlightReview from "../highlight-review";
 import TableEditVideo from "./TableEditVideo";
+import { FileUploader } from "react-drag-drop-files";
+import TableReview from "./TableReview";
+import TableLogo from "./TableLogo";
+import { CategoryTwoTone } from "@mui/icons-material";
+
+const { TabPane } = Tabs;
 
 export const formatTimeSlice = (time) => {
   var mind = time % (60 * 60);
@@ -39,29 +38,20 @@ export const formatTimeSlice = (time) => {
   return minutes + ":" + ("0" + seconds).slice(-2);
 };
 
-const reducerObj = (obj) => {
-  const payload = obj.reduce((filter, video) => {
-    if (video.selected) {
-      const newVideoInfo = {
-        level: video.level,
-        time: video.time,
-        event: video.event,
-        file_name: video.file_name,
-        players: video.players,
-        ts: [
-          Math.floor(video.ts[0] + video.startTime),
-          Math.floor(video.ts[0] + video.endTime),
-        ],
-      };
-      filter.push(newVideoInfo);
-    }
-    return filter;
-  }, []);
-  return payload;
-};
+const options = [
+  { label: "Top-Right", value: 1 },
+  { label: "Bottom-Right", value: 2 },
+  { label: "Bottom-Left", value: 3 },
+  { label: "Top-Left", value: 4 },
+];
 
 const VideoInput = () => {
   const [opendialog, setOpenDialog] = useState(false);
+
+  const [position, setPosition] = useState(undefined);
+  const [eventName, setEventName] = useState(undefined);
+  const [file, setFile] = useState();
+  const [logo, setLogo] = useState();
   const location = useLocation();
   const videoPlayer = useRef(null);
   const [scroll, setScroll] = useState("paper");
@@ -83,10 +73,13 @@ const VideoInput = () => {
   const previousVideoPieceTime = useRef(videoPieceTime);
   const previousDataRow = useRef(rowSelected);
 
+  const [opendialogUploadEvent, setOpendialogUploadEvent] = useState(false);
+  const [opendialogUploadLogo, setOpendialogUploadLogo] = useState(false);
+
   useEffect(() => {
     previousVideoPieceTime.current = videoPieceTime;
   }, [videoPieceTime]);
-
+  console.log(body);
   const [open, setOpen] = useState(false);
 
   const [highlights, setHighlights] = useState();
@@ -131,20 +124,26 @@ const VideoInput = () => {
       });
 
       setBody(response.data.jsonFile);
-      setVideoSrc(response.data.jsonFile.event);
+
       setRowSelected(response.data.jsonFile.event[0]);
+      const temp = response.data.jsonFile.event;
+
+      if (response.data.jsonFile.event[0].selected === -1) {
+        const tempdata = { ...response.data.jsonFile.event[0] };
+        tempdata.selected = 1;
+        updateLogTrimmed(tempdata);
+        temp[0].selected = 1;
+      }
+      setLogo(response.data.jsonFile.logo);
+      setVideoSrc(temp);
       setIsTrimmed(
-        response.data.jsonFile.event[0].selected === 1 ? true : false
+        response.data.jsonFile.event[0].selected === 0 ? false : true
       );
     };
 
     getData();
     getHighlight();
   }, []);
-
-  // console.log(previousDataRow.current);
-  // console.log(rowSelected);
-
   const updateLogTrimmed = async (eventUpdate) => {
     try {
       await videoEditingApi.updateLogTrimmed(
@@ -156,8 +155,9 @@ const VideoInput = () => {
 
   const handleDuration = (duration) => {
     const temp = { ...previousDataRow.current };
+    const sd = videoSrc.find((item) => item.file_name === temp.file_name);
     //send temp to update
-    updateLogTrimmed(temp);
+    updateLogTrimmed(sd);
     previousDataRow.current = rowSelected;
     setDuration(duration);
   };
@@ -175,14 +175,15 @@ const VideoInput = () => {
     setRowSelected(a);
     newVideoSrc[vdSrc] = a;
     setVideoSrc(newVideoSrc);
-    //console.log(indexSeekTo);
     videoPlayer.current.seekTo(newValue[indexSeekTo], "seconds");
   };
 
   const handleEditVideo = () => {
     const temp = { ...previousDataRow.current };
     updateLogTrimmed(temp);
-    const payload = videoSrc.reduce((filtered, video) => {
+
+    const tempFilter = [...videoSrc];
+    const payload = tempFilter.reduce((filtered, video) => {
       if (video.selected === 1) {
         filtered.push(video);
       }
@@ -194,7 +195,6 @@ const VideoInput = () => {
 
   const handleSendServer = (e) => {
     e.preventDefault();
-    //const payload = reducerObj(filtered);
     const newBody = {
       ...body,
       event: filtered,
@@ -209,17 +209,17 @@ const VideoInput = () => {
         );
         setOpen(false);
         setNoti(true);
+        setOpenDialog(false);
         setMessage("Concat Succeed");
         setTypeNoti("success");
         getHighlight();
       } catch (error) {
-        setOpen(false);
         setNoti(true);
+        setOpen(false);
         setMessage(error.response.data.description);
         setTypeNoti("error");
       }
     };
-    setOpenDialog(false);
     setOpen(true);
     concatHighlight();
   };
@@ -230,7 +230,6 @@ const VideoInput = () => {
       ...body,
       event: payload,
     };
-    //console.log(newBody);
 
     const downloadOne = async () => {
       try {
@@ -257,36 +256,6 @@ const VideoInput = () => {
     };
     setOpen(true);
     downloadOne();
-    // const downloadOne = async () => {
-    //   try {
-    //     Axios({
-    //       url: process.env.REACT_APP_BASE_API_URL + `/VideoEditings/download`,
-    //       method: "POST",
-    //       data: {
-    //         matchId: location.state.row.id,
-    //         description: hlDescription,
-    //         jsonFile: newBody,
-    //       },
-    //       responseType: "blob",
-    //     })
-    //       .then((res) => {
-    //         FileDownload(res.data, "videos.ts");
-    //         setOpen(false);
-    //       })
-    //       .catch(function (error) {
-    //         setOpen(false);
-    //         return Promise.reject(error);
-    //       });
-    //   } catch (error) {
-    //     setOpen(false);
-    //     setNoti(true);
-    //     setMessage(error.response.data.description);
-    //     setTypeNoti("error");
-    //   }
-    // };
-    // setOpenDialog(false);
-    // setOpen(true);
-    // downloadOne();
   };
 
   function download_files(files) {
@@ -317,8 +286,6 @@ const VideoInput = () => {
       ...body,
       event: filtered,
     };
-    console.log(filtered);
-
     const downloadNotMerge = async () => {
       try {
         var response = await videoEditingApi.downloadNotMerge(
@@ -337,54 +304,19 @@ const VideoInput = () => {
         setTypeNoti("error");
       }
     };
-    setOpenDialog(false);
     setOpen(true);
     downloadNotMerge();
-
-    //console.log(payload);
-    // const notConcatHighlight = async () => {
-    //   try {
-    //     Axios({
-    //       url:
-    //         process.env.REACT_APP_BASE_API_URL +
-    //         `/VideoEditings/notConcatHighlight`,
-    //       method: "POST",
-    //       data: {
-    //         matchId: location.state.row.id,
-    //         description: hlDescription,
-    //         jsonFile: newBody,
-    //       },
-    //       responseType: "blob",
-    //     })
-    //       .then((res) => {
-    //         FileDownload(res.data, "videos.zip");
-    //         setOpen(false);
-    //       })
-    //       .catch(function (error) {
-    //         setOpen(false);
-    //         return Promise.reject(error);
-    //       });
-    //   } catch (error) {
-    //     setOpen(false);
-    //     setNoti(true);
-    //     setMessage(error.response.data.description);
-    //     setTypeNoti("error");
-    //   }
-    // };
-    // setOpenDialog(false);
-    // setOpen(true);
-    // notConcatHighlight();
   };
 
   const handleClose = () => {
     setOpenDialog(false);
+    setOpendialogUploadEvent(false);
+    setOpendialogUploadLogo(false);
   };
 
-  const handleReviewChange = (e, video) => {
-    const newVideos = [...filtered];
-    const a = newVideos.findIndex((vid) => vid.file_name === video.file_name);
-    newVideos[a].selected = e.target.checked ? 1 : 0;
-    setFiltered(newVideos);
+  const handleClose1 = () => {
+    setOpendialogUploadEvent(false);
+    setOpendialogUploadLogo(false);
   };
 
   const onTableClick = (row) => {
@@ -424,21 +356,128 @@ const VideoInput = () => {
     [isReady]
   );
 
+  const handleUploadEventClick = () => {
+    if (file === undefined || eventName === undefined) {
+      setNoti(true);
+      setMessage("Please chose file or enter event name");
+      setTypeNoti("error");
+      return;
+    }
+
+    const formdata = new FormData();
+    formdata.append("eventName", eventName);
+    formdata.append("file", file);
+    formdata.append("logo", null);
+    try {
+      const uploadSmallVideo = async () => {
+        var response = await videoEditingApi.uploadSmallVideo(formdata);
+        const temp = [...filtered];
+        temp.unshift(response.data);
+        setFiltered(temp);
+        setOpen(false);
+        setNoti(true);
+        setMessage("Upload Succeed");
+        setTypeNoti("success");
+        setOpendialogUploadEvent(false);
+      };
+      setOpen(true);
+      uploadSmallVideo();
+    } catch (error) {
+      setNoti(true);
+      setMessage(error.response.data.description);
+      setTypeNoti("error");
+    }
+  };
+  const handleUploadLogoClick = () => {
+    if (file === undefined || position === undefined) {
+      setNoti(true);
+      setMessage("Please chose file or select position");
+      setTypeNoti("error");
+      return;
+    }
+
+    const formdata = new FormData();
+    formdata.append("eventName", null);
+    formdata.append("file", file);
+    formdata.append("position", position.value);
+    try {
+      const uploadLogo = async () => {
+        var response = await videoEditingApi.uploadLogo(
+          location.state.row.id,
+          formdata
+        );
+        setLogo(response.data);
+        setOpen(false);
+        setNoti(true);
+        setMessage("Upload Succeed");
+        setTypeNoti("success");
+        setOpendialogUploadLogo(false);
+        const body1 = { ...body };
+        body1.logo = response.data;
+        setBody(body1);
+      };
+      setOpen(true);
+      uploadLogo();
+    } catch (error) {
+      setNoti(true);
+      setMessage(error.response.data.description);
+      setTypeNoti("error");
+    }
+  };
+
+  const handleFileChange = (file) => {
+    setFile(file);
+  };
+
+  const handleIconRemoveEventClick = (row) => {
+    const temp = [...filtered];
+    const afterRemove = temp.filter((item) => item.file_name !== row.file_name);
+
+    setFiltered(afterRemove);
+  };
+
+  const handleIconRemoveLogoClick = (position) => {
+    try {
+      const deleteLogo = async () => {
+        var response = await videoEditingApi.deleteLogo(
+          location.state.row.id,
+          position
+        );
+        setLogo(response.data);
+        setOpen(false);
+        setNoti(true);
+        setMessage("Delete Succeed");
+        setTypeNoti("success");
+        setOpendialogUploadLogo(false);
+        const body1 = { ...body };
+        body1.logo = response.data;
+        setBody(body1);
+      };
+      setOpen(true);
+      deleteLogo();
+    } catch (error) {
+      setNoti(true);
+      setMessage(error.response.data.description);
+      setTypeNoti("error");
+    }
+  };
+
   return (
     <>
       <Backdrop
-        sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }}
+        sx={{
+          color: "#fff",
+          zIndex: (theme) => theme.zIndex.drawer + 100000000,
+        }}
         open={open}
       >
         <CircularProgress color="inherit" />
       </Backdrop>
 
       <Dialog
-        open={opendialog}
-        onClose={handleClose}
+        open={opendialogUploadEvent}
+        onClose={handleClose1}
         scroll={scroll}
-        fullWidth={true}
-        maxWidth="lg"
       >
         <DialogTitle
           sx={{
@@ -450,164 +489,132 @@ const VideoInput = () => {
           }}
           id="scroll-dialog-title"
         >
-          <b>Merge Video Selected</b>
+          <h4>Upload more event</h4>
+          <Button variant="contained" onClick={handleUploadEventClick}>
+            Upload
+          </Button>
         </DialogTitle>
         <DialogContent dividers={scroll === "paper"}>
           <DialogContentText
             id="scroll-dialog-description"
             ref={descriptionElementRef}
             tabIndex={-1}
-            minHeight="60vh"
           >
-            <Table>
-              <TableHead>
-                <TableRow sx={{ backgroundColor: "#CEEBF9" }}>
-                  <TableCell
-                    key={0}
-                    sx={{
-                      border: "1px solid #76BBD9",
-                      padding: 1,
-                    }}
-                    align="center"
-                  >
-                    <b>STT</b>
-                  </TableCell>
-                  <TableCell
-                    key={1}
-                    sx={{
-                      border: "1px solid #76BBD9",
-                      padding: 1,
-                    }}
-                    align="center"
-                  >
-                    <b>Name</b>
-                  </TableCell>
-                  <TableCell
-                    key={2}
-                    sx={{
-                      border: "1px solid #76BBD9",
-                      padding: 1,
-                    }}
-                    align="center"
-                  >
-                    <b>Times</b>
-                  </TableCell>
-                  <TableCell
-                    key={3}
-                    sx={{
-                      border: "1px solid #76BBD9",
-                      padding: 1,
-                    }}
-                    align="center"
-                  >
-                    <b>Start</b>
-                  </TableCell>
-                  <TableCell
-                    key={4}
-                    sx={{
-                      border: "1px solid #76BBD9",
-                      padding: 1,
-                    }}
-                    align="center"
-                  >
-                    <b>End</b>
-                  </TableCell>
-                  <TableCell
-                    key={5}
-                    sx={{
-                      border: "1px solid #76BBD9",
-                      padding: 1,
-                    }}
-                    align="center"
-                  >
-                    <b>Select</b>
-                  </TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {/* style={ {minHeight: '45px' } } */}
-                {filtered?.map((video, i) => (
-                  <TableRow key={i}>
-                    <TableCell
-                      key={1}
-                      sx={{
-                        border: "1px solid #76BBD9",
-                        padding: 1,
+            <Grid container spacing={2} width="450px">
+              <Grid item xs={12}>
+                <TextField
+                  value={eventName}
+                  label="Event Name"
+                  variant="standard"
+                  //size="small"
+                  onChange={(e) => setEventName(e.target.value)}
+                  fullWidth
+                  //required={!hidden}
+                  //placeholder="Enter league name"
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <FileUploader
+                  handleChange={handleFileChange}
+                  name="file"
+                  //types={["MP4,PNG,JPG,"]}
+                />
+              </Grid>
+            </Grid>
+          </DialogContentText>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={opendialogUploadLogo}
+        onClose={handleClose1}
+        scroll={scroll}
+      >
+        <DialogTitle
+          sx={{
+            backgroundColor: "#CEEBF9",
+            fontSize: "15px",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+          id="scroll-dialog-title"
+        >
+          <h4>Upload file Logo</h4>
+          <Button variant="contained" onClick={handleUploadLogoClick}>
+            Upload
+          </Button>
+        </DialogTitle>
+        <DialogContent dividers={scroll === "paper"}>
+          <DialogContentText
+            id="scroll-dialog-description"
+            ref={descriptionElementRef}
+            tabIndex={-1}
+          >
+            <Grid container spacing={2} width="450px">
+              <Grid item xs={12}>
+                <Autocomplete
+                  options={options}
+                  //size="small"
+                  value={position}
+                  fullWidth
+                  getOptionLabel={(option) => option["label"] || ""}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Position"
+                      variant="standard"
+                      inputProps={{
+                        ...params.inputProps,
                       }}
-                      align="center"
-                    >
-                      {i + 1}
-                    </TableCell>
-                    <TableCell
-                      key={2}
-                      sx={{
-                        border: "1px solid #76BBD9",
-                        padding: 1,
-                      }}
-                      align="center"
-                    >
-                      {video.event}
-                    </TableCell>
-                    <TableCell
-                      key={4}
-                      sx={{
-                        border: "1px solid #76BBD9",
-                        padding: 1,
-                      }}
-                      align="center"
-                    >
-                      {video.time.substring(0, 2)}m{video.time.substring(2, 4)}s
-                    </TableCell>
-                    <TableCell
-                      key={3}
-                      sx={{
-                        border: "1px solid #76BBD9",
-                        padding: 1,
-                      }}
-                      align="center"
-                    >
-                      {formatTimeSlice(video.ts[0] + video.startTime)}
-                    </TableCell>
-                    <TableCell
-                      key={6}
-                      sx={{
-                        border: "1px solid #76BBD9",
-                        padding: 1,
-                      }}
-                      align="center"
-                    >
-                      {formatTimeSlice(video.ts[0] + video.endTime)}
-                    </TableCell>
-                    <TableCell
-                      key={7}
-                      sx={{
-                        border: "1px solid #76BBD9",
-                        padding: 1,
-                      }}
-                      align="center"
-                    >
-                      <Checkbox
-                        checked={video.selected}
-                        onChange={(e) => handleReviewChange(e, video)}
-                      />
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {(filtered === undefined || filtered.length === 0) && (
-                  <TableRow>
-                    <TableCell
-                      sx={{
-                        border: "1px solid #76BBD9",
-                      }}
-                      align="center"
-                      colSpan={6}
-                    >
-                      No data
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+                    />
+                  )}
+                  onChange={(e, value) => {
+                    setPosition(value);
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <FileUploader
+                  handleChange={handleFileChange}
+                  name="file"
+                  //types={["MP4,PNG,JPG,"]}
+                />
+              </Grid>
+            </Grid>
+          </DialogContentText>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={opendialog}
+        onClose={handleClose}
+        scroll={scroll}
+        fullWidth={true}
+        maxWidth="lg"
+      >
+        <DialogContent dividers={scroll === "paper"}>
+          <DialogContentText
+            id="scroll-dialog-description"
+            ref={descriptionElementRef}
+            tabIndex={-1}
+            minHeight="70vh"
+          >
+            <Tabs defaultActiveKey="1">
+              <TabPane tab="Event" key="1">
+                <TableReview
+                  data={filtered}
+                  setData={setFiltered}
+                  handleIconRemoveClick={handleIconRemoveEventClick}
+                />
+              </TabPane>
+              <TabPane tab="Logo" key="2">
+                <TableLogo
+                  data={logo}
+                  handleIconRemoveClick={handleIconRemoveLogoClick}
+                />
+              </TabPane>
+            </Tabs>
           </DialogContentText>
         </DialogContent>
         <DialogActions>
@@ -634,6 +641,36 @@ const VideoInput = () => {
             />
             <div>
               <Button
+                sx={{
+                  backgroundColor: "#66CC66",
+                }}
+                variant="contained"
+                onClick={() => {
+                  setOpendialogUploadLogo(true);
+                  setPosition(undefined);
+                  setFile(undefined);
+                }}
+              >
+                Upload Logo
+              </Button>
+              <Button
+                sx={{
+                  marginLeft: "10px",
+                  backgroundColor: "#66CC66",
+                }}
+                variant="contained"
+                onClick={() => {
+                  setOpendialogUploadEvent(true);
+                  setEventName(undefined);
+                  setFile(undefined);
+                }}
+              >
+                Upload More Event
+              </Button>
+              <Button
+                sx={{
+                  marginLeft: "10px",
+                }}
                 variant="contained"
                 onClick={handleSendServerNotMerge}
                 disabled={dis}
@@ -712,12 +749,12 @@ const VideoInput = () => {
                   color={isTrimmed ? "error" : "info"}
                   onClick={handleNotQualifiedOrTrimmedClick}
                 >
-                  {isTrimmed ? "Not qualified" : "Trimmed"}
+                  {isTrimmed ? "Not qualified" : "Trim"}
                 </Button>
                 <Button
                   variant="contained"
-                  color="info"
                   onClick={handleDownloadOneClick}
+                  color="secondary"
                 >
                   Download
                 </Button>

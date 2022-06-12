@@ -3,7 +3,7 @@ import { Table, Input, Button, Space } from "antd";
 import Highlighter from "react-highlight-words";
 import { SearchOutlined } from "@ant-design/icons";
 import { Link, IconButton, Tooltip } from "@mui/material";
-import "../table-video.css";
+import "../VideoInput/table-video.css";
 import "antd/dist/antd.css";
 
 import DeleteIcon from "@mui/icons-material/Delete";

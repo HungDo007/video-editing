@@ -25,11 +25,11 @@ function TableEditVideo(props) {
     });
     setFilterLv(a);
 
-    const evfilter = [...new Set(data.map((item)=>item.event))];
-    var b =[];
-    evfilter.forEach((item)=>{
-      return b.push({text: item, value:item})
-    })
+    const evfilter = [...new Set(data.map((item) => item.event))];
+    var b = [];
+    evfilter.forEach((item) => {
+      return b.push({ text: item, value: item });
+    });
     setFilterEvent(b);
   }, [data?.length]);
 

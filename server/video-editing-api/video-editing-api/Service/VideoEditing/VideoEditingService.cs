@@ -544,8 +544,12 @@ namespace video_editing_api.Service.VideoEditing
             try
             {
                 var match = _matchInfo.Find(x => x.Id == concatModel.MatchId).First();
+                var eventNotQualified = match.JsonFile.Event.Where(x => x.selected == 0).ToList();
 
-                var inputSend = handlePreSendServer(concatModel.JsonFile);
+                var inputSend = handlePreSendServer(concatModel.JsonFile, eventNotQualified);
+
+
+
                 //var inputSend = new InputSendServer<Eventt>();
                 //inputSend = _mapper.Map<InputSendServer<Eventt>>(concatModel.JsonFile);
 
@@ -659,10 +663,10 @@ namespace video_editing_api.Service.VideoEditing
         {
             try
             {
-                var inputSend = handlePreSendServer(concatModel.JsonFile);
-                //var inputSend = new InputSendServer<Eventt>();
-                //inputSend = _mapper.Map<InputSendServer<Eventt>>(concatModel.JsonFile);
+                var jsonFile = concatModel.JsonFile.Event.Where(x => x.selected != -1).ToList();
+                concatModel.JsonFile.Event = jsonFile;
 
+                var inputSend = handlePreSendServer(concatModel.JsonFile, null);
 
                 HttpClient client = new HttpClient();
                 client.Timeout = TimeSpan.FromDays(1);
@@ -676,8 +680,6 @@ namespace video_editing_api.Service.VideoEditing
 
                 var listRes = JsonConvert.DeserializeObject<NotConcatResultModel>(result);
                 return listRes.mp4;
-                //var (fileType, archiveData, archiveName) = DownloadFiles(listRes.ts);
-                //return archiveData;
             }
             catch (System.Exception ex)
             {
@@ -736,9 +738,7 @@ namespace video_editing_api.Service.VideoEditing
         {
             try
             {
-                var inputSend = handlePreSendServer(concatModel.JsonFile);
-                //    = new InputSendServer<Eventt>();
-                //inputSend = _mapper.Map<InputSendServer<Eventt>>(concatModel.JsonFile);
+                var inputSend = handlePreSendServer(concatModel.JsonFile, null);
 
                 HttpClient client = new HttpClient();
                 client.Timeout = TimeSpan.FromDays(1);
@@ -751,7 +751,6 @@ namespace video_editing_api.Service.VideoEditing
 
                 ConcatResultModel model = JsonConvert.DeserializeObject<ConcatResultModel>(result);
                 return model.mp4;
-                //return Download(model.ts);
             }
             catch (System.Exception ex)
             {
@@ -760,7 +759,7 @@ namespace video_editing_api.Service.VideoEditing
         }
 
 
-        private InputSendServer<Eventt> handlePreSendServer(InputSendServer<EventStorage> input)
+        private InputSendServer<Eventt> handlePreSendServer(InputSendServer<EventStorage> input, List<EventStorage> eventsNotQuailifed)
         {
             try
             {
@@ -769,7 +768,25 @@ namespace video_editing_api.Service.VideoEditing
                 var inputSend = new InputSendServer<Eventt>();
                 inputSend = _mapper.Map<InputSendServer<Eventt>>(input);
 
-                foreach (var item in input.Event)
+                eventts = MapAndAddEvent(eventts, input.Event);
+                if (eventsNotQuailifed != null)
+                {
+                    eventts = MapAndAddEvent(eventts, eventsNotQuailifed);
+                }
+                inputSend.Event = eventts;
+                return inputSend;
+
+            }
+            catch (System.Exception ex)
+            {
+                throw new System.Exception(ex.Message);
+            }
+        }
+        private List<Eventt> MapAndAddEvent(List<Eventt> eventSrc, List<EventStorage> eventAdd)
+        {
+            try
+            {
+                foreach (var item in eventAdd)
                 {
                     Eventt eventt = new Eventt()
                     {
@@ -779,16 +796,17 @@ namespace video_editing_api.Service.VideoEditing
                         file_name = item.file_name,
                         players = item.players,
                         time = item.time,
-                        ts = new List<int>()
+                        ts = new List<int>(),
+                        qualified = item.selected == 0 ? item.selected : 1
                     };
-                    eventt.ts.Add((int)(item.ts[0] + item.startTime));
-                    eventt.ts.Add((int)(item.ts[0] + item.endTime));
-
-                    eventts.Add(eventt);
+                    if (item.ts != null && item.ts.Count < 1)
+                    {
+                        eventt.ts.Add((int)(item.ts[0] + item.startTime));
+                        eventt.ts.Add((int)(item.ts[0] + item.endTime));
+                    }
+                    eventSrc.Add(eventt);
                 }
-                inputSend.Event = eventts;
-                return inputSend;
-
+                return eventSrc;
             }
             catch (System.Exception ex)
             {
@@ -810,6 +828,96 @@ namespace video_editing_api.Service.VideoEditing
 
                 _matchInfo.ReplaceOne(m => m.Id == matchId, match);
                 return true;
+            }
+            catch (System.Exception ex)
+            {
+                throw new System.Exception(ex.Message);
+            }
+        }
+
+        public async Task<string> SaveEvent(InputAddEventAndLogo input)
+        {
+            try
+            {
+                string publicId = System.Guid.NewGuid().ToString();
+                string fileName = input.File.FileName;
+                string type = fileName.Substring(fileName.LastIndexOf("."));
+
+                return await _storageService.SaveFileNoFolder($"{publicId}{type}", input.File);
+            }
+            catch (System.Exception ex)
+            {
+                throw new System.Exception(ex.Message);
+            }
+        }
+
+        public async Task<List<List<string>>> SaveLogo(string matchId, InputAddEventAndLogo input)
+        {
+            try
+            {
+                string publicId = System.Guid.NewGuid().ToString();
+                string fileName = input.File.FileName;
+                string type = fileName.Substring(fileName.LastIndexOf("."));
+                string file_name = await _storageService.SaveFileNoFolder($"{publicId}{type}", input.File);
+
+                var match = _matchInfo.Find(x => x.Id == matchId).First();
+
+                var logo = match.JsonFile.logo;
+                if (logo == null)
+                {
+                    logo = new List<List<string>>();
+                }
+                int index = -1;
+                for (int i = 0; i < logo.Count; i++)
+                {
+                    if (logo[i][1] == input.position.ToString())
+                    {
+                        index = i;
+                        break;
+                    }
+                }
+
+                if (index == -1)
+                {
+                    var logoItem = new List<string> { file_name, input.position.ToString() };
+                    logo.Add(logoItem);
+                }
+                else
+                {
+                    logo[index][0] = file_name;
+                }
+                match.JsonFile.logo = logo;
+                _matchInfo.ReplaceOne(m => m.Id == matchId, match);
+                return logo;
+            }
+            catch (System.Exception ex)
+            {
+                throw new System.Exception(ex.Message);
+            }
+        }
+
+        public async Task<List<List<string>>> DeleteLogo(string matchId, int position)
+        {
+            try
+            {
+                var match = _matchInfo.Find(x => x.Id == matchId).First();
+
+                var logo = match.JsonFile.logo;
+
+                int index = -1;
+                for (int i = 0; i < logo.Count; i++)
+                {
+                    if (logo[i][1] == position.ToString())
+                    {
+                        index = i;
+                        break;
+                    }
+                }
+
+                logo.Remove(logo[index]);
+                match.JsonFile.logo = logo;
+                _matchInfo.ReplaceOne(m => m.Id == matchId, match);
+                return logo;
             }
             catch (System.Exception ex)
             {

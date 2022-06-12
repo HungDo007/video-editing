@@ -1,5 +1,4 @@
 import axiosClient from "./axios.client";
-import Axios from "axios";
 
 const videoEditingApi = {
   getMatches: () => {
@@ -89,6 +88,21 @@ const videoEditingApi = {
       jsonFile: data,
     };
     return axiosClient.post(url, body);
+  },
+
+  uploadSmallVideo: (formdata) => {
+    const url = `/VideoEditings/uploadSmallVideo`;
+    return axiosClient.post(url, formdata);
+  },
+
+  uploadLogo: (matchId, formdata) => {
+    const url = `/VideoEditings/uploadLogo/${matchId}`;
+    return axiosClient.post(url, formdata);
+  },
+
+  deleteLogo: (matchId, position) => {
+    const url = `/VideoEditings/deleteLogo/${matchId}/${position}`;
+    return axiosClient.post(url);
   },
 };
 

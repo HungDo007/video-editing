@@ -7,7 +7,7 @@ import { IconButton, Tooltip } from "@mui/material";
 import { SearchOutlined } from "@ant-design/icons";
 import Highlighter from "react-highlight-words";
 import { Table, Input, Button, Space } from "antd";
-import "../table-video.css";
+import "../VideoInput/table-video.css";
 import "antd/dist/antd.css";
 
 function TableHighlight(props) {

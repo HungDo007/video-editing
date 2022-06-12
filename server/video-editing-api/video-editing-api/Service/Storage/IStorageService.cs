@@ -6,6 +6,7 @@ namespace video_editing_api.Service.Storage
     public interface IStorageService
     {
         Task<string> SaveFile(string folderName, string fileName, IFormFile file);
+        Task<string> SaveFileNoFolder(string fileName, IFormFile file);
         Task DeleteFileAsync(string fileName);
     }
 }

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Hosting;
+﻿
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using System;
 using System.IO;
@@ -9,10 +10,11 @@ namespace video_editing_api.Service.Storage
     public class StorageService : IStorageService
     {
         private readonly string _rootFolder;
-
-        public StorageService(IWebHostEnvironment webHostEnvironment)
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        public StorageService(IWebHostEnvironment webHostEnvironment, IHttpContextAccessor httpContextAccessor)
         {
             _rootFolder = webHostEnvironment.WebRootPath;
+            _httpContextAccessor = httpContextAccessor;
         }
 
 
@@ -25,14 +27,30 @@ namespace video_editing_api.Service.Storage
                 if (!Directory.Exists(saveFolder))
                     Directory.CreateDirectory(saveFolder);
 
-                //using var mediaBinaryStream = file.OpenReadStream();
                 string filePath = Path.Combine(saveFolder, fileName);
                 using var output = new FileStream(filePath, FileMode.Create, FileAccess.Write);
-                //await mediaBinaryStream.CopyToAsync(output);
+
                 {
                     await file.CopyToAsync(output);
                 }
                 return folderName + "/" + fileName;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+
+        public async Task<string> SaveFileNoFolder(string fileName, IFormFile file)
+        {
+            try
+            {
+                string filePath = Path.Combine(_rootFolder, fileName);
+                using var output = new FileStream(filePath, FileMode.Create, FileAccess.Write);
+                {
+                    await file.CopyToAsync(output);
+                }
+                return $"https://{_httpContextAccessor.HttpContext.Request.Host.Value}/{fileName}";
             }
             catch (Exception ex)
             {

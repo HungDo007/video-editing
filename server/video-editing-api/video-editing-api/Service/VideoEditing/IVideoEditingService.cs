@@ -36,6 +36,10 @@ namespace video_editing_api.Service.VideoEditing
         byte[] Download(string url);
         Task<string> DownloadOne(ConcatModel concatModel);
 
+        Task<string> SaveEvent(InputAddEventAndLogo input);
+        Task<List<List<string>>> SaveLogo(string matchId, InputAddEventAndLogo input);
+
         Task<bool> UpdateLogTrimed(string matchId, EventStorage eventStorage);
+        Task<List<List<string>>> DeleteLogo(string matchId, int position);
     }
 }

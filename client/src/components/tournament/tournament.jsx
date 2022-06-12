@@ -51,8 +51,6 @@ const Tournament = () => {
   let navigate = useNavigate();
 
   const handleDateChange = (date) => {
-    // var a = time.toLocaleString("sv", { timeZoneName: "short" });
-    // console.log(`${a.substring(0, 10)}T${a.substring(11, 19)}`);
     setTime(date);
   };
 
@@ -86,7 +84,7 @@ const Tournament = () => {
       ip: ip,
       port: port,
     };
-    console.log(payload);
+
     const addTournament = async () => {
       try {
         const response = await videoEditingApi.addMatch(payload);
@@ -145,10 +143,8 @@ const Tournament = () => {
   };
 
   useEffect(() => {
-    console.log("sad");
     const getTournaments = async () => {
       try {
-        console.log("dd");
         const response = await videoEditingApi.getTournaments();
         setTournaments(response.data);
       } catch (error) {
@@ -261,7 +257,7 @@ const Tournament = () => {
           onSubmit={handleSubmit}
         >
           <Grid item xs={3}>
-            Title
+            League Name
           </Grid>
 
           <Grid item xs={9}>
@@ -286,7 +282,7 @@ const Tournament = () => {
                   renderInput={(params) => (
                     <TextField
                       {...params}
-                      placeholder="Select Title"
+                      placeholder="Select league name"
                       variant="standard"
                       required={hidden}
                       inputProps={{
@@ -317,7 +313,7 @@ const Tournament = () => {
                   onChange={(e) => setTournamentName(e.target.value)}
                   fullWidth
                   required={!hidden}
-                  placeholder="Enter Title Name"
+                  placeholder="Enter league name"
                 />
               </div>
             </div>
@@ -326,7 +322,7 @@ const Tournament = () => {
             
           </Grid> */}
           <Grid item xs={3}>
-            Name
+            Match Name
           </Grid>
           <Grid item xs={9}>
             <TextField
@@ -336,7 +332,7 @@ const Tournament = () => {
               onChange={(e) => setMatchName(e.target.value)}
               fullWidth
               required
-              placeholder="Enter Name"
+              placeholder="Enter match name"
             />
           </Grid>
 

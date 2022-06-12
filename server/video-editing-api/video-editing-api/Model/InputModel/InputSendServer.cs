@@ -14,8 +14,8 @@ namespace video_editing_api.Model.InputModel
         public string outfolder { get; set; }
         public string inforder { get; set; }
         public string mp4folder { get; set; }
+        public List<List<string>> logo { get; set; }
     }
-
 
     public class Eventt
     {
@@ -26,7 +26,7 @@ namespace video_editing_api.Model.InputModel
         public List<string> players { get; set; }
         public List<int> ts { get; set; }
         public int mainpoint { get; set; }
-
+        public int qualified { get; set; }
     }
 
     public class EventStorage
@@ -40,7 +40,6 @@ namespace video_editing_api.Model.InputModel
         public int mainpoint { get; set; } = 0;
         public int startTime { get; set; } = 0;
         public int endTime { get; set; } = 0;
-        public int selected { get; set; } = 0;
-
+        public int selected { get; set; } = -1;
     }
 }

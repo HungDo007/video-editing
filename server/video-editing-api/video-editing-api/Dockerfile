@@ -7,7 +7,7 @@ EXPOSE 443
 
 FROM mcr.microsoft.com/dotnet/sdk:5.0 AS build
 WORKDIR /src
-COPY ["video-editing-api/video-editin g-api.csproj", "video-editing-api/"]
+COPY ["video-editing-api/video-editing-api.csproj", "video-editing-api/"]
 RUN dotnet restore "video-editing-api/video-editing-api.csproj"
 COPY . .
 WORKDIR "/src/video-editing-api"

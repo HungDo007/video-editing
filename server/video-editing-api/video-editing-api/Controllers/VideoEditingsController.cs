@@ -218,6 +218,51 @@ namespace video_editing_api.Controllers
         }
 
 
+        [HttpPost("uploadSmallVideo")]
+        public async Task<IActionResult> UploadSmallVideo([FromForm] InputAddEventAndLogo input)
+        {
+            try
+            {
+                string file_name = await _videoEditingService.SaveEvent(input);
+                var res = new
+                {
+                    Event = input.eventName,
+                    file_name = file_name
+                };
+                return Ok(new Response<object>(200, "", res));
+            }
+            catch (System.Exception e)
+            {
+                return BadRequest(new Response<string>(400, e.Message, null));
+            }
+        }
+        [HttpPost("uploadLogo/{matchId}")]
+        public async Task<IActionResult> UploadLogo(string matchId, [FromForm] InputAddEventAndLogo input)
+        {
+            try
+            {
+                var res = await _videoEditingService.SaveLogo(matchId, input);
+                return Ok(new Response<List<List<string>>>(200, "", res));
+            }
+            catch (System.Exception e)
+            {
+                return BadRequest(new Response<string>(400, e.Message, null));
+            }
+        }
+        [HttpPost("deleteLogo/{matchId}/{position}")]
+        public async Task<IActionResult> DeleteLogo(string matchId, int position)
+        {
+            try
+            {
+                var res = await _videoEditingService.DeleteLogo(matchId, position);
+                return Ok(new Response<List<List<string>>>(200, "", res));
+            }
+            catch (System.Exception e)
+            {
+                return BadRequest(new Response<string>(400, e.Message, null));
+            }
+        }
+
         [HttpGet("download")]
         [AllowAnonymous]
         public IActionResult download(string url)
