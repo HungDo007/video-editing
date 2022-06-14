@@ -171,7 +171,6 @@ function TableHighlight(props) {
           <Tooltip key={123} title="Delete">
             <IconButton
               onClick={(e) => {
-                console.log(row);
                 handleIconDeleteClick(row);
               }}
             >

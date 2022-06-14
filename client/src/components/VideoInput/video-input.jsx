@@ -79,7 +79,6 @@ const VideoInput = () => {
   useEffect(() => {
     previousVideoPieceTime.current = videoPieceTime;
   }, [videoPieceTime]);
-  console.log(body);
   const [open, setOpen] = useState(false);
 
   const [highlights, setHighlights] = useState();

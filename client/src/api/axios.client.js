@@ -11,7 +11,7 @@ const axiosClient = axios.create({
   },
   paramsSerializer: (params) => queryString.stringify(params),
 });
-
+axiosClient.defaults.timeout = 0;
 axiosClient.interceptors.request.use(async (config) => {
   //handle token here
   const token = Cookies.get("Token");
