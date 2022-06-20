@@ -10,11 +10,9 @@ import {
   Alert,
   Grid,
   Dialog,
-  DialogTitle,
   DialogContent,
   DialogContentText,
   DialogActions,
-  Autocomplete,
 } from "@mui/material";
 import { Tabs } from "antd";
 import ReactPlayer from "react-player";
@@ -22,10 +20,9 @@ import videoEditingApi from "../../api/video-editing";
 import { useLocation } from "react-router-dom";
 import HighlightReview from "../highlight-review";
 import TableEditVideo from "./TableEditVideo";
-import { FileUploader } from "react-drag-drop-files";
 import TableReview from "./TableReview";
 import TableLogo from "./TableLogo";
-import { CategoryTwoTone } from "@mui/icons-material";
+import { DialogUploadEvent, DialogUploadLogo } from "../flugin";
 
 const { TabPane } = Tabs;
 
@@ -37,13 +34,6 @@ export const formatTimeSlice = (time) => {
   var seconds = Math.ceil(secd);
   return minutes + ":" + ("0" + seconds).slice(-2);
 };
-
-const options = [
-  { label: "Top-Right", value: 1 },
-  { label: "Bottom-Right", value: 2 },
-  { label: "Bottom-Left", value: 3 },
-  { label: "Top-Left", value: 4 },
-];
 
 const VideoInput = () => {
   const [opendialog, setOpenDialog] = useState(false);
@@ -473,117 +463,23 @@ const VideoInput = () => {
         <CircularProgress color="inherit" />
       </Backdrop>
 
-      <Dialog
+      <DialogUploadEvent
         open={opendialogUploadEvent}
-        onClose={handleClose1}
-        scroll={scroll}
-      >
-        <DialogTitle
-          sx={{
-            backgroundColor: "#CEEBF9",
-            fontSize: "15px",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-          id="scroll-dialog-title"
-        >
-          <h4>Upload more event</h4>
-          <Button variant="contained" onClick={handleUploadEventClick}>
-            Upload
-          </Button>
-        </DialogTitle>
-        <DialogContent dividers={scroll === "paper"}>
-          <DialogContentText
-            id="scroll-dialog-description"
-            ref={descriptionElementRef}
-            tabIndex={-1}
-          >
-            <Grid container spacing={2} width="450px">
-              <Grid item xs={12}>
-                <TextField
-                  value={eventName}
-                  label="Event Name"
-                  variant="standard"
-                  //size="small"
-                  onChange={(e) => setEventName(e.target.value)}
-                  fullWidth
-                  //required={!hidden}
-                  //placeholder="Enter league name"
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <FileUploader
-                  handleChange={handleFileChange}
-                  name="file"
-                  //types={["MP4,PNG,JPG,"]}
-                />
-              </Grid>
-            </Grid>
-          </DialogContentText>
-        </DialogContent>
-      </Dialog>
+        handleClose={handleClose1}
+        handleUploadEventClick={handleUploadEventClick}
+        eventName={eventName}
+        setEventName={setEventName}
+        handleFileChange={handleFileChange}
+      />
 
-      <Dialog
+      <DialogUploadLogo
         open={opendialogUploadLogo}
-        onClose={handleClose1}
-        scroll={scroll}
-      >
-        <DialogTitle
-          sx={{
-            backgroundColor: "#CEEBF9",
-            fontSize: "15px",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-          id="scroll-dialog-title"
-        >
-          <h4>Upload file Logo</h4>
-          <Button variant="contained" onClick={handleUploadLogoClick}>
-            Upload
-          </Button>
-        </DialogTitle>
-        <DialogContent dividers={scroll === "paper"}>
-          <DialogContentText
-            id="scroll-dialog-description"
-            ref={descriptionElementRef}
-            tabIndex={-1}
-          >
-            <Grid container spacing={2} width="450px">
-              <Grid item xs={12}>
-                <Autocomplete
-                  options={options}
-                  //size="small"
-                  value={position}
-                  fullWidth
-                  getOptionLabel={(option) => option["label"] || ""}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      label="Position"
-                      variant="standard"
-                      inputProps={{
-                        ...params.inputProps,
-                      }}
-                    />
-                  )}
-                  onChange={(e, value) => {
-                    setPosition(value);
-                  }}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <FileUploader
-                  handleChange={handleFileChange}
-                  name="file"
-                  //types={["MP4,PNG,JPG,"]}
-                />
-              </Grid>
-            </Grid>
-          </DialogContentText>
-        </DialogContent>
-      </Dialog>
+        handleClose={handleClose1}
+        handleUploadLogoClick={handleUploadLogoClick}
+        position={position}
+        setPosition={setPosition}
+        handleFileChange={handleFileChange}
+      />
 
       <Dialog
         open={opendialog}
@@ -766,6 +662,7 @@ const VideoInput = () => {
         <Grid item xs={5} overflow="auto">
           <TableEditVideo
             data={videoSrc}
+            height="50vh"
             onTableClick={onTableClick}
             buttonReview={
               <Button variant="contained" onClick={handleEditVideo}>

@@ -89,5 +89,17 @@ namespace video_editing_api.Service.DBConnection
                 throw new System.Exception(e.Message);
             }
         }
+
+        public IMongoCollection<TagEvent> GetTagEventCollection()
+        {
+            try
+            {
+                return _database.GetCollection<TagEvent>(SystemConstants.TagEventCollection);
+            }
+            catch (System.Exception e)
+            {
+                throw new System.Exception(e.Message);
+            }
+        }
     }
 }

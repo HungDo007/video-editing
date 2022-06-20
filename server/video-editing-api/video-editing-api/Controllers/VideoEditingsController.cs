@@ -208,7 +208,7 @@ namespace video_editing_api.Controllers
         {
             try
             {
-                var res = await _videoEditingService.UploadJson(matchId, jsonfile);
+                var res = await _videoEditingService.UploadJson(User.Identity.Name, matchId, jsonfile);
                 return Ok(new Response<string>(200, "", res));
             }
             catch (System.Exception e)
@@ -219,6 +219,7 @@ namespace video_editing_api.Controllers
 
 
         [HttpPost("uploadSmallVideo")]
+        [AllowAnonymous]
         public async Task<IActionResult> UploadSmallVideo([FromForm] InputAddEventAndLogo input)
         {
             try
@@ -236,6 +237,20 @@ namespace video_editing_api.Controllers
                 return BadRequest(new Response<string>(400, e.Message, null));
             }
         }
+        [HttpPost("uploadLogo")]
+        public async Task<IActionResult> UploadLogo([FromForm] InputAddEventAndLogo input)
+        {
+            try
+            {
+                var res = await _videoEditingService.SaveLogo(input);
+                return Ok(new Response<List<string>>(200, "", res));
+            }
+            catch (System.Exception e)
+            {
+                return BadRequest(new Response<string>(400, e.Message, null));
+            }
+        }
+
         [HttpPost("uploadLogo/{matchId}")]
         public async Task<IActionResult> UploadLogo(string matchId, [FromForm] InputAddEventAndLogo input)
         {
@@ -271,6 +286,48 @@ namespace video_editing_api.Controllers
             {
                 byte[] content = _videoEditingService.Download(url);
                 return File(content, "video/mp2t", "video.ts");
+            }
+            catch (System.Exception e)
+            {
+                return BadRequest(new Response<string>(400, e.Message, null));
+            }
+        }
+
+        [HttpGet("getTag")]
+        public async Task<IActionResult> getTag()
+        {
+            try
+            {
+                var res = await _videoEditingService.GetTag(User.Identity.Name);
+                return Ok(new Response<List<Tag>>(200, "", res));
+            }
+            catch (System.Exception e)
+            {
+                return BadRequest(new Response<string>(400, e.Message, null));
+            }
+        }
+
+        [HttpPost("mergeHL")]
+        public async Task<IActionResult> mergeHL(InputMergeHL input)
+        {
+            try
+            {
+                var res = await _videoEditingService.MergeHL(input);
+                return Ok(new Response<string>(200, "", res));
+            }
+            catch (System.Exception e)
+            {
+                return BadRequest(new Response<string>(400, e.Message, null));
+            }
+        }
+
+        [HttpPost("getJsonFromTag")]
+        public async Task<IActionResult> getJsonFromTag(HighlightFilterByTagRequest request)
+        {
+            try
+            {
+                var res = await _videoEditingService.GetJsonFromTag(User.Identity.Name, request);
+                return Ok(new Response<List<EventStorage>>(200, "", res));
             }
             catch (System.Exception e)
             {

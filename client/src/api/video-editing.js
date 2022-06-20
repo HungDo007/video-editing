@@ -99,10 +99,28 @@ const videoEditingApi = {
     const url = `/VideoEditings/uploadLogo/${matchId}`;
     return axiosClient.post(url, formdata);
   },
+  uploadLogoHL: (formdata) => {
+    const url = `/VideoEditings/uploadLogo`;
+    return axiosClient.post(url, formdata);
+  },
 
   deleteLogo: (matchId, position) => {
     const url = `/VideoEditings/deleteLogo/${matchId}/${position}`;
     return axiosClient.post(url);
+  },
+  getTagNameList: () => {
+    const url = "/VideoEditings/getTag";
+    return axiosClient.get(url);
+  },
+  getJsonFileFromTagName: (body) => {
+    const url = "/VideoEditings/getJsonFromTag";
+    return axiosClient.post(url, body);
+  },
+  mergeHL: (body) => {
+    const url = "/VideoEditings/mergeHL";
+    const response = axiosClient.post(url, body);
+    console.log(response);
+    return response;
   },
 };
 

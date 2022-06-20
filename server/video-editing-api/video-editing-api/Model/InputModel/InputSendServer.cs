@@ -4,17 +4,17 @@ namespace video_editing_api.Model.InputModel
 {
     public class InputSendServer<T>
     {
-        public List<T> Event { get; set; }
-        public string match_name { get; set; }
-        public string league { get; set; }
-        public List<string> teams { get; set; }
-        public string match_date { get; set; }
-        public string IP { get; set; }
-        public List<int> score { get; set; }
-        public string outfolder { get; set; }
-        public string inforder { get; set; }
-        public string mp4folder { get; set; }
-        public List<List<string>> logo { get; set; }
+        public List<T> Event { get; set; } = new List<T>();
+        public string match_name { get; set; } = string.Empty;
+        public string league { get; set; } = string.Empty;
+        public List<string> teams { get; set; } = new List<string>();
+        public string match_date { get; set; } = string.Empty;
+        public string IP { get; set; } = string.Empty;
+        public List<int> score { get; set; } = new List<int>();
+        public string outfolder { get; set; } = "/data/{}/{}/highlights/";
+        public string inforder { get; set; } = "/data/{}/{}/ts/";
+        public string mp4folder { get; set; } = "/data/{}/{}/mp4/";
+        public List<List<string>> logo { get; set; } = new List<List<string>>();
     }
 
     public class Eventt

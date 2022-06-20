@@ -28,11 +28,11 @@ function ResponsiveDrawer(props) {
   const [listItem, setListItem] = React.useState(() => {
     const listItem = [
       { name: "Soccer", url: "/", icon: <SportsSoccerIcon /> },
-      // {
-      //   name: "Movie",
-      //   url: "/film",
-      //   icon: <MovieIcon />,
-      // },
+      {
+        name: "Highlight",
+        url: "/highlight",
+        icon: <MovieIcon />,
+      },
     ];
     return listItem;
   });

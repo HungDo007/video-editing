@@ -31,15 +31,21 @@ namespace video_editing_api.Service.VideoEditing
         Task<List<HighlightVideo>> GetHighlightVideos();
         Task<List<HighlightVideo>> GetHighlightVideosForMatch(string matchId);
         Task<HighlightVideo> GetHighlightVideosById(string highlightId);
-        Task<string> UploadJson(string matchId, IFormFile jsonfile);
+        Task<string> UploadJson(string username, string matchId, IFormFile jsonfile);
 
         byte[] Download(string url);
         Task<string> DownloadOne(ConcatModel concatModel);
 
         Task<string> SaveEvent(InputAddEventAndLogo input);
         Task<List<List<string>>> SaveLogo(string matchId, InputAddEventAndLogo input);
+        Task<List<string>> SaveLogo(InputAddEventAndLogo input);
 
         Task<bool> UpdateLogTrimed(string matchId, EventStorage eventStorage);
         Task<List<List<string>>> DeleteLogo(string matchId, int position);
+
+        Task<List<Tag>> GetTag(string username);
+        Task<List<EventStorage>> GetJsonFromTag(string username, HighlightFilterByTagRequest request);
+
+        Task<string> MergeHL(InputMergeHL input);
     }
 }

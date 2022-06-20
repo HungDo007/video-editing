@@ -1,14 +1,14 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Table, Input, Button, Space } from "antd";
+import { Table, Input, Button, Space, DatePicker } from "antd";
 import Highlighter from "react-highlight-words";
-import { SearchOutlined } from "@ant-design/icons";
+import { SearchOutlined, CalendarOutlined } from "@ant-design/icons";
 import { Link, IconButton, Tooltip } from "@mui/material";
 import "../VideoInput/table-video.css";
 import "antd/dist/antd.css";
 
 import DeleteIcon from "@mui/icons-material/Delete";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
-
+const { RangePicker } = DatePicker;
 function TableTournament(props) {
   const {
     data,
@@ -17,7 +17,6 @@ function TableTournament(props) {
     handleIconUploadClick,
     handleIconDeleteClick,
   } = props;
-  console.log(titleSearch, data);
 
   const [titleS, setTitleS] = useState();
   useEffect(() => {
@@ -31,13 +30,25 @@ function TableTournament(props) {
 
   // for search
   const searchInput = useRef(null);
+  const searchInputDate = useRef(null);
   const [searchText, setSearchText] = useState();
   const [searchedColumn, setSearchedColumn] = useState();
+
+  const [searchDate, setSearchDate] = useState();
+
+  const handleSearchDate = (selectedKeys, confirm, dataIndex) => {
+    confirm();
+    console.log(selectedKeys[0]);
+    setSearchDate(selectedKeys[0]);
+    setSearchedColumn(dataIndex);
+  };
+
   const handleSearch = (selectedKeys, confirm, dataIndex) => {
     confirm();
     setSearchText(selectedKeys[0]);
     setSearchedColumn(dataIndex);
   };
+
   const getColumnSearchProps = (dataIndex) => ({
     filterDropdown: ({
       setSelectedKeys,
@@ -108,6 +119,72 @@ function TableTournament(props) {
       ),
   });
   // end for search
+  const getColumnSearchDateProps = (dataIndex) => ({
+    filterDropdown: ({
+      setSelectedKeys,
+      selectedKeys,
+      confirm,
+      clearFilters,
+    }) => (
+      <div style={{ padding: 8 }}>
+        <RangePicker
+          ref={searchInputDate}
+          value={selectedKeys[0]}
+          onChange={(date) => setSelectedKeys(date ? [date] : [])}
+          style={{ marginBottom: 8, display: "block" }}
+        />
+        <Space>
+          <Button
+            type="primary"
+            onClick={() => handleSearchDate(selectedKeys, confirm, dataIndex)}
+            icon={<SearchOutlined />}
+            size="small"
+            style={{ width: 90 }}
+          >
+            Search
+          </Button>
+          <Button
+            onClick={() => {
+              setSelectedKeys([]);
+              handleSearchDate([], confirm, dataIndex);
+            }}
+            size="small"
+            style={{ width: 90 }}
+          >
+            Reset
+          </Button>
+        </Space>
+      </div>
+    ),
+    filterIcon: (filtered) => (
+      <CalendarOutlined style={{ color: filtered ? "#1890ff" : "unset" }} />
+    ),
+    onFilter: (value, record) => {
+      var dateStart = new Date(value[0]._d);
+      var dateEnd = new Date(value[1]._d);
+      var date = new Date(record[dataIndex]);
+      var isInRange =
+        dateEnd.getTime() >= date.getTime() &&
+        dateStart.getTime() <= date.getTime();
+      return isInRange ? record[dataIndex] : "";
+    },
+    // onFilterDropdownVisibleChange: (visible) => {
+    //   if (visible) {
+    //     setTimeout(() => searchInputDate.current.select(), 100);
+    //   }
+    // },
+    // render: (text) =>
+    //   searchedColumn === dataIndex ? (
+    //     <Highlighter
+    //       highlightStyle={{ backgroundColor: "#ffc069", padding: 0 }}
+    //       searchWords={[searchText]}
+    //       autoEscape
+    //       textToHighlight={text ? text.toString() : ""}
+    //     />
+    //   ) : (
+    //     text
+    //   ),
+  });
 
   const columns = [
     {
@@ -129,6 +206,7 @@ function TableTournament(props) {
       render: (mactchTime) => {
         return mactchTime.substring(0, 10) + " " + mactchTime.substring(11, 16);
       },
+      ...getColumnSearchDateProps("mactchTime"),
     },
     {
       title: "Channel",

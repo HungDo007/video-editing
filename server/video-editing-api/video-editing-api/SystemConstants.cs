@@ -9,6 +9,7 @@
         public const string MatchInfoCollection = "MatchInfo";
         public const string HighlightVideoCollection = "HighlightVideo";
         public const string FilmCollection = "Film";
+        public const string TagEventCollection = "TagEvent";
         //public const string VideoResourceCollection = "VideoResource";
     }
 }

@@ -9,6 +9,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="wwwroot\ffmpeg\**" />
+    <Content Remove="wwwroot\ffmpeg\**" />
+    <EmbeddedResource Remove="wwwroot\ffmpeg\**" />
+    <None Remove="wwwroot\ffmpeg\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="11.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="5.0.9" />
     <PackageReference Include="AspNetCore.Identity.MongoDbCore" Version="3.1.2" />    
@@ -22,7 +29,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="wwwroot\ffmpeg\" />
+    <Folder Include="wwwroot\" />
   </ItemGroup>
 
 </Project>

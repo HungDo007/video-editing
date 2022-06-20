@@ -31,6 +31,7 @@ namespace video_editing_api.Service.VideoEditing
         private readonly IMongoCollection<Tournament> _tournament;
         private readonly IMongoCollection<MatchInfo> _matchInfo;
         private readonly IMongoCollection<HighlightVideo> _highlight;
+        private readonly IMongoCollection<TagEvent> _tagEvent;
 
         private readonly IStorageService _storageService;
         private readonly Cloudinary _cloudinary;
@@ -39,11 +40,14 @@ namespace video_editing_api.Service.VideoEditing
 
 
         private string _dir;
-        public VideoEditingService(IDbClient dbClient, IConfiguration config, IStorageService storageService, IWebHostEnvironment env, IMapper mapper)
+        public VideoEditingService(IDbClient dbClient, IConfiguration config,
+            IStorageService storageService, IWebHostEnvironment env, IMapper mapper)
         {
             _tournament = dbClient.GetTournamentCollection();
             _matchInfo = dbClient.GetMatchInfoCollection();
             _highlight = dbClient.GetHighlightVideoCollection();
+            _tagEvent = dbClient.GetTagEventCollection();
+
             _dir = env.WebRootPath;
             _storageService = storageService;
             _mapper = mapper;
@@ -149,7 +153,7 @@ namespace video_editing_api.Service.VideoEditing
                                //Videos = m.Videos,
                            }).ToList();
 
-                return res;
+                return res.OrderByDescending(m => m.MactchTime).ToList();
             }
             catch (System.Exception e)
             {
@@ -544,9 +548,9 @@ namespace video_editing_api.Service.VideoEditing
             try
             {
                 var match = _matchInfo.Find(x => x.Id == concatModel.MatchId).First();
-                var eventNotQualified = match.JsonFile.Event.Where(x => x.selected == 0).ToList();
+                //var eventNotQualified = match.JsonFile.Event.Where(x => x.selected == 0).ToList();
 
-                var inputSend = handlePreSendServer(concatModel.JsonFile, eventNotQualified);
+                var inputSend = handlePreSendServer(concatModel.JsonFile, null);
 
 
 
@@ -582,19 +586,32 @@ namespace video_editing_api.Service.VideoEditing
             }
         }
 
-        public async Task<string> UploadJson(string matchId, IFormFile jsonfile)
+        public async Task<string> UploadJson(string username, string matchId, IFormFile jsonfile)
         {
             try
             {
                 string textJson = string.Empty;
+                var flag = false;
                 using (var reader = new StreamReader(jsonfile.OpenReadStream()))
                 {
                     textJson = await reader.ReadToEndAsync();
                 }
                 InputSendServer<EventStorage> input = JsonConvert.DeserializeObject<InputSendServer<EventStorage>>(textJson);
+                var tagEvnt = await _tagEvent.Find(tag => tag.Username == username).FirstOrDefaultAsync();
+                if (tagEvnt == null)
+                {
+                    flag = true;
+                    tagEvnt = new TagEvent();
+                    tagEvnt.Username = username;
+                }
 
                 for (var i = 0; i < input.Event.Count; i++)
                 {
+                    if (!tagEvnt.Tag.Any(t => t.TagName == input.Event[i].Event))
+                    {
+                        tagEvnt.Tag.Add(new Model.Collection.Tag(input.Event[i].Event));
+                    }
+
                     if (input.Event[i].ts.Count > 0)
                     {
                         var temp = input.Event[i].mainpoint - input.Event[i].ts[0];
@@ -603,11 +620,14 @@ namespace video_editing_api.Service.VideoEditing
                         input.Event[i].selected = i == 0 ? 1 : -1;
                     }
                 }
-                foreach (var item in input.Event)
+                if (flag)
                 {
-
+                    _tagEvent.InsertOne(tagEvnt);
                 }
-
+                else
+                {
+                    _tagEvent.ReplaceOne(tag => tag.Username == username, tagEvnt);
+                }
                 var match = _matchInfo.Find(x => x.Id == matchId).First();
                 match.IsUploadJsonFile = true;
                 match.JsonFile = input;
@@ -790,7 +810,7 @@ namespace video_editing_api.Service.VideoEditing
                 {
                     Eventt eventt = new Eventt()
                     {
-                        Event = item.Event,
+                        Event = item.Event.Split("_").First(),
                         level = item.level,
                         mainpoint = item.mainpoint,
                         file_name = item.file_name,
@@ -799,7 +819,7 @@ namespace video_editing_api.Service.VideoEditing
                         ts = new List<int>(),
                         qualified = item.selected == 0 ? item.selected : 1
                     };
-                    if (item.ts != null && item.ts.Count < 1)
+                    if (item.ts != null && item.ts.Count > 0)
                     {
                         eventt.ts.Add((int)(item.ts[0] + item.startTime));
                         eventt.ts.Add((int)(item.ts[0] + item.endTime));
@@ -850,7 +870,22 @@ namespace video_editing_api.Service.VideoEditing
                 throw new System.Exception(ex.Message);
             }
         }
+        public async Task<List<string>> SaveLogo(InputAddEventAndLogo input)
+        {
+            try
+            {
+                string publicId = System.Guid.NewGuid().ToString();
+                string fileName = input.File.FileName;
+                string type = fileName.Substring(fileName.LastIndexOf("."));
+                string file_name = await _storageService.SaveFileNoFolder($"{publicId}{type}", input.File);
 
+                return new List<string> { file_name, input.position.ToString() };
+            }
+            catch (System.Exception ex)
+            {
+                throw new System.Exception(ex.Message);
+            }
+        }
         public async Task<List<List<string>>> SaveLogo(string matchId, InputAddEventAndLogo input)
         {
             try
@@ -925,5 +960,129 @@ namespace video_editing_api.Service.VideoEditing
             }
         }
         #endregion
+
+        #region tag
+        public async Task<List<Model.Collection.Tag>> GetTag(string username)
+        {
+            try
+            {
+                var tagEvnt = await _tagEvent.Find(tag => tag.Username == username).FirstOrDefaultAsync();
+
+                if (tagEvnt == null)
+                {
+                    List<Model.Collection.Tag> tag = new List<Model.Collection.Tag>();
+                    var matchs = _matchInfo.Find(x => x.Username == username && x.IsUploadJsonFile).ToList();
+                    foreach (var match in matchs)
+                    {
+
+                        foreach (var item in match.JsonFile.Event)
+                        {
+                            if (!tag.Any(t => t.TagName == item.Event))
+                            {
+                                tag.Add(new Model.Collection.Tag(item.Event));
+                            }
+                        }
+
+                    }
+                    tagEvnt = new TagEvent();
+                    tagEvnt.Username = username;
+                    tagEvnt.Tag = tag;
+
+                    _tagEvent.InsertOne(tagEvnt);
+                    return tag;
+                }
+                else
+                    return tagEvnt.Tag;
+            }
+            catch (System.Exception ex)
+            {
+                throw new System.Exception(ex.Message);
+            }
+        }
+
+        public async Task<List<EventStorage>> GetJsonFromTag(string username, HighlightFilterByTagRequest request)
+        {
+            try
+            {
+                var matchs = await _matchInfo.Find(m => m.Username == username
+                                                    && m.MactchTime >= request.DateFrom
+                                                    && m.MactchTime <= request.DateTo
+                                                    && m.IsUploadJsonFile).ToListAsync();
+
+                List<EventStorage> response = new List<EventStorage>();
+                foreach (var match in matchs)
+                {
+                    foreach (var item in match.JsonFile.Event)
+                    {
+                        if (item.Event == request.TagName)
+                        {
+                            EventStorage @event = item;
+                            @event.Event += $"_{match.MatchName}";
+                            @event.selected = -1;
+                            response.Add(@event);
+                        }
+                    }
+                }
+
+                return response;
+            }
+            catch (System.Exception ex)
+            {
+                throw new System.Exception(ex.Message);
+            }
+        }
+
+        #endregion
+
+
+        async void UploadToServerStorage(IFormFile file)
+        {
+            HttpClient client = new HttpClient();
+            client.Timeout = TimeSpan.FromDays(1);
+            client.BaseAddress = new System.Uri("https://store.cads.live");
+
+            var requestContent = new MultipartFormDataContent();
+
+            if (file != null)
+            {
+                byte[] data;
+                using (var br = new BinaryReader(file.OpenReadStream()))
+                {
+                    data = br.ReadBytes((int)file.OpenReadStream().Length);
+                }
+                ByteArrayContent bytes = new ByteArrayContent(data);
+                requestContent.Add(bytes, "event", file.FileName);
+            }
+            var response = await client.PostAsync("/projects/", requestContent);
+            var result = await response.Content.ReadAsStringAsync();
+        }
+
+        public async Task<string> MergeHL(InputMergeHL input)
+        {
+            try
+            {
+                InputSendServer<EventStorage> inputSendServer = new InputSendServer<EventStorage>();
+                inputSendServer.Event = input.Event;
+                inputSendServer.logo = input.Logo;
+
+                var inputSend = handlePreSendServer(inputSendServer, null);
+
+                HttpClient client = new HttpClient();
+                client.Timeout = TimeSpan.FromDays(1);
+                client.BaseAddress = new System.Uri("http://118.69.218.59:7007");
+                var json = JsonConvert.SerializeObject(inputSend);
+                json = json.Replace("E", "e");
+                var httpContent = new StringContent(json, Encoding.UTF8, "application/json");
+                var response = await client.PostAsync("/highlight", httpContent);
+                var result = await response.Content.ReadAsStringAsync();
+
+                ConcatResultModel model = JsonConvert.DeserializeObject<ConcatResultModel>(result);
+                return model.mp4;
+            }
+            catch (System.Exception ex)
+            {
+                throw new System.Exception(ex.Message);
+            }
+        }
     }
 }

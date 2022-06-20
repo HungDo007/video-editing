@@ -11,6 +11,7 @@ import Tournament from "../tournament/tournament";
 import VideoInput from "../VideoInput/video-input";
 import HighlightReview from "../highlight-review";
 import Film from "../Film";
+import HighlightFilter from "../HiglightFilter/highlight-filter";
 
 function RoutePath() {
   return (
@@ -24,6 +25,7 @@ function RoutePath() {
       <Route path="/film" element={<Film />} />
       <Route path="/video-edit" element={<VideoInput />} />
       <Route path="/highlight-review" element={<HighlightReview />} />
+      <Route path="/highlight" element={<HighlightFilter />} />
     </Routes>
   );
 }

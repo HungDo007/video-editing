@@ -7,7 +7,7 @@ import "antd/dist/antd.css";
 import { formatTimeSlice } from "./video-input";
 
 function TableEditVideo(props) {
-  const { data, onTableClick, buttonReview } = props;
+  const { data, onTableClick, buttonReview, height } = props;
   const [searchText, setSearchText] = useState();
   const [searchedColumn, setSearchedColumn] = useState();
   const searchInput = useRef(null);
@@ -236,7 +236,7 @@ function TableEditVideo(props) {
           </div>
         );
       }}
-      scroll={{ y: "50vh", x: "100%" }}
+      scroll={{ y: height, x: "100%" }}
     />
   );
 }
