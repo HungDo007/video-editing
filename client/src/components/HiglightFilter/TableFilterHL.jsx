@@ -15,7 +15,7 @@ import { Table, Input, Button, Space, Tag } from "antd";
 import "../VideoInput/table-video.css";
 import "antd/dist/antd.css";
 
-function TableHighlight(props) {
+function TableFilterHL(props) {
   const { data, handleViewClick, handleIconDeleteClick } = props;
 
   // for search
@@ -101,42 +101,11 @@ function TableHighlight(props) {
 
   const columns = [
     {
-      title: "Name",
-      render: (row) => {
-        return row.matchInfo?.substring(1, row.matchInfo?.indexOf(")"));
-      },
-    },
-    {
-      title: "Time merge",
-      render: (row) => {
-        return row.matchInfo?.substring(
-          row.matchInfo?.indexOf(")") + 3,
-          row.matchInfo?.indexOf(")") + 13
-        );
-      },
-    },
-
-    {
       title: "Description",
       dataIndex: "description",
       key: "description",
       ...getColumnSearchProps("description"),
     },
-    // {
-    //   render: (row) => {
-    //     return (
-    //       <Tooltip key={123} title="Share">
-    //         <IconButton
-    //           onClick={(e) => {
-    //             console.log(row);
-    //           }}
-    //         >
-    //           <ShareIcon />
-    //         </IconButton>
-    //       </Tooltip>
-    //     );
-    //   },
-    // },
     {
       title: "Status",
       render: (row) => {
@@ -225,4 +194,4 @@ function TableHighlight(props) {
   );
 }
 
-export default TableHighlight;
+export default TableFilterHL;

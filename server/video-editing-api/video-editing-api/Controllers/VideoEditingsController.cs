@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
-using System.IO;
 using System.Threading.Tasks;
 using video_editing_api.Model;
 using video_editing_api.Model.Collection;
@@ -22,6 +21,7 @@ namespace video_editing_api.Controllers
         {
             _videoEditingService = videoEditingService;
         }
+
 
 
         [HttpGet("getTournamentById")]
@@ -162,19 +162,21 @@ namespace video_editing_api.Controllers
                 return BadRequest(new Response<List<HighlightVideo>>(400, e.Message, null));
             }
         }
-        [HttpGet("getHighligthById/{highlightId}")]
-        public async Task<IActionResult> GeHighligth(string highlightId)
+        [HttpGet("getHighlightHL")]
+        public async Task<IActionResult> GeHighligthHL()
         {
             try
             {
-                var res = await _videoEditingService.GetHighlightVideosById(highlightId);
-                return Ok(new Response<HighlightVideo>(200, "", res));
+                var res = await _videoEditingService.GetHighlightVideosHL(User.Identity.Name);
+                return Ok(new Response<List<HighlightVideo>>(200, "", res));
             }
             catch (System.Exception e)
             {
                 return BadRequest(new Response<List<HighlightVideo>>(400, e.Message, null));
             }
         }
+
+
         [HttpPost("concatHighlight")]
         public async Task<IActionResult> ConcatVideo(ConcatModel concatModel)
         {
@@ -307,12 +309,26 @@ namespace video_editing_api.Controllers
             }
         }
 
+        [HttpGet("getTeam")]
+        public async Task<IActionResult> getTeam(string username)
+        {
+            try
+            {
+                var res = await _videoEditingService.GetTeam(User.Identity.Name);
+                return Ok(new Response<List<Team>>(200, "", res));
+            }
+            catch (System.Exception e)
+            {
+                return BadRequest(new Response<string>(400, e.Message, null));
+            }
+        }
+
         [HttpPost("mergeHL")]
         public async Task<IActionResult> mergeHL(InputMergeHL input)
         {
             try
             {
-                var res = await _videoEditingService.MergeHL(input);
+                var res = await _videoEditingService.MergeHL(User.Identity.Name, input);
                 return Ok(new Response<string>(200, "", res));
             }
             catch (System.Exception e)
@@ -446,7 +462,7 @@ namespace video_editing_api.Controllers
         //}
 
 
-        [HttpPost]
+        //[HttpPost]
         //public async Task<IActionResult> test123(InputSendServer file)
         //{
         //    //string a = string.Empty;
@@ -470,19 +486,19 @@ namespace video_editing_api.Controllers
         //    return Ok();
         //}
 
-        private byte[] Convert(IFormFile file)
-        {
-            byte[] fileBytes = { };
-            if (file.Length > 0)
-            {
-                using (var ms = new MemoryStream())
-                {
-                    file.CopyTo(ms);
-                    fileBytes = ms.ToArray();
-                }
-            }
-            return fileBytes;
-        }
+        //private byte[] Convert(IFormFile file)
+        //{
+        //    byte[] fileBytes = { };
+        //    if (file.Length > 0)
+        //    {
+        //        using (var ms = new MemoryStream())
+        //        {
+        //            file.CopyTo(ms);
+        //            fileBytes = ms.ToArray();
+        //        }
+        //    }
+        //    return fileBytes;
+        //}
 
     }
 }

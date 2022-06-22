@@ -199,7 +199,7 @@ const VideoInput = () => {
         setOpen(false);
         setNoti(true);
         setOpenDialog(false);
-        setMessage("Concat Succeed");
+        setMessage("Consolidation in progress");
         setTypeNoti("success");
         getHighlight();
       } catch (error) {
@@ -681,7 +681,11 @@ const VideoInput = () => {
       <div
         style={{ height: 3, backgroundColor: "black", marginBottom: "15px" }}
       ></div>
-      <HighlightReview getHighlight={getHighlight} highlights={highlights} />
+      <HighlightReview
+        getHighlight={getHighlight}
+        highlights={highlights}
+        mode={1}
+      />
     </>
   );
 };

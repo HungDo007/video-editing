@@ -16,9 +16,10 @@ import ReactPlayer from "react-player";
 import TableHighlight from "./TableHighlight";
 import { ConfirmDialog } from "../flugin";
 import { Typography } from "antd";
+import TableFilterHL from "../HiglightFilter/TableFilterHL";
 
 function HighlightReview(props) {
-  const { highlights, getHighlight } = props;
+  const { highlights, getHighlight, mode } = props;
   //const [highlights, setHighlights] = useState();
   const [source, setSource] = useState();
   const [name, setName] = useState();
@@ -141,11 +142,19 @@ function HighlightReview(props) {
           </DialogContentText>
         </DialogContent>
       </Dialog>
-      <TableHighlight
-        data={highlights}
-        handleViewClick={handleViewClick}
-        handleIconDeleteClick={handleIconDeleteClick}
-      />
+      {mode === 1 ? (
+        <TableHighlight
+          data={highlights}
+          handleViewClick={handleViewClick}
+          handleIconDeleteClick={handleIconDeleteClick}
+        />
+      ) : (
+        <TableFilterHL
+          data={highlights}
+          handleViewClick={handleViewClick}
+          handleIconDeleteClick={handleIconDeleteClick}
+        />
+      )}
     </>
   );
 }

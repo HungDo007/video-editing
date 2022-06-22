@@ -62,8 +62,6 @@ namespace video_editing_api.Service.VideoEditing
         }
 
 
-
-
         #region Tournament
         public async Task<Tournament> GetTournament(string id)
         {
@@ -550,34 +548,19 @@ namespace video_editing_api.Service.VideoEditing
                 var match = _matchInfo.Find(x => x.Id == concatModel.MatchId).First();
                 //var eventNotQualified = match.JsonFile.Event.Where(x => x.selected == 0).ToList();
 
-                var inputSend = handlePreSendServer(concatModel.JsonFile, null);
-
-
-
-                //var inputSend = new InputSendServer<Eventt>();
-                //inputSend = _mapper.Map<InputSendServer<Eventt>>(concatModel.JsonFile);
-
-                HttpClient client = new HttpClient();
-                client.Timeout = TimeSpan.FromDays(1);
-                client.BaseAddress = new System.Uri("http://118.69.218.59:7007");
-
-                var json = JsonConvert.SerializeObject(inputSend);
-                json = json.Replace("E", "e");
-                var httpContent = new StringContent(json, Encoding.UTF8, "application/json");
-                var response = await client.PostAsync("/highlight", httpContent);
-                var result = await response.Content.ReadAsStringAsync();
-
-                ConcatResultModel model = JsonConvert.DeserializeObject<ConcatResultModel>(result);
+                var inputSend = handlePreSendServer(concatModel.JsonFile);
 
                 HighlightVideo hl = new HighlightVideo()
                 {
                     MatchId = concatModel.MatchId,
                     Description = concatModel.Description,
-                    mp4 = model.mp4,
-                    ts = model.ts,
-                    MatchInfo = $"({match.MatchName})T({DateTime.Now.ToString("dd-MM-yyyy-hh-mm")})"
+                    MatchInfo = $"({match.MatchName})T({DateTime.Now.ToString("dd-MM-yyyy-hh-mm")})",
+                    Status = SystemConstants.HighlightStatusProcessing
                 };
                 await _highlight.InsertOneAsync(hl);
+
+                var mergeQueue = new MergeQueueInput(inputSend, hl.Id);
+                BackgroundQueue.MergeQueue.Enqueue(mergeQueue);
                 return "Succeed";
             }
             catch (System.Exception ex)
@@ -607,7 +590,7 @@ namespace video_editing_api.Service.VideoEditing
 
                 for (var i = 0; i < input.Event.Count; i++)
                 {
-                    if (!tagEvnt.Tag.Any(t => t.TagName == input.Event[i].Event))
+                    if (!tagEvnt.Tag.Any(t => t.TagName.ToLower() == input.Event[i].Event.ToLower()))
                     {
                         tagEvnt.Tag.Add(new Model.Collection.Tag(input.Event[i].Event));
                     }
@@ -620,6 +603,14 @@ namespace video_editing_api.Service.VideoEditing
                         input.Event[i].selected = i == 0 ? 1 : -1;
                     }
                 }
+                foreach (var item in input.teams)
+                {
+                    if (!tagEvnt.Team.Any(t => t.TeamName.ToLower() == item.ToLower()))
+                    {
+                        tagEvnt.Team.Add(new Team(item));
+                    }
+                }
+
                 if (flag)
                 {
                     _tagEvent.InsertOne(tagEvnt);
@@ -657,8 +648,6 @@ namespace video_editing_api.Service.VideoEditing
         {
             try
             {
-                //var a = 
-                //var b = await _highlight.Find(hl => hl.MatchId == matchId).FirstOrDefaultAsync();
                 return await _highlight.Find(hl => hl.MatchId == matchId).ToListAsync();
             }
             catch (System.Exception e)
@@ -666,6 +655,19 @@ namespace video_editing_api.Service.VideoEditing
                 throw new System.Exception(e.Message);
             }
         }
+
+        public async Task<List<HighlightVideo>> GetHighlightVideosHL(string username)
+        {
+            try
+            {
+                return await _highlight.Find(hl => hl.Username == username).ToListAsync();
+            }
+            catch (System.Exception e)
+            {
+                throw new System.Exception(e.Message);
+            }
+        }
+
 
         public async Task<HighlightVideo> GetHighlightVideosById(string highlightId)
         {
@@ -686,7 +688,7 @@ namespace video_editing_api.Service.VideoEditing
                 var jsonFile = concatModel.JsonFile.Event.Where(x => x.selected != -1).ToList();
                 concatModel.JsonFile.Event = jsonFile;
 
-                var inputSend = handlePreSendServer(concatModel.JsonFile, null);
+                var inputSend = handlePreSendServer(concatModel.JsonFile);
 
                 HttpClient client = new HttpClient();
                 client.Timeout = TimeSpan.FromDays(1);
@@ -758,7 +760,7 @@ namespace video_editing_api.Service.VideoEditing
         {
             try
             {
-                var inputSend = handlePreSendServer(concatModel.JsonFile, null);
+                var inputSend = handlePreSendServer(concatModel.JsonFile);
 
                 HttpClient client = new HttpClient();
                 client.Timeout = TimeSpan.FromDays(1);
@@ -779,7 +781,7 @@ namespace video_editing_api.Service.VideoEditing
         }
 
 
-        private InputSendServer<Eventt> handlePreSendServer(InputSendServer<EventStorage> input, List<EventStorage> eventsNotQuailifed)
+        private InputSendServer<Eventt> handlePreSendServer(InputSendServer<EventStorage> input)
         {
             try
             {
@@ -789,10 +791,7 @@ namespace video_editing_api.Service.VideoEditing
                 inputSend = _mapper.Map<InputSendServer<Eventt>>(input);
 
                 eventts = MapAndAddEvent(eventts, input.Event);
-                if (eventsNotQuailifed != null)
-                {
-                    eventts = MapAndAddEvent(eventts, eventsNotQuailifed);
-                }
+
                 inputSend.Event = eventts;
                 return inputSend;
 
@@ -968,7 +967,7 @@ namespace video_editing_api.Service.VideoEditing
             {
                 var tagEvnt = await _tagEvent.Find(tag => tag.Username == username).FirstOrDefaultAsync();
 
-                if (tagEvnt == null)
+                if (tagEvnt == null || tagEvnt.Tag.Count < 1)
                 {
                     List<Model.Collection.Tag> tag = new List<Model.Collection.Tag>();
                     var matchs = _matchInfo.Find(x => x.Username == username && x.IsUploadJsonFile).ToList();
@@ -977,18 +976,25 @@ namespace video_editing_api.Service.VideoEditing
 
                         foreach (var item in match.JsonFile.Event)
                         {
-                            if (!tag.Any(t => t.TagName == item.Event))
+                            if (!tag.Any(t => t.TagName.ToLower() == item.Event.ToLower()))
                             {
                                 tag.Add(new Model.Collection.Tag(item.Event));
                             }
                         }
 
                     }
-                    tagEvnt = new TagEvent();
-                    tagEvnt.Username = username;
-                    tagEvnt.Tag = tag;
-
-                    _tagEvent.InsertOne(tagEvnt);
+                    if (tagEvnt == null)
+                    {
+                        tagEvnt = new TagEvent();
+                        tagEvnt.Username = username;
+                        tagEvnt.Tag = tag;
+                        _tagEvent.InsertOne(tagEvnt);
+                    }
+                    else
+                    {
+                        tagEvnt.Tag = tag;
+                        _tagEvent.ReplaceOne(t => t.Username == username, tagEvnt);
+                    }
                     return tag;
                 }
                 else
@@ -1000,6 +1006,51 @@ namespace video_editing_api.Service.VideoEditing
             }
         }
 
+        public async Task<List<Team>> GetTeam(string username)
+        {
+            try
+            {
+                var tagEvnt = await _tagEvent.Find(tag => tag.Username == username).FirstOrDefaultAsync();
+
+                if (tagEvnt == null || tagEvnt.Team.Count < 1)
+                {
+                    List<Team> team = new List<Team>();
+                    var matchs = _matchInfo.Find(x => x.Username == username && x.IsUploadJsonFile).ToList();
+                    foreach (var match in matchs)
+                    {
+                        foreach (var item in match.JsonFile.teams)
+                        {
+                            if (!team.Any(t => t.TeamName.ToLower() == item.ToLower()))
+                            {
+                                team.Add(new Team(item));
+                            }
+                        }
+
+                    }
+                    if (tagEvnt == null)
+                    {
+                        tagEvnt = new TagEvent();
+                        tagEvnt.Username = username;
+                        tagEvnt.Team = team;
+                        _tagEvent.InsertOne(tagEvnt);
+                    }
+                    else
+                    {
+                        tagEvnt.Team = team;
+                        _tagEvent.ReplaceOne(t => t.Username == username, tagEvnt);
+                    }
+                    return team;
+                }
+                else
+                    return tagEvnt.Team;
+            }
+            catch (System.Exception ex)
+            {
+                throw new System.Exception(ex.Message);
+            }
+        }
+
+
         public async Task<List<EventStorage>> GetJsonFromTag(string username, HighlightFilterByTagRequest request)
         {
             try
@@ -1007,19 +1058,23 @@ namespace video_editing_api.Service.VideoEditing
                 var matchs = await _matchInfo.Find(m => m.Username == username
                                                     && m.MactchTime >= request.DateFrom
                                                     && m.MactchTime <= request.DateTo
-                                                    && m.IsUploadJsonFile).ToListAsync();
+                                                    && m.IsUploadJsonFile
+                                                    && m.TournamentId == request.TournamentId).ToListAsync();
 
                 List<EventStorage> response = new List<EventStorage>();
                 foreach (var match in matchs)
                 {
-                    foreach (var item in match.JsonFile.Event)
+                    if (CheckTeam(request.Teams, match.JsonFile.teams))
                     {
-                        if (item.Event == request.TagName)
+                        foreach (var item in match.JsonFile.Event)
                         {
-                            EventStorage @event = item;
-                            @event.Event += $"_{match.MatchName}";
-                            @event.selected = -1;
-                            response.Add(@event);
+                            if (item.Event == request.TagName)
+                            {
+                                EventStorage @event = item;
+                                @event.Event += $"_{match.MatchName}";
+                                @event.selected = -1;
+                                response.Add(@event);
+                            }
                         }
                     }
                 }
@@ -1032,6 +1087,23 @@ namespace video_editing_api.Service.VideoEditing
             }
         }
 
+
+        private bool CheckTeam(List<Team> teamInput, List<string> teamCheck)
+        {
+            try
+            {
+                foreach (var item in teamCheck)
+                {
+                    if (teamInput.Any(x => x.TeamName == item))
+                        return true;
+                }
+                return false;
+            }
+            catch (System.Exception ex)
+            {
+                throw new System.Exception(ex.Message);
+            }
+        }
         #endregion
 
 
@@ -1057,7 +1129,7 @@ namespace video_editing_api.Service.VideoEditing
             var result = await response.Content.ReadAsStringAsync();
         }
 
-        public async Task<string> MergeHL(InputMergeHL input)
+        public async Task<string> MergeHL(string username, InputMergeHL input)
         {
             try
             {
@@ -1065,19 +1137,22 @@ namespace video_editing_api.Service.VideoEditing
                 inputSendServer.Event = input.Event;
                 inputSendServer.logo = input.Logo;
 
-                var inputSend = handlePreSendServer(inputSendServer, null);
+                var inputSend = handlePreSendServer(inputSendServer);
 
-                HttpClient client = new HttpClient();
-                client.Timeout = TimeSpan.FromDays(1);
-                client.BaseAddress = new System.Uri("http://118.69.218.59:7007");
-                var json = JsonConvert.SerializeObject(inputSend);
-                json = json.Replace("E", "e");
-                var httpContent = new StringContent(json, Encoding.UTF8, "application/json");
-                var response = await client.PostAsync("/highlight", httpContent);
-                var result = await response.Content.ReadAsStringAsync();
 
-                ConcatResultModel model = JsonConvert.DeserializeObject<ConcatResultModel>(result);
-                return model.mp4;
+                HighlightVideo hl = new HighlightVideo()
+                {
+                    MatchId = null,
+                    Description = input.Description,
+                    Username = username,
+                    MatchInfo = null,
+                    Status = SystemConstants.HighlightStatusProcessing
+                };
+                await _highlight.InsertOneAsync(hl);
+
+                var mergeQueue = new MergeQueueInput(inputSend, hl.Id);
+                BackgroundQueue.MergeQueue.Enqueue(mergeQueue);
+                return "Succeed";
             }
             catch (System.Exception ex)
             {

@@ -50,6 +50,10 @@ const videoEditingApi = {
     const url = `/VideoEditings/getHighlightOfMatch/${matchId}`;
     return axiosClient.get(url);
   },
+  getHighlightHL: () => {
+    const url = `/VideoEditings/getHighlightHL`;
+    return axiosClient.get(url);
+  },
 
   deleteHighlight: (id) => {
     const url = `/VideoEditings/deleteHighlight/${id}`;
@@ -110,6 +114,10 @@ const videoEditingApi = {
   },
   getTagNameList: () => {
     const url = "/VideoEditings/getTag";
+    return axiosClient.get(url);
+  },
+  getTeamNameList: () => {
+    const url = "/VideoEditings/getTeam";
     return axiosClient.get(url);
   },
   getJsonFileFromTagName: (body) => {

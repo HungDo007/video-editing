@@ -30,6 +30,7 @@ namespace video_editing_api.Service.VideoEditing
         Task<bool> DeleteHighlight(string id);
         Task<List<HighlightVideo>> GetHighlightVideos();
         Task<List<HighlightVideo>> GetHighlightVideosForMatch(string matchId);
+        Task<List<HighlightVideo>> GetHighlightVideosHL(string username);
         Task<HighlightVideo> GetHighlightVideosById(string highlightId);
         Task<string> UploadJson(string username, string matchId, IFormFile jsonfile);
 
@@ -44,8 +45,9 @@ namespace video_editing_api.Service.VideoEditing
         Task<List<List<string>>> DeleteLogo(string matchId, int position);
 
         Task<List<Tag>> GetTag(string username);
+        Task<List<Team>> GetTeam(string username);
         Task<List<EventStorage>> GetJsonFromTag(string username, HighlightFilterByTagRequest request);
 
-        Task<string> MergeHL(InputMergeHL input);
+        Task<string> MergeHL(string username, InputMergeHL input);
     }
 }

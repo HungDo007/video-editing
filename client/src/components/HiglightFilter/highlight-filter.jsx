@@ -27,12 +27,21 @@ import ReactPlayer from "react-player";
 import TableReview from "../VideoInput/TableReview";
 import TableLogo from "../VideoInput/TableLogo";
 import { DialogUploadEvent, DialogUploadLogo } from "../flugin";
+import HighlightReview from "../highlight-review";
 const { TabPane } = Tabs;
 
 function HighlightFilter() {
   const [filtered, setFiltered] = useState([]);
   const [logo, setLogo] = useState([]);
-  console.log(logo);
+
+  const [highlights, setHighlights] = useState([]);
+  const [hlDescription, setHlDescription] = useState();
+
+  const [tournaments, setTournaments] = useState([]);
+  const [tournament, setTournament] = useState([]);
+  const [teams, setTeams] = useState([]);
+  const [team, setTeam] = useState([]);
+
   const [opendialog, setOpenDialog] = useState(false);
   const [position, setPosition] = useState(undefined);
   const [eventName, setEventName] = useState(undefined);
@@ -65,7 +74,25 @@ function HighlightFilter() {
   const previousVideoPieceTime = useRef(videoPieceTime);
   const previousDataRow = useRef(rowSelected);
 
+  const getHighlight = async () => {
+    try {
+      var response = await videoEditingApi.getHighlightHL();
+      setHighlights(response.data);
+    } catch (error) {
+      console.log(error.response);
+    }
+  };
+
   useEffect(() => {
+    const getTournaments = async () => {
+      try {
+        const response = await videoEditingApi.getTournaments();
+        //const data = [...tempTournaments, ...response.data];
+        setTournaments(response.data);
+      } catch (error) {
+        console.log(error);
+      }
+    };
     const getTagNameList = async () => {
       try {
         var response = await videoEditingApi.getTagNameList();
@@ -74,7 +101,18 @@ function HighlightFilter() {
         console.log(error);
       }
     };
+    const getTeamNameList = async () => {
+      try {
+        var response = await videoEditingApi.getTeamNameList();
+        setTeams(response.data);
+      } catch (error) {
+        console.log(error);
+      }
+    };
     getTagNameList();
+    getHighlight();
+    getTournaments();
+    getTeamNameList();
   }, []);
 
   useEffect(() => {
@@ -128,6 +166,7 @@ function HighlightFilter() {
 
   const handleSearchVideo = (e) => {
     e.preventDefault();
+    console.log(tournament, team);
     const body = {
       dateFrom: fromDate
         .toLocaleString("sv", { timeZoneName: "short" })
@@ -136,6 +175,8 @@ function HighlightFilter() {
         .toLocaleString("sv", { timeZoneName: "short" })
         .substring(0, 10),
       tagName: tagName.tagName,
+      tournamentId: tournament.id,
+      teams: team,
     };
     const getJsonFileFromTagName = async () => {
       try {
@@ -290,26 +331,23 @@ function HighlightFilter() {
   const handleFileChange = (file) => {
     setFile(file);
   };
-  const mergeVideoHL = () => {
+  const mergeVideoHL = (e) => {
+    e.preventDefault();
     const body = {
       event: filtered,
       logo: logo,
+      description: hlDescription,
     };
 
     const mergeHL = async () => {
       try {
-        var response = await videoEditingApi.mergeHL(body);
-
+        await videoEditingApi.mergeHL(body);
         setOpen(false);
-        // Create blob link to download
-        const link = document.createElement("a");
-        link.href = response.data.replace("raw", "download");
-        // Append to html link element page
-        document.body.appendChild(link);
-        // Start download
-        link.click();
-        // Clean up and remove the link
-        link.parentNode.removeChild(link);
+        setNoti(true);
+        setMessage("Consolidation in progress");
+        setTypeNoti("success");
+        handleClose();
+        getHighlight();
       } catch (error) {
         setOpen(false);
         setNoti(true);
@@ -398,52 +436,74 @@ function HighlightFilter() {
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <div style={{ display: "flex", justifyContent: "flex-end" }}>
-            <Button
+          <Grid
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+            container
+            component="form"
+            onSubmit={mergeVideoHL}
+          >
+            <TextField
               sx={{
-                backgroundColor: "#66CC66",
+                width: "50%",
               }}
-              variant="contained"
-              onClick={() => {
-                setOpendialogUploadLogo(true);
-                setPosition(undefined);
-                setFile(undefined);
-              }}
-            >
-              Upload Logo
-            </Button>
-            <Button
-              sx={{
-                marginLeft: "10px",
-                backgroundColor: "#66CC66",
-              }}
-              variant="contained"
-              onClick={() => {
-                setOpendialogUploadEvent(true);
-                setEventName(undefined);
-                setFile(undefined);
-              }}
-            >
-              Upload More Event
-            </Button>
+              label="Enter description for video highlight"
+              value={hlDescription}
+              onChange={(e) => setHlDescription(e.target.value)}
+              multiline
+              small
+              required
+            />
+            <div style={{ display: "flex", justifyContent: "flex-end" }}>
+              <Button
+                sx={{
+                  backgroundColor: "#66CC66",
+                }}
+                variant="contained"
+                onClick={() => {
+                  setOpendialogUploadLogo(true);
+                  setPosition(undefined);
+                  setFile(undefined);
+                }}
+              >
+                Upload Logo
+              </Button>
+              <Button
+                sx={{
+                  marginLeft: "10px",
+                  backgroundColor: "#66CC66",
+                }}
+                variant="contained"
+                onClick={() => {
+                  setOpendialogUploadEvent(true);
+                  setEventName(undefined);
+                  setFile(undefined);
+                }}
+              >
+                Upload More Event
+              </Button>
 
-            <Button
-              sx={{
-                marginLeft: "10px",
-              }}
-              variant="contained"
-              onClick={mergeVideoHL}
-              disabled={filtered?.length > 0 ? false : true}
-            >
-              Merge
-            </Button>
-          </div>
+              <Button
+                sx={{
+                  marginLeft: "10px",
+                }}
+                variant="contained"
+                type="submit"
+                //onClick={mergeVideoHL}
+                disabled={filtered?.length > 0 ? false : true}
+              >
+                Merge
+              </Button>
+            </div>
+          </Grid>
         </DialogActions>
       </Dialog>
 
       <Grid container spacing={2} component="form" onSubmit={handleSearchVideo}>
-        <Grid item xs={1} />
-        <Grid item xs={3}>
+        <Grid item xs={2.2}>
           <LocalizationProvider dateAdapter={AdapterDateFns}>
             <DesktopDatePicker
               label="From date"
@@ -456,7 +516,7 @@ function HighlightFilter() {
             />
           </LocalizationProvider>
         </Grid>
-        <Grid item xs={3}>
+        <Grid item xs={2.2}>
           <LocalizationProvider dateAdapter={AdapterDateFns}>
             <DesktopDatePicker
               label="To date"
@@ -469,7 +529,53 @@ function HighlightFilter() {
             />
           </LocalizationProvider>
         </Grid>
-        <Grid item xs={3}>
+        <Grid item xs={2.2}>
+          <Autocomplete
+            //multiple
+            options={tournaments ? tournaments : []}
+            size="small"
+            //disableCloseOnSelect
+            value={tournament || null}
+            fullWidth
+            //limitTags={1}
+            getOptionLabel={(option) => option["name"] || ""}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="League name"
+                placeholder={"Select league name"}
+                inputProps={{
+                  ...params.inputProps,
+                }}
+              />
+            )}
+            onChange={(e, value) => setTournament(value)}
+          />
+        </Grid>
+        <Grid item xs={2.2}>
+          <Autocomplete
+            multiple
+            options={teams ? teams : []}
+            size="small"
+            value={team || null}
+            disableCloseOnSelect
+            fullWidth
+            limitTags={1}
+            multiline={false}
+            getOptionLabel={(option) => option["teamName"] || ""}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Team"
+                inputProps={{
+                  ...params.inputProps,
+                }}
+              />
+            )}
+            onChange={(e, value) => setTeam(value)}
+          />
+        </Grid>
+        <Grid item xs={2.2}>
           <Autocomplete
             options={optTagName}
             size="small"
@@ -488,80 +594,87 @@ function HighlightFilter() {
             onChange={(e, value) => setTagName(value)}
           />
         </Grid>
-        <Grid item xs={1} sx={{ display: "flex", justifyContent: "center" }}>
+        <Grid item xs={1}>
           <Button variant="contained" type="submit" color="success">
             <SearchIcon />
           </Button>
         </Grid>
-        <Grid item xs={1} />
         <Grid item xs={12}>
           <div style={{ height: "1.5px", backgroundColor: "grey" }}></div>
         </Grid>
+        <Grid item xs={12} display="flex">
+          <Grid item xs={6}>
+            <TableEditVideo
+              data={videoSrc}
+              height="55vh"
+              onTableClick={onTableClick}
+              buttonReview={
+                <Button variant="contained" onClick={handleEditVideo}>
+                  View
+                </Button>
+              }
+            />
+          </Grid>
+          {rowSelected && (
+            <Grid item xs={6}>
+              <Grid item xs={12} display="flex" justifyContent="center">
+                <ReactPlayer
+                  ref={videoPlayer}
+                  url={rowSelected?.file_name}
+                  onDuration={handleDuration}
+                  controls
+                  onReady={() => onReady(rowSelected)}
+                  playing={true}
+                />
+              </Grid>
 
-        <Grid item xs={6}>
-          <TableEditVideo
-            data={videoSrc}
-            height="55vh"
-            onTableClick={onTableClick}
-            buttonReview={
-              <Button variant="contained" onClick={handleEditVideo}>
-                View
-              </Button>
-            }
+              <Grid
+                item
+                xs={12}
+                sx={{ display: "flex", justifyContent: "center" }}
+              >
+                <div style={{ width: "100%", maxWidth: "720px" }}>
+                  <Box sx={{ display: "flex" }}>
+                    <Slider
+                      min={0}
+                      max={duration}
+                      value={videoPieceTime}
+                      valueLabelDisplay="auto"
+                      valueLabelFormat={(s) => {
+                        return formatTimeSlice(s);
+                      }}
+                      onChange={handleSlideChange}
+                    />
+                  </Box>
+                  <Box
+                    sx={{
+                      marginBottom: 2,
+                      display: "flex",
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    <div>{formatTimeSlice(rowSelected?.startTime)}</div>
+                    <Button
+                      variant="contained"
+                      color={isTrimmed ? "error" : "info"}
+                      onClick={handleNotQualifiedOrTrimmedClick}
+                    >
+                      {isTrimmed ? "Not qualified" : "Trim"}
+                    </Button>
+                    <div>{formatTimeSlice(rowSelected?.endTime)}</div>
+                  </Box>
+                </div>
+              </Grid>
+            </Grid>
+          )}
+        </Grid>
+        <Grid item xs={12}>
+          <HighlightReview
+            getHighlight={getHighlight}
+            highlights={highlights}
+            mode={2}
           />
         </Grid>
-        {rowSelected && (
-          <Grid item xs={6}>
-            <Grid item xs={12} display="flex" justifyContent="center">
-              <ReactPlayer
-                ref={videoPlayer}
-                url={rowSelected?.file_name}
-                onDuration={handleDuration}
-                controls
-                onReady={() => onReady(rowSelected)}
-                playing={true}
-              />
-            </Grid>
-
-            <Grid
-              item
-              xs={12}
-              sx={{ display: "flex", justifyContent: "center" }}
-            >
-              <div style={{ width: "100%", maxWidth: "720px" }}>
-                <Box sx={{ display: "flex" }}>
-                  <Slider
-                    min={0}
-                    max={duration}
-                    value={videoPieceTime}
-                    valueLabelDisplay="auto"
-                    valueLabelFormat={(s) => {
-                      return formatTimeSlice(s);
-                    }}
-                    onChange={handleSlideChange}
-                  />
-                </Box>
-                <Box
-                  sx={{
-                    marginBottom: 2,
-                    display: "flex",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <div>{formatTimeSlice(rowSelected?.startTime)}</div>
-                  <Button
-                    variant="contained"
-                    color={isTrimmed ? "error" : "info"}
-                    onClick={handleNotQualifiedOrTrimmedClick}
-                  >
-                    {isTrimmed ? "Not qualified" : "Trim"}
-                  </Button>
-                  <div>{formatTimeSlice(rowSelected?.endTime)}</div>
-                </Box>
-              </div>
-            </Grid>
-          </Grid>
-        )}
       </Grid>
     </>
   );

@@ -10,6 +10,7 @@ namespace video_editing_api.Model.Collection
         public string Id { get; set; }
         public string Username { get; set; }
         public List<Tag> Tag { get; set; } = new List<Tag>();
+        public List<Team> Team { get; set; } = new List<Team>();
     }
 
 
@@ -21,5 +22,14 @@ namespace video_editing_api.Model.Collection
         }
 
         public string TagName { get; set; }
+    }
+    public class Team
+    {
+        public Team(string teamName)
+        {
+            TeamName = teamName;
+        }
+
+        public string TeamName { get; set; }
     }
 }

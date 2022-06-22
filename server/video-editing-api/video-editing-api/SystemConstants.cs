@@ -10,6 +10,10 @@
         public const string HighlightVideoCollection = "HighlightVideo";
         public const string FilmCollection = "Film";
         public const string TagEventCollection = "TagEvent";
+
+        public const int HighlightStatusProcessing = 0;
+        public const int HighlightStatusSucceed = 1;
+        public const int HighlightStatusFailed = 2;
         //public const string VideoResourceCollection = "VideoResource";
     }
 }
