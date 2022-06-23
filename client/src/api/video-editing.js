@@ -116,8 +116,8 @@ const videoEditingApi = {
     const url = "/VideoEditings/getTag";
     return axiosClient.get(url);
   },
-  getTeamNameList: () => {
-    const url = "/VideoEditings/getTeam";
+  getTeamNameList: (leagueId) => {
+    const url = `/VideoEditings/getTeam?leagueId=${leagueId}`;
     return axiosClient.get(url);
   },
   getJsonFileFromTagName: (body) => {

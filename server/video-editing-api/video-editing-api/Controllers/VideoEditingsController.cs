@@ -182,7 +182,7 @@ namespace video_editing_api.Controllers
         {
             try
             {
-                var res = await _videoEditingService.ConcatVideoOfMatch(concatModel);
+                var res = await _videoEditingService.ConcatVideoOfMatch(User.Identity.Name, concatModel);
                 return Ok(new Response<string>(200, "", res));
             }
             catch (System.Exception e)
@@ -310,11 +310,13 @@ namespace video_editing_api.Controllers
         }
 
         [HttpGet("getTeam")]
-        public async Task<IActionResult> getTeam(string username)
+        [AllowAnonymous]
+        public async Task<IActionResult> getTeam(string leagueId)
         {
             try
             {
-                var res = await _videoEditingService.GetTeam(User.Identity.Name);
+                //User.Identity.Name
+                var res = await _videoEditingService.GetTeam(User.Identity.Name, leagueId);
                 return Ok(new Response<List<Team>>(200, "", res));
             }
             catch (System.Exception e)

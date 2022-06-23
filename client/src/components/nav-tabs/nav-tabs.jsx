@@ -3,6 +3,7 @@ import "./index.css";
 import "react-pro-sidebar/dist/css/styles.css";
 import ReorderIcon from "@mui/icons-material/Reorder";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
+import CollectionsOutlinedIcon from "@mui/icons-material/CollectionsOutlined";
 import Cookies from "js-cookie";
 import LogoutIcon from "@mui/icons-material/Logout";
 import ScrollToTop from "react-scroll-to-top";
@@ -32,6 +33,11 @@ function ResponsiveDrawer(props) {
         name: "Highlight",
         url: "/highlight",
         icon: <MovieIcon />,
+      },
+      {
+        name: "Gallery",
+        url: "#",
+        icon: <CollectionsOutlinedIcon />,
       },
     ];
     return listItem;

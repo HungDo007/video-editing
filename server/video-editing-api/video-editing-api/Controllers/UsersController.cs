@@ -119,7 +119,8 @@ namespace video_editing_api.Controllers
                 var res = new
                 {
                     Token = tokenHandler.WriteToken(token),
-                    FullName = user.FullName
+                    FullName = user.FullName,
+                    Username = user.UserName,
                 };
                 return Ok(new Response<object>(200, "", res));
             }

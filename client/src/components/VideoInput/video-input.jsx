@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect, useCallback } from "react";
+import { HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
 import {
   Box,
   Button,
@@ -36,6 +37,7 @@ export const formatTimeSlice = (time) => {
 };
 
 const VideoInput = () => {
+  const [connection, setConnection] = useState();
   const [opendialog, setOpenDialog] = useState(false);
 
   const [position, setPosition] = useState(undefined);
@@ -130,9 +132,40 @@ const VideoInput = () => {
       );
     };
 
+    const join = async () => {
+      try {
+        const connection1 = new HubConnectionBuilder()
+          .withUrl(process.env.REACT_APP_BASE_NOTI_URL)
+          .configureLogging(LogLevel.Information)
+          .build();
+
+        connection1.on("noti", (user, message) => {
+          console.log(user, message);
+          getHighlight();
+        });
+        await connection1.start();
+        await connection1.invoke("JoinRoom", {
+          user: localStorage.getItem("username"),
+          room: localStorage.getItem("username"),
+        });
+        setConnection(connection1);
+      } catch (e) {
+        console.log(e);
+      }
+    };
+
+    join();
     getData();
     getHighlight();
+    return () => {
+      try {
+        connection.stop();
+      } catch (e) {
+        console.log(e);
+      }
+    };
   }, []);
+  console.log(connection);
   const updateLogTrimmed = async (eventUpdate) => {
     try {
       await videoEditingApi.updateLogTrimmed(

@@ -61,6 +61,7 @@ function Login() {
         setLoading(false);
         Cookies.set("Token", response.data.token);
         localStorage.setItem("fullName", response.data.fullName);
+        localStorage.setItem("username", response.data.username);
         navigate("/");
       } catch (error) {
         setLoading(false);

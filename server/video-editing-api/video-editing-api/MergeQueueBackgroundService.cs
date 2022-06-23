@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using MongoDB.Driver;
@@ -10,6 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using video_editing_api.Model.Collection;
 using video_editing_api.Model.InputModel;
+using video_editing_api.Service;
 using video_editing_api.Service.DBConnection;
 
 namespace video_editing_api
@@ -18,10 +20,12 @@ namespace video_editing_api
     {
         private readonly string _baseUrl;
         private readonly IServiceProvider _serviceProvider;
-        public MergeQueueBackgroundService(IConfiguration configuration, IServiceProvider serviceProvider)
+        private readonly IHubContext<NotiHub> _hub;
+        public MergeQueueBackgroundService(IConfiguration configuration, IServiceProvider serviceProvider, IHubContext<NotiHub> hub)
         {
             _baseUrl = configuration["BaseUrlMergeVideo"];
             _serviceProvider = serviceProvider;
+            _hub = hub;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -38,8 +42,8 @@ namespace video_editing_api
                         Console.WriteLine("send " + DateTime.Now.ToString("dd-MM-yyy hh:mm:ss"));
 
                         MergeQueueInput input = BackgroundQueue.MergeQueue.Dequeue();
-                        await HandleSendServer(input, higlight);
-
+                        string message = await HandleSendServer(input, higlight);
+                        await _hub.Clients.Group(input.Username).SendAsync("noti", "background_task", message);
                         Console.WriteLine("done" + DateTime.Now.ToString("dd-MM-yyy hh:mm:ss"));
                     }
                 }
@@ -51,8 +55,9 @@ namespace video_editing_api
         }
 
 
-        private async Task HandleSendServer(MergeQueueInput input, IMongoCollection<HighlightVideo> _highlight)
+        private async Task<string> HandleSendServer(MergeQueueInput input, IMongoCollection<HighlightVideo> _highlight)
         {
+            HighlightVideo hl = new HighlightVideo();
             try
             {
                 HttpClient client = new HttpClient();
@@ -65,7 +70,7 @@ namespace video_editing_api
                 var httpContent = new StringContent(json, Encoding.UTF8, "application/json");
                 var response = await client.PostAsync("/highlight", httpContent);
 
-                HighlightVideo hl = _highlight.Find(hl => hl.Id == input.IdHiglight).FirstOrDefault();
+                hl = _highlight.Find(hl => hl.Id == input.IdHiglight).FirstOrDefault();
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -89,10 +94,12 @@ namespace video_editing_api
             catch (Exception ex)
             {
                 Console.WriteLine("error" + DateTime.Now.ToString("dd-MM-yyy hh:mm:ss"));
-                HighlightVideo hl = _highlight.Find(hl => hl.Id == input.IdHiglight).FirstOrDefault();
+                hl = _highlight.Find(hl => hl.Id == input.IdHiglight).FirstOrDefault();
                 hl.Status = SystemConstants.HighlightStatusFailed;
                 await _highlight.ReplaceOneAsync(hl => hl.Id == input.IdHiglight, hl);
             }
+
+            return JsonConvert.SerializeObject(hl);
         }
     }
 }

@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using video_editing_api.Model;
 using video_editing_api.Model.Collection;
+using video_editing_api.Service;
 using video_editing_api.Service.DBConnection;
 using video_editing_api.Service.Film;
 using video_editing_api.Service.Storage;
@@ -31,6 +32,7 @@ namespace video_editing_api
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddHostedService<MergeQueueBackgroundService>();
+            services.AddSignalR();
             #region AddCors
             services.AddCors(options =>
             {
@@ -145,6 +147,7 @@ namespace video_editing_api
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+                endpoints.MapHub<NotiHub>("/noti");
             });
         }
     }

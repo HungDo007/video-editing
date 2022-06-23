@@ -32,6 +32,7 @@ namespace video_editing_api.Service.VideoEditing
         private readonly IMongoCollection<MatchInfo> _matchInfo;
         private readonly IMongoCollection<HighlightVideo> _highlight;
         private readonly IMongoCollection<TagEvent> _tagEvent;
+        private readonly IMongoCollection<TeamOfLeague> _teamOfLeague;
 
         private readonly IStorageService _storageService;
         private readonly Cloudinary _cloudinary;
@@ -47,6 +48,7 @@ namespace video_editing_api.Service.VideoEditing
             _matchInfo = dbClient.GetMatchInfoCollection();
             _highlight = dbClient.GetHighlightVideoCollection();
             _tagEvent = dbClient.GetTagEventCollection();
+            _teamOfLeague = dbClient.GetTeamOfLeagueCollection();
 
             _dir = env.WebRootPath;
             _storageService = storageService;
@@ -541,14 +543,14 @@ namespace video_editing_api.Service.VideoEditing
             }
         }
 
-        public async Task<string> ConcatVideoOfMatch(ConcatModel concatModel)
+        public async Task<string> ConcatVideoOfMatch(string username, ConcatModel concatModel)
         {
             try
             {
                 var match = _matchInfo.Find(x => x.Id == concatModel.MatchId).First();
                 //var eventNotQualified = match.JsonFile.Event.Where(x => x.selected == 0).ToList();
-
                 var inputSend = handlePreSendServer(concatModel.JsonFile);
+                if (inputSend.logo.Count == 0) inputSend.logo.Add(new List<string>());
 
                 HighlightVideo hl = new HighlightVideo()
                 {
@@ -559,7 +561,7 @@ namespace video_editing_api.Service.VideoEditing
                 };
                 await _highlight.InsertOneAsync(hl);
 
-                var mergeQueue = new MergeQueueInput(inputSend, hl.Id);
+                var mergeQueue = new MergeQueueInput(inputSend, hl.Id, username);
                 BackgroundQueue.MergeQueue.Enqueue(mergeQueue);
                 return "Succeed";
             }
@@ -574,20 +576,23 @@ namespace video_editing_api.Service.VideoEditing
             try
             {
                 string textJson = string.Empty;
-                var flag = false;
+                var flagTag = false;
+                var flagTeam = false;
+                var match = _matchInfo.Find(x => x.Id == matchId).First();
+
                 using (var reader = new StreamReader(jsonfile.OpenReadStream()))
                 {
                     textJson = await reader.ReadToEndAsync();
                 }
                 InputSendServer<EventStorage> input = JsonConvert.DeserializeObject<InputSendServer<EventStorage>>(textJson);
+                #region tagEvent
                 var tagEvnt = await _tagEvent.Find(tag => tag.Username == username).FirstOrDefaultAsync();
                 if (tagEvnt == null)
                 {
-                    flag = true;
+                    flagTag = true;
                     tagEvnt = new TagEvent();
                     tagEvnt.Username = username;
                 }
-
                 for (var i = 0; i < input.Event.Count; i++)
                 {
                     if (!tagEvnt.Tag.Any(t => t.TagName.ToLower() == input.Event[i].Event.ToLower()))
@@ -603,15 +608,34 @@ namespace video_editing_api.Service.VideoEditing
                         input.Event[i].selected = i == 0 ? 1 : -1;
                     }
                 }
+                #endregion
+                #region team
+                var team = await _teamOfLeague.Find(team => team.TournamentId == match.TournamentId && team.Username == username).FirstOrDefaultAsync();
+                if (team == null)
+                {
+                    flagTag = true;
+                    team = new TeamOfLeague();
+                    team.Username = username;
+                    team.TournamentId = match.TournamentId;
+                }
                 foreach (var item in input.teams)
                 {
-                    if (!tagEvnt.Team.Any(t => t.TeamName.ToLower() == item.ToLower()))
+                    if (!team.Team.Any(t => t.TeamName.ToLower() == item.ToLower()))
                     {
-                        tagEvnt.Team.Add(new Team(item));
+                        team.Team.Add(new Team(item));
                     }
                 }
+                if (flagTag)
+                {
+                    _teamOfLeague.InsertOne(team);
+                }
+                else
+                {
+                    _teamOfLeague.ReplaceOne(tag => tag.Id == team.Id, team);
+                }
+                #endregion
 
-                if (flag)
+                if (flagTag)
                 {
                     _tagEvent.InsertOne(tagEvnt);
                 }
@@ -619,7 +643,7 @@ namespace video_editing_api.Service.VideoEditing
                 {
                     _tagEvent.ReplaceOne(tag => tag.Username == username, tagEvnt);
                 }
-                var match = _matchInfo.Find(x => x.Id == matchId).First();
+
                 match.IsUploadJsonFile = true;
                 match.JsonFile = input;
                 _matchInfo.ReplaceOne(m => m.Id == matchId, match);
@@ -967,7 +991,7 @@ namespace video_editing_api.Service.VideoEditing
             {
                 var tagEvnt = await _tagEvent.Find(tag => tag.Username == username).FirstOrDefaultAsync();
 
-                if (tagEvnt == null || tagEvnt.Tag.Count < 1)
+                if (tagEvnt == null)
                 {
                     List<Model.Collection.Tag> tag = new List<Model.Collection.Tag>();
                     var matchs = _matchInfo.Find(x => x.Username == username && x.IsUploadJsonFile).ToList();
@@ -983,18 +1007,11 @@ namespace video_editing_api.Service.VideoEditing
                         }
 
                     }
-                    if (tagEvnt == null)
-                    {
-                        tagEvnt = new TagEvent();
-                        tagEvnt.Username = username;
-                        tagEvnt.Tag = tag;
-                        _tagEvent.InsertOne(tagEvnt);
-                    }
-                    else
-                    {
-                        tagEvnt.Tag = tag;
-                        _tagEvent.ReplaceOne(t => t.Username == username, tagEvnt);
-                    }
+                    tagEvnt = new TagEvent();
+                    tagEvnt.Username = username;
+                    tagEvnt.Tag = tag;
+                    _tagEvent.InsertOne(tagEvnt);
+
                     return tag;
                 }
                 else
@@ -1006,43 +1023,40 @@ namespace video_editing_api.Service.VideoEditing
             }
         }
 
-        public async Task<List<Team>> GetTeam(string username)
+        public async Task<List<Team>> GetTeam(string username, string leagueId)
         {
             try
             {
-                var tagEvnt = await _tagEvent.Find(tag => tag.Username == username).FirstOrDefaultAsync();
+                if (string.IsNullOrEmpty(leagueId)) return new List<Team>();
 
-                if (tagEvnt == null || tagEvnt.Team.Count < 1)
+                var team = await _teamOfLeague.Find(team => team.TournamentId == leagueId && team.Username == username).FirstOrDefaultAsync();
+
+                if (team == null)
                 {
-                    List<Team> team = new List<Team>();
-                    var matchs = _matchInfo.Find(x => x.Username == username && x.IsUploadJsonFile).ToList();
+                    List<Team> teams = new List<Team>();
+                    var matchs = _matchInfo.Find(x => x.Username == username && x.TournamentId == leagueId && x.IsUploadJsonFile).ToList();
                     foreach (var match in matchs)
                     {
                         foreach (var item in match.JsonFile.teams)
                         {
-                            if (!team.Any(t => t.TeamName.ToLower() == item.ToLower()))
+                            if (!teams.Any(t => t.TeamName.ToLower() == item.ToLower()))
                             {
-                                team.Add(new Team(item));
+                                teams.Add(new Team(item));
                             }
                         }
 
                     }
-                    if (tagEvnt == null)
-                    {
-                        tagEvnt = new TagEvent();
-                        tagEvnt.Username = username;
-                        tagEvnt.Team = team;
-                        _tagEvent.InsertOne(tagEvnt);
-                    }
-                    else
-                    {
-                        tagEvnt.Team = team;
-                        _tagEvent.ReplaceOne(t => t.Username == username, tagEvnt);
-                    }
-                    return team;
+
+                    team = new TeamOfLeague();
+                    team.Username = username;
+                    team.TournamentId = leagueId;
+                    team.Team = teams;
+                    _teamOfLeague.InsertOne(team);
+
+                    return teams;
                 }
                 else
-                    return tagEvnt.Team;
+                    return team.Team;
             }
             catch (System.Exception ex)
             {
@@ -1092,6 +1106,7 @@ namespace video_editing_api.Service.VideoEditing
         {
             try
             {
+                if (teamInput.Count < 1) return true;
                 foreach (var item in teamCheck)
                 {
                     if (teamInput.Any(x => x.TeamName == item))
@@ -1135,7 +1150,9 @@ namespace video_editing_api.Service.VideoEditing
             {
                 InputSendServer<EventStorage> inputSendServer = new InputSendServer<EventStorage>();
                 inputSendServer.Event = input.Event;
+                if (input.Logo.Count == 0) input.Logo.Add(new List<string>());
                 inputSendServer.logo = input.Logo;
+
 
                 var inputSend = handlePreSendServer(inputSendServer);
 
@@ -1150,7 +1167,7 @@ namespace video_editing_api.Service.VideoEditing
                 };
                 await _highlight.InsertOneAsync(hl);
 
-                var mergeQueue = new MergeQueueInput(inputSend, hl.Id);
+                var mergeQueue = new MergeQueueInput(inputSend, hl.Id, username);
                 BackgroundQueue.MergeQueue.Enqueue(mergeQueue);
                 return "Succeed";
             }

@@ -23,7 +23,7 @@ namespace video_editing_api.Service.VideoEditing
         Task<List<MatchInfo>> GetMatchInfo(string username);
         Task<string> AddMatchInfo(string username, MatchInfo matchInfo);
         Task<bool> DeleteMatch(string id);
-        Task<string> ConcatVideoOfMatch(ConcatModel concatModel);
+        Task<string> ConcatVideoOfMatch(string username, ConcatModel concatModel);
 
         Task<List<string>> NotConcatVideoOfMatch(ConcatModel concatModel);
 
@@ -45,7 +45,7 @@ namespace video_editing_api.Service.VideoEditing
         Task<List<List<string>>> DeleteLogo(string matchId, int position);
 
         Task<List<Tag>> GetTag(string username);
-        Task<List<Team>> GetTeam(string username);
+        Task<List<Team>> GetTeam(string username, string leagueId);
         Task<List<EventStorage>> GetJsonFromTag(string username, HighlightFilterByTagRequest request);
 
         Task<string> MergeHL(string username, InputMergeHL input);

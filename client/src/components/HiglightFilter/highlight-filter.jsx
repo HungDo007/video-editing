@@ -1,5 +1,6 @@
 import { DesktopDatePicker, LocalizationProvider } from "@mui/lab";
 import AdapterDateFns from "@mui/lab/AdapterDateFns";
+import { HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
 import {
   Alert,
   Autocomplete,
@@ -31,6 +32,7 @@ import HighlightReview from "../highlight-review";
 const { TabPane } = Tabs;
 
 function HighlightFilter() {
+  const [connection, setConnection] = useState();
   const [filtered, setFiltered] = useState([]);
   const [logo, setLogo] = useState([]);
 
@@ -84,6 +86,19 @@ function HighlightFilter() {
   };
 
   useEffect(() => {
+    const getTeamNameList = async () => {
+      try {
+        var response = await videoEditingApi.getTeamNameList(tournament?.id);
+        setTeams(response.data);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    setTeams([]);
+    getTeamNameList();
+  }, [tournament]);
+
+  useEffect(() => {
     const getTournaments = async () => {
       try {
         const response = await videoEditingApi.getTournaments();
@@ -101,18 +116,41 @@ function HighlightFilter() {
         console.log(error);
       }
     };
-    const getTeamNameList = async () => {
+
+    const join = async () => {
       try {
-        var response = await videoEditingApi.getTeamNameList();
-        setTeams(response.data);
-      } catch (error) {
-        console.log(error);
+        const connection1 = new HubConnectionBuilder()
+          .withUrl(process.env.REACT_APP_BASE_NOTI_URL)
+          .configureLogging(LogLevel.Information)
+          .build();
+
+        connection1.on("noti", (user, message) => {
+          console.log(user, message);
+          getHighlight();
+        });
+        await connection1.start();
+        await connection1.invoke("JoinRoom", {
+          user: localStorage.getItem("username"),
+          room: localStorage.getItem("username"),
+        });
+        setConnection(connection1);
+      } catch (e) {
+        console.log(e);
       }
     };
+
+    join();
+
     getTagNameList();
     getHighlight();
     getTournaments();
-    getTeamNameList();
+    return () => {
+      try {
+        connection.stop();
+      } catch (e) {
+        console.log(e);
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -544,6 +582,7 @@ function HighlightFilter() {
                 {...params}
                 label="League name"
                 placeholder={"Select league name"}
+                required
                 inputProps={{
                   ...params.inputProps,
                 }}

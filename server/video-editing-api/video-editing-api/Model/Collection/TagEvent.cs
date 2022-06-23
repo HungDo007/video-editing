@@ -10,7 +10,7 @@ namespace video_editing_api.Model.Collection
         public string Id { get; set; }
         public string Username { get; set; }
         public List<Tag> Tag { get; set; } = new List<Tag>();
-        public List<Team> Team { get; set; } = new List<Team>();
+
     }
 
 

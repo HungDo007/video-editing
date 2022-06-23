@@ -101,5 +101,17 @@ namespace video_editing_api.Service.DBConnection
                 throw new System.Exception(e.Message);
             }
         }
+
+        public IMongoCollection<TeamOfLeague> GetTeamOfLeagueCollection()
+        {
+            try
+            {
+                return _database.GetCollection<TeamOfLeague>(SystemConstants.TeamOfLeagueCollection);
+            }
+            catch (System.Exception e)
+            {
+                throw new System.Exception(e.Message);
+            }
+        }
     }
 }
