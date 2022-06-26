@@ -93,7 +93,6 @@ function TableReview(props) {
             <IconButton
               aria-label="delete"
               onClick={(e) => {
-                console.log(row);
                 handleIconRemoveClick(row);
               }}
             >

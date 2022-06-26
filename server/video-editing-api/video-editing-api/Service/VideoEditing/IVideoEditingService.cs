@@ -8,16 +8,8 @@ namespace video_editing_api.Service.VideoEditing
 {
     public interface IVideoEditingService
     {
-        Task<string> UploadVideoForMatch(string Id, IFormFile file);
-        string UploadVideo(string Id, IFormFile file);
-        Task<bool> Up(string matchId, List<TrimVideoHightlightModel> models);
-
-
-        Task<Tournament> GetTournament(string id);
         Task<List<Tournament>> GetTournament();
         Task<string> AddTournament(List<Tournament> tournaments);
-
-
 
         Task<MatchInfo> GetInfoOfMatch(string id);
         Task<List<MatchInfo>> GetMatchInfo(string username);
@@ -31,10 +23,8 @@ namespace video_editing_api.Service.VideoEditing
         Task<List<HighlightVideo>> GetHighlightVideos();
         Task<List<HighlightVideo>> GetHighlightVideosForMatch(string matchId);
         Task<List<HighlightVideo>> GetHighlightVideosHL(string username);
-        Task<HighlightVideo> GetHighlightVideosById(string highlightId);
         Task<string> UploadJson(string username, string matchId, IFormFile jsonfile);
 
-        byte[] Download(string url);
         Task<string> DownloadOne(ConcatModel concatModel);
 
         Task<string> SaveEvent(InputAddEventAndLogo input);
@@ -49,5 +39,9 @@ namespace video_editing_api.Service.VideoEditing
         Task<List<EventStorage>> GetJsonFromTag(string username, HighlightFilterByTagRequest request);
 
         Task<string> MergeHL(string username, InputMergeHL input);
+
+        Task<string> SaveToGallery(string username, GalleryInput input);
+        Task<List<Gallery>> getGalley(string username, int Type);
+        Task<bool> deleteGallery(string id);
     }
 }

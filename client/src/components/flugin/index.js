@@ -5,6 +5,7 @@ import TablePagination from "./TablePaging";
 import ConfirmDialog from "./ConfirmDialog";
 import DialogUploadLogo from "./DialogUploadLogo";
 import DialogUploadEvent from "./DialogUploadEvent";
+import DialogMoreEvent from "./LoadMoreEvent";
 
 export {
   CheckboxesTags,
@@ -14,4 +15,5 @@ export {
   ConfirmDialog,
   DialogUploadLogo,
   DialogUploadEvent,
+  DialogMoreEvent,
 };

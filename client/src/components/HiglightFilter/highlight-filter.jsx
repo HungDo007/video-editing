@@ -27,14 +27,16 @@ import { formatTimeSlice } from "../VideoInput/video-input";
 import ReactPlayer from "react-player";
 import TableReview from "../VideoInput/TableReview";
 import TableLogo from "../VideoInput/TableLogo";
-import { DialogUploadEvent, DialogUploadLogo } from "../flugin";
 import HighlightReview from "../highlight-review";
+import { DialogMoreEvent } from "../flugin";
 const { TabPane } = Tabs;
 
 function HighlightFilter() {
   const [connection, setConnection] = useState();
   const [filtered, setFiltered] = useState([]);
   const [logo, setLogo] = useState([]);
+
+  const [hlSuccess, setHlSuccess] = useState();
 
   const [highlights, setHighlights] = useState([]);
   const [hlDescription, setHlDescription] = useState();
@@ -45,12 +47,7 @@ function HighlightFilter() {
   const [team, setTeam] = useState([]);
 
   const [opendialog, setOpenDialog] = useState(false);
-  const [position, setPosition] = useState(undefined);
-  const [eventName, setEventName] = useState(undefined);
   const descriptionElementRef = useRef(null);
-  const [opendialogUploadEvent, setOpendialogUploadEvent] = useState(false);
-  const [opendialogUploadLogo, setOpendialogUploadLogo] = useState(false);
-  const [file, setFile] = useState();
 
   const [noti, setNoti] = useState(false);
   const [message, setMessage] = useState();
@@ -76,6 +73,13 @@ function HighlightFilter() {
   const previousVideoPieceTime = useRef(videoPieceTime);
   const previousDataRow = useRef(rowSelected);
 
+  const [eventGallery, setEventGallery] = useState();
+  const [logoGallery, setLogoGallery] = useState();
+  const [openDialogMoreEvent, setOpenDialogMoreEvent] = useState(false);
+  const [openDialogMoreLogo, setOpenDialogMoreLogo] = useState(false);
+
+  console.log(eventGallery, logoGallery);
+
   const getHighlight = async () => {
     try {
       var response = await videoEditingApi.getHighlightHL();
@@ -84,6 +88,16 @@ function HighlightFilter() {
       console.log(error.response);
     }
   };
+
+  useEffect(() => {
+    console.log(hlSuccess);
+    if (hlSuccess) {
+      const temp = [...highlights];
+      const idx = temp.findIndex((hl) => hl.id === hlSuccess.id);
+      temp[idx] = hlSuccess;
+      setHighlights(temp);
+    }
+  }, [hlSuccess]);
 
   useEffect(() => {
     const getTeamNameList = async () => {
@@ -97,6 +111,26 @@ function HighlightFilter() {
     setTeams([]);
     getTeamNameList();
   }, [tournament]);
+  const join = async () => {
+    try {
+      const connection1 = new HubConnectionBuilder()
+        .withUrl(process.env.REACT_APP_BASE_NOTI_URL)
+        .configureLogging(LogLevel.Information)
+        .build();
+
+      connection1.on("noti", (user, message) => {
+        setHlSuccess(JSON.parse(message));
+      });
+      await connection1.start();
+      await connection1.invoke("JoinRoom", {
+        username: localStorage.getItem("username"),
+        room: localStorage.getItem("username"),
+      });
+      setConnection(connection1);
+    } catch (e) {
+      console.log(e);
+    }
+  };
 
   useEffect(() => {
     const getTournaments = async () => {
@@ -117,30 +151,35 @@ function HighlightFilter() {
       }
     };
 
-    const join = async () => {
+    const getGallery = async () => {
       try {
-        const connection1 = new HubConnectionBuilder()
-          .withUrl(process.env.REACT_APP_BASE_NOTI_URL)
-          .configureLogging(LogLevel.Information)
-          .build();
-
-        connection1.on("noti", (user, message) => {
-          console.log(user, message);
-          getHighlight();
-        });
-        await connection1.start();
-        await connection1.invoke("JoinRoom", {
-          user: localStorage.getItem("username"),
-          room: localStorage.getItem("username"),
-        });
-        setConnection(connection1);
-      } catch (e) {
-        console.log(e);
-      }
+        var eventG = [];
+        var logoG = [];
+        var responseL = await videoEditingApi.getGallery(0);
+        var responseE = await videoEditingApi.getGallery(1);
+        if (responseE.data.length > 0) {
+          responseE.data.forEach((element) => {
+            const data = {
+              event: element.event,
+              file_name: element.file_name,
+              selected: -1,
+            };
+            eventG.push(data);
+          });
+        }
+        if (responseL.data.length > 0) {
+          responseL.data.forEach((element) => {
+            const data = { event: element.event, file_name: element.file_name };
+            logoG.push(data);
+          });
+        }
+        setLogoGallery(logoG);
+        setEventGallery(eventG);
+      } catch {}
     };
 
     join();
-
+    getGallery();
     getTagNameList();
     getHighlight();
     getTournaments();
@@ -168,7 +207,6 @@ function HighlightFilter() {
     const vdSrc = newVideoSrc.findIndex(
       (vid) => vid.file_name === row.file_name
     );
-    console.log(vdSrc);
     if (row.selected !== 0) {
       setIsTrimmed(true);
       newVideoSrc[vdSrc].selected = 1;
@@ -219,7 +257,6 @@ function HighlightFilter() {
     const getJsonFileFromTagName = async () => {
       try {
         var response = await videoEditingApi.getJsonFileFromTagName(body);
-        console.log(response.data.length);
         if (response.data.length > 0) {
           response.data[0].selected = 1;
           setVideoSrc(response.data);
@@ -284,91 +321,8 @@ function HighlightFilter() {
 
   const handleClose = () => {
     setOpenDialog(false);
-    setOpendialogUploadEvent(false);
-    setOpendialogUploadLogo(false);
   };
 
-  const handleClose1 = () => {
-    setOpendialogUploadEvent(false);
-    setOpendialogUploadLogo(false);
-  };
-
-  const handleUploadEventClick = () => {
-    if (file === undefined || eventName === undefined) {
-      setNoti(true);
-      setMessage("Please chose file or enter event name");
-      setTypeNoti("error");
-      return;
-    }
-
-    const formdata = new FormData();
-    formdata.append("eventName", eventName);
-    formdata.append("file", file);
-    formdata.append("logo", null);
-    try {
-      const uploadSmallVideo = async () => {
-        var response = await videoEditingApi.uploadSmallVideo(formdata);
-        const temp = [...filtered];
-        temp.unshift(response.data);
-        setFiltered(temp);
-        setOpen(false);
-        setNoti(true);
-        setMessage("Upload Succeed");
-        setTypeNoti("success");
-        setOpendialogUploadEvent(false);
-      };
-      setOpen(true);
-      uploadSmallVideo();
-    } catch (error) {
-      setNoti(true);
-      setMessage(error.response.data.description);
-      setTypeNoti("error");
-    }
-  };
-  const handleUploadLogoClick = () => {
-    if (file === undefined || position === undefined) {
-      setNoti(true);
-      setMessage("Please chose file or select position");
-      setTypeNoti("error");
-      return;
-    }
-
-    if (logo.some((lg) => lg[1] == position.value)) {
-      setNoti(true);
-      setMessage("Logo in this position already exists");
-      setTypeNoti("error");
-    } else {
-      const formdata = new FormData();
-      formdata.append("eventName", null);
-      formdata.append("file", file);
-      formdata.append("position", position.value);
-
-      try {
-        const uploadLogo = async () => {
-          var response = await videoEditingApi.uploadLogoHL(formdata);
-          console.log(response);
-          const temp = [...logo];
-          temp.unshift(response.data);
-          setLogo(temp);
-          setOpen(false);
-          setNoti(true);
-          setMessage("Upload Succeed");
-          setTypeNoti("success");
-          setOpendialogUploadLogo(false);
-        };
-        setOpen(true);
-        uploadLogo();
-      } catch (error) {
-        setNoti(true);
-        setMessage(error.response.data.description);
-        setTypeNoti("error");
-      }
-    }
-  };
-
-  const handleFileChange = (file) => {
-    setFile(file);
-  };
   const mergeVideoHL = (e) => {
     e.preventDefault();
     const body = {
@@ -397,6 +351,22 @@ function HighlightFilter() {
     mergeHL();
   };
 
+  const handleCloseEventAndLogo = () => {
+    setOpenDialogMoreEvent(false);
+    setOpenDialogMoreLogo(false);
+  };
+
+  const onCheck = (row) => {
+    if (row.selected === 1) {
+      const temp = [...filtered];
+      temp.unshift(row);
+      setFiltered(temp);
+    } else {
+      const temp = [...filtered];
+      var newF = temp.filter((t) => t.file_name !== row.file_name);
+      setFiltered(newF);
+    }
+  };
   return (
     <>
       <Snackbar
@@ -414,6 +384,13 @@ function HighlightFilter() {
         </Alert>
       </Snackbar>
 
+      <DialogMoreEvent
+        open={openDialogMoreEvent}
+        handleClose={handleCloseEventAndLogo}
+        onCheck={onCheck}
+        eventGallery={eventGallery}
+      />
+
       <Backdrop
         sx={{
           color: "#fff",
@@ -423,24 +400,6 @@ function HighlightFilter() {
       >
         <CircularProgress color="inherit" />
       </Backdrop>
-
-      <DialogUploadEvent
-        open={opendialogUploadEvent}
-        handleClose={handleClose1}
-        handleUploadEventClick={handleUploadEventClick}
-        eventName={eventName}
-        setEventName={setEventName}
-        handleFileChange={handleFileChange}
-      />
-
-      <DialogUploadLogo
-        open={opendialogUploadLogo}
-        handleClose={handleClose1}
-        handleUploadLogoClick={handleUploadLogoClick}
-        position={position}
-        setPosition={setPosition}
-        handleFileChange={handleFileChange}
-      />
 
       <Dialog
         open={opendialog}
@@ -502,9 +461,7 @@ function HighlightFilter() {
                 }}
                 variant="contained"
                 onClick={() => {
-                  setOpendialogUploadLogo(true);
-                  setPosition(undefined);
-                  setFile(undefined);
+                  setOpenDialogMoreLogo(true);
                 }}
               >
                 Upload Logo
@@ -516,9 +473,7 @@ function HighlightFilter() {
                 }}
                 variant="contained"
                 onClick={() => {
-                  setOpendialogUploadEvent(true);
-                  setEventName(undefined);
-                  setFile(undefined);
+                  setOpenDialogMoreEvent(true);
                 }}
               >
                 Upload More Event

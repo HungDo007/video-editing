@@ -13,5 +13,6 @@ namespace video_editing_api.Service.DBConnection
         IMongoCollection<video_editing_api.Model.Collection.Film> GetFilmCollection();
         IMongoCollection<TagEvent> GetTagEventCollection();
         IMongoCollection<TeamOfLeague> GetTeamOfLeagueCollection();
+        IMongoCollection<Gallery> GetGalleryCollection();
     }
 }

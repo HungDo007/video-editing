@@ -6,7 +6,6 @@ import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import CollectionsOutlinedIcon from "@mui/icons-material/CollectionsOutlined";
 import Cookies from "js-cookie";
 import LogoutIcon from "@mui/icons-material/Logout";
-import ScrollToTop from "react-scroll-to-top";
 import imgBG from "./bg-signbar.jpg";
 import SportsSoccerIcon from "@mui/icons-material/SportsSoccer";
 import MovieIcon from "@mui/icons-material/Movie";
@@ -36,7 +35,7 @@ function ResponsiveDrawer(props) {
       },
       {
         name: "Gallery",
-        url: "#",
+        url: "/gallery",
         icon: <CollectionsOutlinedIcon />,
       },
     ];
@@ -115,11 +114,10 @@ function ResponsiveDrawer(props) {
         </ProSidebar>
         <main>
           <Grid container direction="row">
-            <Grid item style={{ width: "100%", padding: "2% 4%" }}>
+            <Grid item xs={12} style={{ width: "100%", padding: "2% 4%" }}>
               {props.children}
             </Grid>
           </Grid>
-          <ScrollToTop smooth style={{ right: "20px", bottom: "20px" }} />
         </main>
       </div>
     </>

@@ -12,6 +12,7 @@ import VideoInput from "../VideoInput/video-input";
 import HighlightReview from "../highlight-review";
 import Film from "../Film";
 import HighlightFilter from "../HiglightFilter/highlight-filter";
+import Gallery from "../Gallery";
 
 function RoutePath() {
   return (
@@ -26,6 +27,7 @@ function RoutePath() {
       <Route path="/video-edit" element={<VideoInput />} />
       <Route path="/highlight-review" element={<HighlightReview />} />
       <Route path="/highlight" element={<HighlightFilter />} />
+      <Route path="/gallery" element={<Gallery />} />
     </Routes>
   );
 }

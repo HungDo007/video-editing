@@ -113,5 +113,17 @@ namespace video_editing_api.Service.DBConnection
                 throw new System.Exception(e.Message);
             }
         }
+
+        public IMongoCollection<Gallery> GetGalleryCollection()
+        {
+            try
+            {
+                return _database.GetCollection<Gallery>(SystemConstants.GalleryCollection);
+            }
+            catch (System.Exception e)
+            {
+                throw new System.Exception(e.Message);
+            }
+        }
     }
 }

@@ -126,9 +126,19 @@ const videoEditingApi = {
   },
   mergeHL: (body) => {
     const url = "/VideoEditings/mergeHL";
-    const response = axiosClient.post(url, body);
-    console.log(response);
-    return response;
+    return axiosClient.post(url, body);
+  },
+  getGallery: (type) => {
+    const url = `/VideoEditings/getGallery?type=${type}`;
+    return axiosClient.get(url);
+  },
+  saveToGallery: (formdata) => {
+    const url = `/VideoEditings/saveToGallery`;
+    return axiosClient.post(url, formdata);
+  },
+  deleteGallery: (id) => {
+    const url = `/VideoEditings/deleteGallery/${id}`;
+    return axiosClient.delete(url);
   },
 };
 

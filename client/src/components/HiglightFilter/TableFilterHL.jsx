@@ -137,7 +137,6 @@ function TableFilterHL(props) {
             <IconButton
               aria-label="delete"
               onClick={(e) => {
-                console.log(row);
                 handleViewClick(row);
               }}
               disabled={row.status === 1 ? false : true}

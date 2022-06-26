@@ -1,6 +1,4 @@
 ﻿using AutoMapper;
-using CloudinaryDotNet;
-using CloudinaryDotNet.Actions;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
@@ -8,11 +6,8 @@ using MongoDB.Driver;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.IO.Compression;
 using System.Linq;
-using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
@@ -20,7 +15,6 @@ using video_editing_api.Model.Collection;
 using video_editing_api.Model.InputModel;
 using video_editing_api.Service.DBConnection;
 using video_editing_api.Service.Storage;
-using Xabe.FFmpeg;
 
 
 namespace video_editing_api.Service.VideoEditing
@@ -33,9 +27,10 @@ namespace video_editing_api.Service.VideoEditing
         private readonly IMongoCollection<HighlightVideo> _highlight;
         private readonly IMongoCollection<TagEvent> _tagEvent;
         private readonly IMongoCollection<TeamOfLeague> _teamOfLeague;
+        private readonly IMongoCollection<Gallery> _gallery;
+
 
         private readonly IStorageService _storageService;
-        private readonly Cloudinary _cloudinary;
         private readonly IWebHostEnvironment _env;
         private readonly IMapper _mapper;
 
@@ -49,33 +44,16 @@ namespace video_editing_api.Service.VideoEditing
             _highlight = dbClient.GetHighlightVideoCollection();
             _tagEvent = dbClient.GetTagEventCollection();
             _teamOfLeague = dbClient.GetTeamOfLeagueCollection();
+            _gallery = dbClient.GetGalleryCollection();
 
             _dir = env.WebRootPath;
             _storageService = storageService;
             _mapper = mapper;
             _env = env;
-            var account = new Account(
-               config["Cloudinary:CloudName"],
-               config["Cloudinary:ApiKey"],
-               config["Cloudinary:ApiSecret"]
-               );
-
-            _cloudinary = new Cloudinary(account);
         }
 
 
-        #region Tournament
-        public async Task<Tournament> GetTournament(string id)
-        {
-            try
-            {
-                return await _tournament.Find(tournament => tournament.Id == id).FirstOrDefaultAsync();
-            }
-            catch (System.Exception e)
-            {
-                throw new System.Exception(e.Message);
-            }
-        }
+        #region Tournament      
         public async Task<List<Tournament>> GetTournament()
         {
             try
@@ -224,97 +202,6 @@ namespace video_editing_api.Service.VideoEditing
         #endregion
 
 
-
-
-        public async Task<string> UploadVideoForMatch(string Id, IFormFile file)
-        {
-            try
-            {
-                var match = _matchInfo.Find(x => x.Id == Id).First();
-                var tournament = _tournament.Find(x => x.Id == match.TournamentId).First();
-
-                string folderName = $"{tournament.Name}_{match.MatchName}_{match.MactchTime.ToString("dd-MM-yyyy-HH-mm")}";
-                string publicId = System.Guid.NewGuid().ToString();
-                string fileName = file.FileName;
-                string type = fileName.Substring(fileName.LastIndexOf("."));
-
-                string path = await _storageService.SaveFile(folderName, $"{publicId}{type}", file);
-                VideoResource vr = new VideoResource()
-                {
-                    PublicId = publicId,
-                    Name = fileName.Substring(0, fileName.LastIndexOf(".")),
-                    Url = path,
-                    Duration = await getDuration(path)
-                };
-                //match.Videos.Add(vr);
-                _matchInfo.ReplaceOne(m => m.Id == Id, match);
-                return "Succed";
-            }
-            catch (System.Exception e)
-            {
-                throw new System.Exception(e.Message);
-            }
-        }
-
-        public string UploadVideo(string Id, IFormFile file)
-        {
-
-            try
-            {
-                var match = _matchInfo.Find(x => x.Id == Id).First();
-                var tournament = _tournament.Find(x => x.Id == match.TournamentId).First();
-
-                string tournamentName = tournament.Name;
-                string matchName = match.MatchName;
-                string matchTime = match.MactchTime.ToString("dd-MM-yyyy-HH-mm");
-
-                //match.Videos.Add(UploadVideoForMatch(file, tournamentName, matchName, matchTime));
-
-                _matchInfo.ReplaceOne(m => m.Id == Id, match);
-                return "Succed";
-            }
-            catch (System.Exception e)
-            {
-                throw new System.Exception(e.Message);
-            }
-        }
-
-
-        private VideoResource UploadVideoForMatch(IFormFile file, string tournamentName, string matchName, string matchTime)
-        {
-            try
-            {
-                var videoresource = new VideoResource();
-                using var stream = file.OpenReadStream();
-                var name = System.Guid.NewGuid();
-                var param = new VideoUploadParams
-                {
-                    File = new FileDescription(file.FileName, stream),
-                    Transformation = new Transformation().Crop("fill"),
-                    PublicId = $"VideoEditing/{tournamentName}/{matchName}-{matchTime}/{name}"
-                };
-                var uploadResult = _cloudinary.Upload(param);
-
-                if (uploadResult.Error == null)
-                {
-                    videoresource.PublicId = uploadResult.PublicId;
-                    videoresource.Duration = uploadResult.Duration;
-                    videoresource.Name = "";
-                    videoresource.Url = uploadResult.SecureUrl.ToString();
-                }
-                else
-                {
-                    throw new System.Exception(uploadResult.Error.Message);
-                }
-                return videoresource;
-            }
-            catch (System.Exception e)
-            {
-                throw new System.Exception(e.Message);
-            }
-        }
-
-
         public async Task<List<HighlightVideo>> GetHighlightVideos()
         {
             try
@@ -327,221 +214,6 @@ namespace video_editing_api.Service.VideoEditing
             }
         }
 
-        //public async Task<string> ConcatVideoOfMatch(string matchId, List<TrimVideoHightlightModel> models)
-        //{
-        //    try
-        //    {
-        //        string response = string.Empty;
-        //        var match = _matchInfo.Find(x => x.Id == matchId).First();
-        //        if (models.Count > 0)
-        //        {
-        //            var trans = new Transformation().EndOffset(models[0].EndTime).StartOffset(models[0].StartTime);
-
-        //            for (int i = 1; i < models.Count; i++)
-        //            {
-        //                trans.Chain().Flags("splice").Overlay(new Layer().PublicId($"video:{models[i].PublicId}")).EndOffset(models[i].EndTime).StartOffset(models[i].StartTime).Chain();
-        //            }
-
-        //            var fitstVideo = match.Videos.Where(x => x.PublicId == models[0].PublicId).FirstOrDefault();
-        //            if (fitstVideo != null)
-        //            {
-        //                var name = System.Guid.NewGuid();
-        //                var param = new VideoUploadParams
-        //                {
-        //                    File = new FileDescription(fitstVideo.Url),
-        //                    Transformation = models.Count > 1 ? trans.Chain().Flags("layer_apply") : trans,
-        //                    PublicId = $"VideoEditing/Highlight/{match.MatchName}-{match.MactchTime.ToString("dd-MM-yyyy-HH-mm")}/{name}"
-        //                };
-        //                var uploadResult = await _cloudinary.UploadAsync(param);
-        //                if (uploadResult.Error == null)
-        //                {
-        //                    var highlight = new HighlightVideo()
-        //                    {
-        //                        MatchId = match.Id,
-        //                        MatchInfo = $"({match.MatchName})T({match.MactchTime.ToString("dd-MM-yyyy-hh-mm")})",
-        //                        Duration = uploadResult.Duration,
-        //                        PublicId = uploadResult.PublicId,
-        //                        Url = uploadResult.SecureUrl.ToString()
-        //                    };
-        //                    await _highlight.InsertOneAsync(highlight);
-        //                    response = highlight.Url;
-        //                }
-        //                else
-        //                {
-        //                    throw new System.Exception(uploadResult.Error.Message);
-        //                }
-        //            }
-        //            else
-        //            {
-        //                throw new System.Exception("No video in storage video of match!");
-        //            }
-        //        }
-        //        else
-        //        {
-        //            throw new System.Exception("No video to concat");
-        //        }
-        //        return response;
-        //    }
-        //    catch (System.Exception e)
-        //    {
-        //        throw new System.Exception(e.Message);
-        //    }
-        //}
-
-
-
-
-        //public async Task<bool> Up()
-        //{
-        //    try
-        //    {
-        //        //await _storageService.SaveFile("test", "test.mp4", file);
-        //        //await Trim();
-        //        //await Concat();
-        //        //await test();
-        //        return true;
-        //    }
-        //    catch (System.Exception ex)
-        //    {
-        //        throw new System.Exception(ex.Message);
-        //    }
-        //}
-
-
-        public async Task<bool> Trim()
-        {
-            try
-            {
-                var input = Path.Combine(_dir, "test\\test.mp4");
-                var output = Path.Combine(_dir, "converted.mp4");
-                //var ffmpeg = FFmpeg.
-
-                FFmpeg.SetExecutablesPath(Path.Combine(_dir, "ffmpeg"));
-                // Resource
-                var info = await FFmpeg.GetMediaInfo(input);
-                var a = info.Duration;
-
-                var videoStream = info.VideoStreams.First().SetCodec(Xabe.FFmpeg.VideoCodec.h264).SetSize(VideoSize.Hd480).Split(System.TimeSpan.FromSeconds(30), System.TimeSpan.FromSeconds(10));
-                IStream audioStream = info.AudioStreams.FirstOrDefault()?.SetCodec(AudioCodec.aac);
-                await FFmpeg.Conversions.New()
-                    .AddStream(videoStream, audioStream)
-                    .SetOutput(output)
-                    .Start();
-                //MediaInfo.Get(input);
-                return true;
-            }
-            catch (System.Exception ex)
-            {
-                throw new System.Exception(ex.Message);
-            }
-        }
-
-
-        public async Task<bool> Concat()
-        {
-            try
-            {
-                var input = Path.Combine(_dir, "test\\test.mp4");
-                var output = Path.Combine(_dir, "converted.mp4");
-                var output1 = Path.Combine(_dir, "converted1.mp4");
-
-                FFmpeg.SetExecutablesPath(Path.Combine(_dir, "ffmpeg"));
-
-                string[] arr = { input, output };
-
-                var conversion = await FFmpeg.Conversions.FromSnippet.Concatenate(output1, arr);
-                await conversion.Start();
-                return true;
-            }
-            catch (System.Exception ex)
-            {
-                throw new System.Exception(ex.Message);
-            }
-        }
-
-
-        public async Task<bool> Up(string matchId, List<TrimVideoHightlightModel> models)
-        {
-            try
-            {
-                //List<string> path = new List<string>();
-                //var match = _matchInfo.Find(x => x.Id == matchId).First();
-
-                ////string outputName = 
-
-                //StringBuilder arguments = new StringBuilder();
-                //StringBuilder temp = new StringBuilder();
-                //StringBuilder inputVideo = new StringBuilder();
-                //StringBuilder trimInfo = new StringBuilder();
-
-
-                //for (int i = 0; i < models.Count; i++)
-                //{
-
-                //    path.Add(match.Videos.Where(video => video.PublicId == models[i].PublicId).First().Url);
-                //    temp.Append($"[v{i}][a{i}]");
-                //    trimInfo.Append($"[{i}:v]trim=start={models[i].StartTime}:end={models[i].EndTime},setpts=PTS-STARTPTS[v{i}];[{i}:a]atrim=start={models[i].StartTime}:end={models[i].EndTime},asetpts=PTS-STARTPTS[a{i}];");
-
-                //}
-                //foreach (var item in path)
-                //{
-                //    inputVideo.Append($"-i {Path.Combine(_dir, item.Replace("/", "\\"))} ");
-                //}
-
-                //arguments.Append("-y ");
-                //arguments.Append(inputVideo.ToString());
-                //arguments.Append("-filter_complex \"");
-                //arguments.Append(trimInfo.ToString());
-
-                //arguments.Append($"{temp.ToString()}concat=n={path.Count}:v=1:a=1[v][a]\" -map \"[v]\" -map \"[a]\" output.mp4");
-
-
-                //var arg = $"-y -i {Path.Combine(_dir, "C1_Tota-Vis_09-01-2022-18-04/c5abe37c-4773-4aa6-97e2-31efe226b86d.mp4")} -i {Path.Combine(_dir, "C1_Tota-Vis_09-01-2022-18-04/b748e801-cce3-4457-830a-c2c0798e3936.mp4")} -filter_complex \"[0:v]trim=start=60:end=180,setpts=PTS-STARTPTS[v0];[0:a]atrim=start=60:end=180,asetpts=PTS-STARTPTS[a0];[1:v]trim=start=60:end=120,setpts=PTS-STARTPTS[v1];[1:a]atrim=start=60:end=120,asetpts=PTS-STARTPTS[a1];[v0][a0][v1][a1]concat=n=2:v=1:a=1[v][a]\" -map \"[v]\" -map \"[a]\" output.mp4";
-
-                var a = "-y -i http://118.69.218.59:5050/projects/625925c9b9e572905bcba1c9/raw/video -i http://118.69.218.59:5050/projects/625925ce85ea1d1c82f86ffa/raw/video -filter_complex \"[0:v]trim=start=10:end=20,setpts=PTS-STARTPTS[v0];[0:a]atrim=start=10:end=20,asetpts=PTS-STARTPTS[a0];[1:v]trim=start=10:end=30,setpts=PTS-STARTPTS[v1];[1:a]atrim=start=10:end=30,asetpts=PTS-STARTPTS[a1];[v0][a0][v1][a1]concat=n=2:v=1:a=1[v][a]\" -map \"[v]\" -map \"[a]\" output1234.mp4";
-
-                await Task.Run(() =>
-                {
-                    string path = Path.Combine(_env.ContentRootPath, "ffmpeg", "ffmpeg.exe");
-                    var startInfo = new ProcessStartInfo()
-                    {
-                        FileName = Path.Combine(_env.ContentRootPath, "ffmpeg", "ffmpeg.exe"),
-                        //Arguments = arguments.ToString(),
-                        Arguments = a,
-                        WorkingDirectory = Path.Combine(_dir, "Highlight"),
-                        CreateNoWindow = true,
-                        UseShellExecute = false
-                    };
-                    using (var process = new Process { StartInfo = startInfo })
-                    {
-                        process.Start();
-                        process.WaitForExit();
-                    }
-                });
-                return true;
-            }
-            catch (System.Exception ex)
-            {
-                throw new System.Exception(ex.Message);
-            }
-        }
-
-
-        private async Task<double> getDuration(string path)
-        {
-            try
-            {
-                path = path.Replace("/", "\\");
-                var input = Path.Combine(_dir, path);
-                FFmpeg.SetExecutablesPath(Path.Combine(_dir, "ffmpeg"));
-                var info = await FFmpeg.GetMediaInfo(input);
-                return info.Duration.TotalSeconds;
-            }
-            catch (System.Exception ex)
-            {
-                throw new System.Exception(ex.Message);
-            }
-        }
 
         public async Task<string> ConcatVideoOfMatch(string username, ConcatModel concatModel)
         {
@@ -625,7 +297,7 @@ namespace video_editing_api.Service.VideoEditing
                         team.Team.Add(new Team(item));
                     }
                 }
-                if (flagTag)
+                if (flagTeam)
                 {
                     _teamOfLeague.InsertOne(team);
                 }
@@ -693,17 +365,6 @@ namespace video_editing_api.Service.VideoEditing
         }
 
 
-        public async Task<HighlightVideo> GetHighlightVideosById(string highlightId)
-        {
-            try
-            {
-                return await _highlight.Find(hl => hl.Id == highlightId).FirstOrDefaultAsync();
-            }
-            catch (System.Exception e)
-            {
-                throw new System.Exception(e.Message);
-            }
-        }
 
         public async Task<List<string>> NotConcatVideoOfMatch(ConcatModel concatModel)
         {
@@ -733,52 +394,9 @@ namespace video_editing_api.Service.VideoEditing
             }
         }
 
-        public byte[] Download(string url)
-        {
-            try
-            {
-                byte[] content;
-                using (var client = new WebClient())
-                {
-                    content = client.DownloadData(url);
-                }
-                return content;
-            }
-            catch (System.Exception ex)
-            {
-                throw new System.Exception(ex.Message);
-            }
-        }
 
-        #region Download File  
-        private (string fileType, byte[] archiveData, string archiveName) DownloadFiles(List<string> urls)
-        {
-            var zipName = $"video-{DateTime.Now.ToString("yyyy_MM_dd-HH_mm_ss")}.zip";
 
-            byte[] content;
-
-            using (var memoryStream = new MemoryStream())
-            {
-                using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, false))
-                {
-                    for (int i = 0; i < urls.Count; i++)
-                    {
-                        using (var client = new WebClient())
-                        {
-                            content = client.DownloadData(urls[i]);
-                        }
-                        var theFile = archive.CreateEntry($"video{i + 1}.ts", CompressionLevel.Optimal);
-                        var entryStream = theFile.Open();
-                        using var fileToCompressStream = new MemoryStream(content);
-                        fileToCompressStream.CopyTo(entryStream);
-                        entryStream.Close();
-                    }
-                }
-
-                return ("application/zip", memoryStream.ToArray(), zipName);
-            }
-
-        }
+        #region Download File    
 
         public async Task<string> DownloadOne(ConcatModel concatModel)
         {
@@ -1121,27 +739,92 @@ namespace video_editing_api.Service.VideoEditing
         }
         #endregion
 
-
-        async void UploadToServerStorage(IFormFile file)
+        public async Task<List<Gallery>> getGalley(string username, int Type)
         {
-            HttpClient client = new HttpClient();
-            client.Timeout = TimeSpan.FromDays(1);
-            client.BaseAddress = new System.Uri("https://store.cads.live");
-
-            var requestContent = new MultipartFormDataContent();
-
-            if (file != null)
+            try
             {
-                byte[] data;
-                using (var br = new BinaryReader(file.OpenReadStream()))
+                if (Type != -1)
                 {
-                    data = br.ReadBytes((int)file.OpenReadStream().Length);
+                    return await _gallery.Find(gal => gal.Username == username && gal.Type == Type).ToListAsync();
                 }
-                ByteArrayContent bytes = new ByteArrayContent(data);
-                requestContent.Add(bytes, "event", file.FileName);
+                else
+                {
+                    return await _gallery.Find(gal => gal.Username == username).ToListAsync();
+                }
             }
-            var response = await client.PostAsync("/projects/", requestContent);
-            var result = await response.Content.ReadAsStringAsync();
+            catch (System.Exception ex)
+            {
+                throw new System.Exception(ex.Message);
+            }
+        }
+
+
+
+        public async Task<string> SaveToGallery(string username, GalleryInput input)
+        {
+            try
+            {
+                Gallery gallery = new Gallery()
+                {
+                    Type = input.Type,
+                    Event = input.EventName,
+                    Username = username
+                };
+
+                if (input.Type == SystemConstants.GalleryVideoType)
+                {
+                    gallery.file_name = await UploadToServerStorage(input.File);
+                }
+                else
+                {
+                    string publicId = System.Guid.NewGuid().ToString();
+                    string fileName = input.File.FileName;
+                    string type = fileName.Substring(fileName.LastIndexOf("."));
+                    gallery.file_name = await _storageService.SaveFileNoFolder($"{publicId}{type}", input.File);
+                }
+                await _gallery.InsertOneAsync(gallery);
+                return "success";
+            }
+            catch (System.Exception ex)
+            {
+                throw new System.Exception(ex.Message);
+            }
+        }
+
+        private async Task<string> UploadToServerStorage(IFormFile file)
+        {
+            try
+            {
+                HttpClient client = new HttpClient();
+                client.Timeout = TimeSpan.FromDays(1);
+                client.BaseAddress = new System.Uri("https://store.cads.live");
+
+                var requestContent = new MultipartFormDataContent();
+
+                if (file != null)
+                {
+                    byte[] data;
+                    using (var br = new BinaryReader(file.OpenReadStream()))
+                    {
+                        data = br.ReadBytes((int)file.OpenReadStream().Length);
+                    }
+                    ByteArrayContent bytes = new ByteArrayContent(data);
+                    requestContent.Add(bytes, "file", file.FileName);
+                }
+                var response = await client.PostAsync("/projects/", requestContent);
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = await response.Content.ReadAsStringAsync();
+                    dynamic jsons = JsonConvert.DeserializeObject(result);
+                    return jsons.url;
+                }
+                else
+                    throw new System.Exception(await response.Content.ReadAsStringAsync());
+            }
+            catch (System.Exception ex)
+            {
+                throw new System.Exception(ex.Message);
+            }
         }
 
         public async Task<string> MergeHL(string username, InputMergeHL input)
@@ -1174,6 +857,19 @@ namespace video_editing_api.Service.VideoEditing
             catch (System.Exception ex)
             {
                 throw new System.Exception(ex.Message);
+            }
+        }
+
+        public async Task<bool> deleteGallery(string id)
+        {
+            try
+            {
+                await _gallery.DeleteOneAsync(gal => gal.Id == id);
+                return true;
+            }
+            catch (System.Exception e)
+            {
+                throw new System.Exception(e.Message);
             }
         }
     }

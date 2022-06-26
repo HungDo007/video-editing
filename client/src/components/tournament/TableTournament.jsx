@@ -38,7 +38,6 @@ function TableTournament(props) {
 
   const handleSearchDate = (selectedKeys, confirm, dataIndex) => {
     confirm();
-    console.log(selectedKeys[0]);
     setSearchDate(selectedKeys[0]);
     setSearchedColumn(dataIndex);
   };
@@ -231,7 +230,6 @@ function TableTournament(props) {
               href="#"
               underline="none"
               onClick={(e) => {
-                console.log(row);
                 handleResultClick(e, row);
               }}
             >
@@ -275,7 +273,6 @@ function TableTournament(props) {
             <IconButton
               aria-label="delete"
               onClick={(e) => {
-                console.log(row);
                 handleIconDeleteClick(row);
               }}
             >

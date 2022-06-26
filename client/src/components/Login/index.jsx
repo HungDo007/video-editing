@@ -67,7 +67,6 @@ function Login() {
         setLoading(false);
         setErr(true);
         setMessage(error.response.data.description);
-        //console.log(error.response.data.description);
       }
     };
     login();

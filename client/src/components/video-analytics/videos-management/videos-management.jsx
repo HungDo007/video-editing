@@ -38,7 +38,6 @@ function VideoManagement() {
 
   const handleChange = (file) => {
     setFile(file);
-    console.log(file);
   };
   return (
     <div>

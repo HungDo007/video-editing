@@ -23,7 +23,7 @@ import HighlightReview from "../highlight-review";
 import TableEditVideo from "./TableEditVideo";
 import TableReview from "./TableReview";
 import TableLogo from "./TableLogo";
-import { DialogUploadEvent, DialogUploadLogo } from "../flugin";
+import { DialogMoreEvent } from "../flugin";
 
 const { TabPane } = Tabs;
 
@@ -40,13 +40,12 @@ const VideoInput = () => {
   const [connection, setConnection] = useState();
   const [opendialog, setOpenDialog] = useState(false);
 
-  const [position, setPosition] = useState(undefined);
-  const [eventName, setEventName] = useState(undefined);
-  const [file, setFile] = useState();
+  const [hlSuccess, setHlSuccess] = useState();
+
   const [logo, setLogo] = useState();
   const location = useLocation();
   const videoPlayer = useRef(null);
-  const [scroll, setScroll] = useState("paper");
+
   const descriptionElementRef = useRef(null);
   const [isTrimmed, setIsTrimmed] = useState(true);
   const [rowSelected, setRowSelected] = useState();
@@ -65,6 +64,8 @@ const VideoInput = () => {
   const previousVideoPieceTime = useRef(videoPieceTime);
   const previousDataRow = useRef(rowSelected);
 
+  const [eventGallery, setEventGallery] = useState();
+  const [logoGallery, setLogoGallery] = useState();
   const [opendialogUploadEvent, setOpendialogUploadEvent] = useState(false);
   const [opendialogUploadLogo, setOpendialogUploadLogo] = useState(false);
 
@@ -85,6 +86,35 @@ const VideoInput = () => {
       console.log(error.response);
     }
   };
+  const join = async () => {
+    try {
+      const connection1 = new HubConnectionBuilder()
+        .withUrl(process.env.REACT_APP_BASE_NOTI_URL)
+        .configureLogging(LogLevel.Information)
+        .build();
+
+      connection1.on("noti", (user, message) => {
+        setHlSuccess(JSON.parse(message));
+      });
+      await connection1.start();
+      await connection1.invoke("JoinRoom", {
+        username: localStorage.getItem("username"),
+        room: localStorage.getItem("username"),
+      });
+      setConnection(connection1);
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
+  useEffect(() => {
+    if (hlSuccess) {
+      const temp = [...highlights];
+      const idx = temp.findIndex((hl) => hl.id === hlSuccess.id);
+      temp[idx] = hlSuccess;
+      setHighlights(temp);
+    }
+  }, [hlSuccess]);
 
   useEffect(() => {
     setVideoPieceTime([rowSelected?.startTime, rowSelected?.endTime]);
@@ -131,41 +161,44 @@ const VideoInput = () => {
         response.data.jsonFile.event[0].selected === 0 ? false : true
       );
     };
-
-    const join = async () => {
+    const getGallery = async () => {
       try {
-        const connection1 = new HubConnectionBuilder()
-          .withUrl(process.env.REACT_APP_BASE_NOTI_URL)
-          .configureLogging(LogLevel.Information)
-          .build();
-
-        connection1.on("noti", (user, message) => {
-          console.log(user, message);
-          getHighlight();
-        });
-        await connection1.start();
-        await connection1.invoke("JoinRoom", {
-          user: localStorage.getItem("username"),
-          room: localStorage.getItem("username"),
-        });
-        setConnection(connection1);
-      } catch (e) {
-        console.log(e);
-      }
+        var eventG = [];
+        var logoG = [];
+        var responseL = await videoEditingApi.getGallery(0);
+        var responseE = await videoEditingApi.getGallery(1);
+        if (responseE.data.length > 0) {
+          responseE.data.forEach((element) => {
+            const data = {
+              event: element.event,
+              file_name: element.file_name,
+              selected: -1,
+            };
+            eventG.push(data);
+          });
+        }
+        if (responseL.data.length > 0) {
+          responseL.data.forEach((element) => {
+            const data = { event: element.event, file_name: element.file_name };
+            logoG.push(data);
+          });
+        }
+        setLogoGallery(logoG);
+        setEventGallery(eventG);
+      } catch {}
     };
-
+    getGallery();
     join();
     getData();
     getHighlight();
-    return () => {
+    return async () => {
       try {
-        connection.stop();
+        await connection.stop();
       } catch (e) {
         console.log(e);
       }
     };
   }, []);
-  console.log(connection);
   const updateLogTrimmed = async (eventUpdate) => {
     try {
       await videoEditingApi.updateLogTrimmed(
@@ -378,77 +411,16 @@ const VideoInput = () => {
     [isReady]
   );
 
-  const handleUploadEventClick = () => {
-    if (file === undefined || eventName === undefined) {
-      setNoti(true);
-      setMessage("Please chose file or enter event name");
-      setTypeNoti("error");
-      return;
+  const onCheck = (row) => {
+    if (row.selected === 1) {
+      const temp = [...filtered];
+      temp.unshift(row);
+      setFiltered(temp);
+    } else {
+      const temp = [...filtered];
+      var newF = temp.filter((t) => t.file_name !== row.file_name);
+      setFiltered(newF);
     }
-
-    const formdata = new FormData();
-    formdata.append("eventName", eventName);
-    formdata.append("file", file);
-    formdata.append("logo", null);
-    try {
-      const uploadSmallVideo = async () => {
-        var response = await videoEditingApi.uploadSmallVideo(formdata);
-        const temp = [...filtered];
-        temp.unshift(response.data);
-        setFiltered(temp);
-        setOpen(false);
-        setNoti(true);
-        setMessage("Upload Succeed");
-        setTypeNoti("success");
-        setOpendialogUploadEvent(false);
-      };
-      setOpen(true);
-      uploadSmallVideo();
-    } catch (error) {
-      setNoti(true);
-      setMessage(error.response.data.description);
-      setTypeNoti("error");
-    }
-  };
-  const handleUploadLogoClick = () => {
-    if (file === undefined || position === undefined) {
-      setNoti(true);
-      setMessage("Please chose file or select position");
-      setTypeNoti("error");
-      return;
-    }
-
-    const formdata = new FormData();
-    formdata.append("eventName", null);
-    formdata.append("file", file);
-    formdata.append("position", position.value);
-    try {
-      const uploadLogo = async () => {
-        var response = await videoEditingApi.uploadLogo(
-          location.state.row.id,
-          formdata
-        );
-        setLogo(response.data);
-        setOpen(false);
-        setNoti(true);
-        setMessage("Upload Succeed");
-        setTypeNoti("success");
-        setOpendialogUploadLogo(false);
-        const body1 = { ...body };
-        body1.logo = response.data;
-        setBody(body1);
-      };
-      setOpen(true);
-      uploadLogo();
-    } catch (error) {
-      setNoti(true);
-      setMessage(error.response.data.description);
-      setTypeNoti("error");
-    }
-  };
-
-  const handleFileChange = (file) => {
-    setFile(file);
   };
 
   const handleIconRemoveEventClick = (row) => {
@@ -459,8 +431,8 @@ const VideoInput = () => {
   };
 
   const handleIconRemoveLogoClick = (position) => {
-    try {
-      const deleteLogo = async () => {
+    const deleteLogo = async () => {
+      try {
         var response = await videoEditingApi.deleteLogo(
           location.state.row.id,
           position
@@ -474,14 +446,14 @@ const VideoInput = () => {
         const body1 = { ...body };
         body1.logo = response.data;
         setBody(body1);
-      };
-      setOpen(true);
-      deleteLogo();
-    } catch (error) {
-      setNoti(true);
-      setMessage(error.response.data.description);
-      setTypeNoti("error");
-    }
+      } catch (error) {
+        setNoti(true);
+        setMessage(error.response.data.description);
+        setTypeNoti("error");
+      }
+    };
+    setOpen(true);
+    deleteLogo();
   };
 
   return (
@@ -496,32 +468,21 @@ const VideoInput = () => {
         <CircularProgress color="inherit" />
       </Backdrop>
 
-      <DialogUploadEvent
+      <DialogMoreEvent
         open={opendialogUploadEvent}
         handleClose={handleClose1}
-        handleUploadEventClick={handleUploadEventClick}
-        eventName={eventName}
-        setEventName={setEventName}
-        handleFileChange={handleFileChange}
-      />
-
-      <DialogUploadLogo
-        open={opendialogUploadLogo}
-        handleClose={handleClose1}
-        handleUploadLogoClick={handleUploadLogoClick}
-        position={position}
-        setPosition={setPosition}
-        handleFileChange={handleFileChange}
+        onCheck={onCheck}
+        eventGallery={eventGallery}
       />
 
       <Dialog
         open={opendialog}
         onClose={handleClose}
-        scroll={scroll}
+        scroll="paper"
         fullWidth={true}
         maxWidth="lg"
       >
-        <DialogContent dividers={scroll === "paper"}>
+        <DialogContent dividers={true}>
           <DialogContentText
             id="scroll-dialog-description"
             ref={descriptionElementRef}
@@ -575,8 +536,6 @@ const VideoInput = () => {
                 variant="contained"
                 onClick={() => {
                   setOpendialogUploadLogo(true);
-                  setPosition(undefined);
-                  setFile(undefined);
                 }}
               >
                 Upload Logo
@@ -589,8 +548,6 @@ const VideoInput = () => {
                 variant="contained"
                 onClick={() => {
                   setOpendialogUploadEvent(true);
-                  setEventName(undefined);
-                  setFile(undefined);
                 }}
               >
                 Upload More Event

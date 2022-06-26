@@ -3,12 +3,11 @@
   position: absolute;
 }
 .app main {
-  /* padding: 0 24px 24px 24px; */
+  min-width: 80vw;
   flex-grow: 1;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   overflow-y: auto;
-  /* min-width: 90vw; */
 }
 #root,
 .app {
