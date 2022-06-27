@@ -15,17 +15,13 @@ import {
   DialogContentText,
   DialogActions,
 } from "@mui/material";
-import { Tabs } from "antd";
 import ReactPlayer from "react-player";
 import videoEditingApi from "../../api/video-editing";
 import { useLocation } from "react-router-dom";
 import HighlightReview from "../highlight-review";
 import TableEditVideo from "./TableEditVideo";
 import TableReview from "./TableReview";
-import TableLogo from "./TableLogo";
-import { DialogMoreEvent } from "../flugin";
-
-const { TabPane } = Tabs;
+import { DialogMoreEvent, DialogMoreLogo } from "../flugin";
 
 export const formatTimeSlice = (time) => {
   var mind = time % (60 * 60);
@@ -42,7 +38,6 @@ const VideoInput = () => {
 
   const [hlSuccess, setHlSuccess] = useState();
 
-  const [logo, setLogo] = useState();
   const location = useLocation();
   const videoPlayer = useRef(null);
 
@@ -68,6 +63,15 @@ const VideoInput = () => {
   const [logoGallery, setLogoGallery] = useState();
   const [opendialogUploadEvent, setOpendialogUploadEvent] = useState(false);
   const [opendialogUploadLogo, setOpendialogUploadLogo] = useState(false);
+  const [logoAdd, setLogoAdd] = useState(() => {
+    const temp = [
+      { position: 1, event: "", file_name: "", checked: false },
+      { position: 2, event: "", file_name: "", checked: false },
+      { position: 3, event: "", file_name: "", checked: false },
+      { position: 4, event: "", file_name: "", checked: false },
+    ];
+    return temp;
+  });
 
   useEffect(() => {
     previousVideoPieceTime.current = videoPieceTime;
@@ -155,7 +159,7 @@ const VideoInput = () => {
         updateLogTrimmed(tempdata);
         temp[0].selected = 1;
       }
-      setLogo(response.data.jsonFile.logo);
+
       setVideoSrc(temp);
       setIsTrimmed(
         response.data.jsonFile.event[0].selected === 0 ? false : true
@@ -250,9 +254,19 @@ const VideoInput = () => {
 
   const handleSendServer = (e) => {
     e.preventDefault();
+    const temp = [...logoAdd];
+
+    var logo = [];
+    temp.forEach((element) => {
+      if (element.checked) {
+        logo.push([element.file_name, element.position.toString()]);
+      }
+    });
+
     const newBody = {
       ...body,
       event: filtered,
+      logo: logo,
     };
 
     const concatHighlight = async () => {
@@ -430,30 +444,13 @@ const VideoInput = () => {
     setFiltered(afterRemove);
   };
 
-  const handleIconRemoveLogoClick = (position) => {
-    const deleteLogo = async () => {
-      try {
-        var response = await videoEditingApi.deleteLogo(
-          location.state.row.id,
-          position
-        );
-        setLogo(response.data);
-        setOpen(false);
-        setNoti(true);
-        setMessage("Delete Succeed");
-        setTypeNoti("success");
-        setOpendialogUploadLogo(false);
-        const body1 = { ...body };
-        body1.logo = response.data;
-        setBody(body1);
-      } catch (error) {
-        setNoti(true);
-        setMessage(error.response.data.description);
-        setTypeNoti("error");
-      }
-    };
-    setOpen(true);
-    deleteLogo();
+  const onChangeSelectLogo = (value, position) => {
+    const temp = [...logoAdd];
+    const idx = temp.findIndex((l) => l.position === position);
+    temp[idx].event = value?.event;
+    temp[idx].file_name = value?.file_name;
+    temp[idx].checked = value ? true : false;
+    setLogoAdd(temp);
   };
 
   return (
@@ -475,6 +472,14 @@ const VideoInput = () => {
         eventGallery={eventGallery}
       />
 
+      <DialogMoreLogo
+        open={opendialogUploadLogo}
+        handleClose={handleClose1}
+        onChange={onChangeSelectLogo}
+        eventLogo={logoGallery}
+        logoAdd={logoAdd}
+      />
+
       <Dialog
         open={opendialog}
         onClose={handleClose}
@@ -489,21 +494,12 @@ const VideoInput = () => {
             tabIndex={-1}
             minHeight="70vh"
           >
-            <Tabs defaultActiveKey="1">
-              <TabPane tab="Event" key="1">
-                <TableReview
-                  data={filtered}
-                  setData={setFiltered}
-                  handleIconRemoveClick={handleIconRemoveEventClick}
-                />
-              </TabPane>
-              <TabPane tab="Logo" key="2">
-                <TableLogo
-                  data={logo}
-                  handleIconRemoveClick={handleIconRemoveLogoClick}
-                />
-              </TabPane>
-            </Tabs>
+            <TableReview
+              data={filtered}
+              setData={setFiltered}
+              handleIconRemoveClick={handleIconRemoveEventClick}
+              logo={logoAdd}
+            />
           </DialogContentText>
         </DialogContent>
         <DialogActions>
@@ -531,35 +527,35 @@ const VideoInput = () => {
             <div>
               <Button
                 sx={{
-                  backgroundColor: "#66CC66",
+                  backgroundColor: "#996699",
                 }}
                 variant="contained"
                 onClick={() => {
                   setOpendialogUploadLogo(true);
                 }}
               >
-                Upload Logo
+                Add Logo
               </Button>
               <Button
                 sx={{
                   marginLeft: "10px",
-                  backgroundColor: "#66CC66",
+                  backgroundColor: "#996699",
                 }}
                 variant="contained"
                 onClick={() => {
                   setOpendialogUploadEvent(true);
                 }}
               >
-                Upload More Event
+                Add Event
               </Button>
               <Button
                 sx={{
                   marginLeft: "10px",
+                  backgroundColor: "#002200",
                 }}
                 variant="contained"
                 onClick={handleSendServerNotMerge}
                 disabled={dis}
-                color="secondary"
               >
                 Download
               </Button>

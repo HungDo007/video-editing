@@ -6,6 +6,7 @@ import ConfirmDialog from "./ConfirmDialog";
 import DialogUploadLogo from "./DialogUploadLogo";
 import DialogUploadEvent from "./DialogUploadEvent";
 import DialogMoreEvent from "./LoadMoreEvent";
+import DialogMoreLogo from "./LoadMoreLogo";
 
 export {
   CheckboxesTags,
@@ -16,4 +17,5 @@ export {
   DialogUploadLogo,
   DialogUploadEvent,
   DialogMoreEvent,
+  DialogMoreLogo,
 };

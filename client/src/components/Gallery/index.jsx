@@ -116,6 +116,7 @@ function Gallery() {
         setNoti(true);
         setMessage(error.response.data.description);
         setTypeNoti("error");
+        setOpenBackdrop(false);
       }
     };
     setOpenBackdrop(true);
@@ -204,9 +205,8 @@ function Gallery() {
           gallery.map((gal) => {
             if (gal.type === 0)
               return (
-                <Grid item xs={3}>
-                  <Paper elevation={3}>
-                    <Image width="100%" src={gal.file_name} />
+                <Grid item xs={2}>
+                  <Paper elevation={3} sx={{ height: "250px" }}>
                     <div
                       style={{
                         display: "flex",
@@ -226,14 +226,14 @@ function Gallery() {
                         />
                       </Popconfirm>
                     </div>
+                    <Image width="100%" src={gal.file_name} />
                   </Paper>
                 </Grid>
               );
             else
               return (
-                <Grid item xs={6}>
-                  <Paper elevation={3}>
-                    <ReactPlayer url={gal.file_name} controls width="100%" />
+                <Grid item xs={4}>
+                  <Paper elevation={3} sx={{ height: "250px" }}>
                     <div
                       style={{
                         display: "flex",
@@ -253,6 +253,12 @@ function Gallery() {
                         />
                       </Popconfirm>
                     </div>
+                    <ReactPlayer
+                      url={gal.file_name}
+                      controls
+                      height="75%"
+                      width="100%"
+                    />
                   </Paper>
                 </Grid>
               );

@@ -29,3 +29,6 @@ tr.drop-over-upward td {
   min-width: unset !important;
   text-align: center;
 }
+.ant-popover {
+  z-index: 1000000000000000000000000;
+}

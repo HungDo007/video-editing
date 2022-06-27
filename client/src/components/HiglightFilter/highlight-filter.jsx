@@ -17,7 +17,6 @@ import {
   Snackbar,
   TextField,
 } from "@mui/material";
-import { Tabs } from "antd";
 import SearchIcon from "@mui/icons-material/Search";
 import React, { useCallback, useRef, useState } from "react";
 import TableEditVideo from "../VideoInput/TableEditVideo";
@@ -26,15 +25,12 @@ import videoEditingApi from "../../api/video-editing";
 import { formatTimeSlice } from "../VideoInput/video-input";
 import ReactPlayer from "react-player";
 import TableReview from "../VideoInput/TableReview";
-import TableLogo from "../VideoInput/TableLogo";
 import HighlightReview from "../highlight-review";
-import { DialogMoreEvent } from "../flugin";
-const { TabPane } = Tabs;
+import { DialogMoreEvent, DialogMoreLogo } from "../flugin";
 
 function HighlightFilter() {
   const [connection, setConnection] = useState();
   const [filtered, setFiltered] = useState([]);
-  const [logo, setLogo] = useState([]);
 
   const [hlSuccess, setHlSuccess] = useState();
 
@@ -78,7 +74,15 @@ function HighlightFilter() {
   const [openDialogMoreEvent, setOpenDialogMoreEvent] = useState(false);
   const [openDialogMoreLogo, setOpenDialogMoreLogo] = useState(false);
 
-  console.log(eventGallery, logoGallery);
+  const [logoAdd, setLogoAdd] = useState(() => {
+    const temp = [
+      { position: 1, event: "", file_name: "", checked: false },
+      { position: 2, event: "", file_name: "", checked: false },
+      { position: 3, event: "", file_name: "", checked: false },
+      { position: 4, event: "", file_name: "", checked: false },
+    ];
+    return temp;
+  });
 
   const getHighlight = async () => {
     try {
@@ -90,7 +94,6 @@ function HighlightFilter() {
   };
 
   useEffect(() => {
-    console.log(hlSuccess);
     if (hlSuccess) {
       const temp = [...highlights];
       const idx = temp.findIndex((hl) => hl.id === hlSuccess.id);
@@ -222,12 +225,6 @@ function HighlightFilter() {
     setFiltered(afterRemove);
   };
 
-  const handleIconRemoveLogoClick = (position) => {
-    const temp = [...logo];
-    const afterRemove = temp.filter((item) => item[1] !== position);
-    setLogo(afterRemove);
-  };
-
   const handleEditVideo = () => {
     const tempFilter = [...videoSrc];
     const payload = tempFilter.reduce((filtered, video) => {
@@ -242,7 +239,6 @@ function HighlightFilter() {
 
   const handleSearchVideo = (e) => {
     e.preventDefault();
-    console.log(tournament, team);
     const body = {
       dateFrom: fromDate
         .toLocaleString("sv", { timeZoneName: "short" })
@@ -325,12 +321,20 @@ function HighlightFilter() {
 
   const mergeVideoHL = (e) => {
     e.preventDefault();
+    const temp = [...logoAdd];
+
+    var logo = [];
+    temp.forEach((element) => {
+      if (element.checked) {
+        logo.push([element.file_name, element.position.toString()]);
+      }
+    });
+
     const body = {
       event: filtered,
       logo: logo,
       description: hlDescription,
     };
-
     const mergeHL = async () => {
       try {
         await videoEditingApi.mergeHL(body);
@@ -367,6 +371,16 @@ function HighlightFilter() {
       setFiltered(newF);
     }
   };
+
+  const onChangeSelectLogo = (value, position) => {
+    const temp = [...logoAdd];
+    const idx = temp.findIndex((l) => l.position === position);
+    temp[idx].event = value?.event;
+    temp[idx].file_name = value?.file_name;
+    temp[idx].checked = value ? true : false;
+    setLogoAdd(temp);
+  };
+
   return (
     <>
       <Snackbar
@@ -389,6 +403,14 @@ function HighlightFilter() {
         handleClose={handleCloseEventAndLogo}
         onCheck={onCheck}
         eventGallery={eventGallery}
+      />
+
+      <DialogMoreLogo
+        open={openDialogMoreLogo}
+        handleClose={handleCloseEventAndLogo}
+        onChange={onChangeSelectLogo}
+        eventLogo={logoGallery}
+        logoAdd={logoAdd}
       />
 
       <Backdrop
@@ -415,21 +437,12 @@ function HighlightFilter() {
             tabIndex={-1}
             minHeight="70vh"
           >
-            <Tabs defaultActiveKey="1">
-              <TabPane tab="Event" key="1">
-                <TableReview
-                  data={filtered}
-                  setData={setFiltered}
-                  handleIconRemoveClick={handleIconRemoveEventClick}
-                />
-              </TabPane>
-              <TabPane tab="Logo" key="2">
-                <TableLogo
-                  data={logo}
-                  handleIconRemoveClick={handleIconRemoveLogoClick}
-                />
-              </TabPane>
-            </Tabs>
+            <TableReview
+              data={filtered}
+              setData={setFiltered}
+              handleIconRemoveClick={handleIconRemoveEventClick}
+              logo={logoAdd}
+            />
           </DialogContentText>
         </DialogContent>
         <DialogActions>
@@ -457,26 +470,27 @@ function HighlightFilter() {
             <div style={{ display: "flex", justifyContent: "flex-end" }}>
               <Button
                 sx={{
-                  backgroundColor: "#66CC66",
+                  backgroundColor: "#996699",
                 }}
                 variant="contained"
                 onClick={() => {
                   setOpenDialogMoreLogo(true);
                 }}
               >
-                Upload Logo
+                Add Logo
               </Button>
+
               <Button
                 sx={{
                   marginLeft: "10px",
-                  backgroundColor: "#66CC66",
+                  backgroundColor: "#996699",
                 }}
                 variant="contained"
                 onClick={() => {
                   setOpenDialogMoreEvent(true);
                 }}
               >
-                Upload More Event
+                Add Event
               </Button>
 
               <Button

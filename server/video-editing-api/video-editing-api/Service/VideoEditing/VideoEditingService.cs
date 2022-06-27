@@ -771,17 +771,17 @@ namespace video_editing_api.Service.VideoEditing
                     Username = username
                 };
 
-                if (input.Type == SystemConstants.GalleryVideoType)
-                {
-                    gallery.file_name = await UploadToServerStorage(input.File);
-                }
-                else
-                {
-                    string publicId = System.Guid.NewGuid().ToString();
-                    string fileName = input.File.FileName;
-                    string type = fileName.Substring(fileName.LastIndexOf("."));
-                    gallery.file_name = await _storageService.SaveFileNoFolder($"{publicId}{type}", input.File);
-                }
+                gallery.file_name = await UploadToServerStorage(input.File);
+                //if (input.Type == SystemConstants.GalleryVideoType)
+                //{
+                //}
+                //else
+                //{
+                //    string publicId = System.Guid.NewGuid().ToString();
+                //    string fileName = input.File.FileName;
+                //    string type = fileName.Substring(fileName.LastIndexOf("."));
+                //    gallery.file_name = await _storageService.SaveFileNoFolder($"{publicId}{type}", input.File);
+                //}
                 await _gallery.InsertOneAsync(gallery);
                 return "success";
             }

@@ -16,8 +16,8 @@ function DialogMoreEvent(props) {
   const descriptionElementRef = useRef(null);
   const handleCheck = (e, row) => {
     const temp = { ...row };
-    temp.selected = e.target.checked === true ? 1 : 0;
-    onCheck(temp);
+    row.selected = e.target.checked === true ? 1 : -1;
+    onCheck(row);
   };
   return (
     <Dialog open={open} scroll="paper">
@@ -42,14 +42,17 @@ function DialogMoreEvent(props) {
           ref={descriptionElementRef}
           tabIndex={-1}
         >
-          <Grid container spacing={2} width="450px">
+          <Grid container spacing={2} width="300px">
             <Grid item xs={12}>
               {eventGallery?.map((row) => (
-                <FormControlLabel
-                  control={<Checkbox />}
-                  label={row.event}
-                  onChange={(e) => handleCheck(e, row)}
-                />
+                <div>
+                  <FormControlLabel
+                    control={<Checkbox />}
+                    label={row.event}
+                    checked={row.selected === 1 ? true : false}
+                    onChange={(e) => handleCheck(e, row)}
+                  />
+                </div>
               ))}
             </Grid>
           </Grid>

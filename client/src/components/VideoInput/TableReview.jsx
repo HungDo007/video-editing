@@ -60,7 +60,7 @@ const DraggableBodyRow = ({
 };
 
 function TableReview(props) {
-  const { data, setData, handleIconRemoveClick } = props;
+  const { data, setData, handleIconRemoveClick, logo } = props;
 
   const columns = [
     {
@@ -123,6 +123,28 @@ function TableReview(props) {
     },
     [data]
   );
+
+  const renderFooter = () => {
+    var count = 0;
+    var text = "Logo selected in:";
+    logo.forEach((element) => {
+      if (element.checked) {
+        count += 1;
+        text += ` ${
+          element.position === 1
+            ? "Top-Right"
+            : element.position === 2
+            ? "Bottom-Right"
+            : element.position === 3
+            ? "Bottom-Left"
+            : "Top-Left"
+        }`;
+      }
+    });
+    if (count === 0) return "Logo has not been selected";
+    else return text;
+  };
+
   return (
     <DndProvider backend={HTML5Backend}>
       <Table
@@ -139,6 +161,7 @@ function TableReview(props) {
           };
           return attr;
         }}
+        footer={renderFooter}
       />
     </DndProvider>
   );
