@@ -206,7 +206,10 @@ function Gallery() {
             if (gal.type === 0)
               return (
                 <Grid item xs={2}>
-                  <Paper elevation={3} sx={{ height: "250px" }}>
+                  <Paper
+                    elevation={3}
+                    sx={{ height: "250px", overflow: "hidden" }}
+                  >
                     <div
                       style={{
                         display: "flex",
@@ -233,7 +236,10 @@ function Gallery() {
             else
               return (
                 <Grid item xs={4}>
-                  <Paper elevation={3} sx={{ height: "250px" }}>
+                  <Paper
+                    elevation={3}
+                    sx={{ height: "250px", overflow: "hidden" }}
+                  >
                     <div
                       style={{
                         display: "flex",

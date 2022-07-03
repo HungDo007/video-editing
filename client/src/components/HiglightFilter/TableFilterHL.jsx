@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-import ShareIcon from "@mui/icons-material/Share";
+import FacebookIcon from "@mui/icons-material/Facebook";
 import VideoLibraryIcon from "@mui/icons-material/VideoLibrary";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CloudDownloadIcon from "@mui/icons-material/CloudDownload";
@@ -14,6 +14,7 @@ import Highlighter from "react-highlight-words";
 import { Table, Input, Button, Space, Tag } from "antd";
 import "../VideoInput/table-video.css";
 import "antd/dist/antd.css";
+import { FacebookShareButton } from "react-share";
 
 function TableFilterHL(props) {
   const { data, handleViewClick, handleIconDeleteClick } = props;
@@ -159,6 +160,20 @@ function TableFilterHL(props) {
             >
               <CloudDownloadIcon />
             </IconButton>
+          </Tooltip>
+        );
+      },
+    },
+    {
+      render: (row) => {
+        return (
+          <Tooltip key={123565} title="Share">
+            <FacebookShareButton
+              url={row.mp4}
+              disabled={row.status === 1 ? false : true}
+            >
+              <FacebookIcon />
+            </FacebookShareButton>
           </Tooltip>
         );
       },

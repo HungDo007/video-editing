@@ -27,12 +27,8 @@ namespace video_editing_api.Service.VideoEditing
 
         Task<string> DownloadOne(ConcatModel concatModel);
 
-        Task<string> SaveEvent(InputAddEventAndLogo input);
-        Task<List<List<string>>> SaveLogo(string matchId, InputAddEventAndLogo input);
-        Task<List<string>> SaveLogo(InputAddEventAndLogo input);
 
         Task<bool> UpdateLogTrimed(string matchId, EventStorage eventStorage);
-        Task<List<List<string>>> DeleteLogo(string matchId, int position);
 
         Task<List<Tag>> GetTag(string username);
         Task<List<Team>> GetTeam(string username, string leagueId);

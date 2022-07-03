@@ -26,7 +26,7 @@ import { formatTimeSlice } from "../VideoInput/video-input";
 import ReactPlayer from "react-player";
 import TableReview from "../VideoInput/TableReview";
 import HighlightReview from "../highlight-review";
-import { DialogMoreEvent, DialogMoreLogo } from "../flugin";
+import { DialogDraggableLogo, DialogMoreEvent } from "../flugin";
 
 function HighlightFilter() {
   const [connection, setConnection] = useState();
@@ -73,16 +73,6 @@ function HighlightFilter() {
   const [logoGallery, setLogoGallery] = useState();
   const [openDialogMoreEvent, setOpenDialogMoreEvent] = useState(false);
   const [openDialogMoreLogo, setOpenDialogMoreLogo] = useState(false);
-
-  const [logoAdd, setLogoAdd] = useState(() => {
-    const temp = [
-      { position: 1, event: "", file_name: "", checked: false },
-      { position: 2, event: "", file_name: "", checked: false },
-      { position: 3, event: "", file_name: "", checked: false },
-      { position: 4, event: "", file_name: "", checked: false },
-    ];
-    return temp;
-  });
 
   const getHighlight = async () => {
     try {
@@ -166,13 +156,18 @@ function HighlightFilter() {
               event: element.event,
               file_name: element.file_name,
               selected: -1,
+              logo: 0,
             };
             eventG.push(data);
           });
         }
         if (responseL.data.length > 0) {
-          responseL.data.forEach((element) => {
-            const data = { event: element.event, file_name: element.file_name };
+          responseL.data.forEach((element, index) => {
+            const data = {
+              file_name: element.file_name,
+              position: { x: -280, y: index * 15 },
+              size: [100, 70],
+            };
             logoG.push(data);
           });
         }
@@ -321,14 +316,17 @@ function HighlightFilter() {
 
   const mergeVideoHL = (e) => {
     e.preventDefault();
-    const temp = [...logoAdd];
-
-    var logo = [];
-    temp.forEach((element) => {
-      if (element.checked) {
-        logo.push([element.file_name, element.position.toString()]);
+    const temp = [...logoGallery];
+    const logo = temp.reduce((fills, lg) => {
+      if (lg.position.x > 0) {
+        lg.position.x = parseInt((lg.position.x / 800) * 1920);
+        lg.position.y = parseInt((lg.position.y / 350) * 1080);
+        lg.size[0] = parseInt((lg.size[0] / 800) * 1920);
+        lg.size[1] = parseInt((lg.size[1] / 350) * 1080);
+        fills.push(lg);
       }
-    });
+      return fills;
+    }, []);
 
     const body = {
       event: filtered,
@@ -372,15 +370,33 @@ function HighlightFilter() {
     }
   };
 
-  const onChangeSelectLogo = (value, position) => {
-    const temp = [...logoAdd];
-    const idx = temp.findIndex((l) => l.position === position);
-    temp[idx].event = value?.event;
-    temp[idx].file_name = value?.file_name;
-    temp[idx].checked = value ? true : false;
-    setLogoAdd(temp);
+  const onTrack = (lg, newPos) => {
+    const temp = [...logoGallery];
+    const idx = temp.findIndex((l) => l.file_name === lg.file_name);
+    temp[idx].position = newPos;
+    setLogoGallery(temp);
   };
 
+  const onResize = (lg, newSize) => {
+    const temp = [...logoGallery];
+    const idx = temp.findIndex((l) => l.file_name === lg.file_name);
+    temp[idx].size = newSize;
+    setLogoGallery(temp);
+  };
+  const handleCheckLogo = (row, e) => {
+    const temp = [...filtered];
+    const idx = temp.findIndex((l) => l.file_name === row.file_name);
+    temp[idx].logo = e.target.checked ? 1 : 0;
+    setFiltered(temp);
+  };
+
+  const handleLogoCheckAll = (e) => {
+    const temp = [...filtered];
+    temp.forEach((item) => {
+      item.logo = e.target.checked ? 1 : 0;
+    });
+    setFiltered(temp);
+  };
   return (
     <>
       <Snackbar
@@ -405,13 +421,20 @@ function HighlightFilter() {
         eventGallery={eventGallery}
       />
 
-      <DialogMoreLogo
+      <DialogDraggableLogo
+        open={openDialogMoreLogo}
+        handleClose={handleCloseEventAndLogo}
+        logo={logoGallery}
+        onTrack={onTrack}
+        onResize={onResize}
+      />
+      {/* <DialogMoreLogo
         open={openDialogMoreLogo}
         handleClose={handleCloseEventAndLogo}
         onChange={onChangeSelectLogo}
         eventLogo={logoGallery}
         logoAdd={logoAdd}
-      />
+      /> */}
 
       <Backdrop
         sx={{
@@ -441,7 +464,9 @@ function HighlightFilter() {
               data={filtered}
               setData={setFiltered}
               handleIconRemoveClick={handleIconRemoveEventClick}
-              logo={logoAdd}
+              logo={logoGallery}
+              onCheck={handleCheckLogo}
+              logoCheckAll={handleLogoCheckAll}
             />
           </DialogContentText>
         </DialogContent>

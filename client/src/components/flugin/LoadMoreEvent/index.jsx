@@ -15,7 +15,6 @@ function DialogMoreEvent(props) {
 
   const descriptionElementRef = useRef(null);
   const handleCheck = (e, row) => {
-    const temp = { ...row };
     row.selected = e.target.checked === true ? 1 : -1;
     onCheck(row);
   };

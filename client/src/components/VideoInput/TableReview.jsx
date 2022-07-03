@@ -1,6 +1,6 @@
 import React, { useCallback, useRef } from "react";
 import "antd/dist/antd.css";
-import { Table } from "antd";
+import { Checkbox, Table } from "antd";
 import update from "immutability-helper";
 import RemoveCircleIcon from "@mui/icons-material/RemoveCircleOutline";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
@@ -60,7 +60,8 @@ const DraggableBodyRow = ({
 };
 
 function TableReview(props) {
-  const { data, setData, handleIconRemoveClick, logo } = props;
+  const { data, setData, handleIconRemoveClick, logo, onCheck, logoCheckAll } =
+    props;
 
   const columns = [
     {
@@ -82,6 +83,28 @@ function TableReview(props) {
       title: "Trim Length",
       render: (selected, row) => {
         return row.endTime ? formatTimeSlice(row.endTime - row.startTime) : "-";
+      },
+    },
+    {
+      title: () => {
+        return (
+          <>
+            <Checkbox
+              checked={data?.findIndex((d) => d.logo === 0) === -1}
+              onChange={(e) => logoCheckAll(e)}
+            >
+              Logo
+            </Checkbox>
+          </>
+        );
+      },
+      render: (_, record) => {
+        return (
+          <Checkbox
+            checked={record.logo === 1}
+            onChange={(e) => onCheck(record, e)}
+          />
+        );
       },
     },
     {
@@ -125,24 +148,8 @@ function TableReview(props) {
   );
 
   const renderFooter = () => {
-    var count = 0;
-    var text = "Logo selected in:";
-    logo.forEach((element) => {
-      if (element.checked) {
-        count += 1;
-        text += ` ${
-          element.position === 1
-            ? "Top-Right"
-            : element.position === 2
-            ? "Bottom-Right"
-            : element.position === 3
-            ? "Bottom-Left"
-            : "Top-Left"
-        }`;
-      }
-    });
-    if (count === 0) return "Logo has not been selected";
-    else return text;
+    var count = logo?.filter((lg) => lg.position.x > 0).length;
+    return `${count} logo selected`;
   };
 
   return (

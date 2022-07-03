@@ -7,6 +7,8 @@ import DialogUploadLogo from "./DialogUploadLogo";
 import DialogUploadEvent from "./DialogUploadEvent";
 import DialogMoreEvent from "./LoadMoreEvent";
 import DialogMoreLogo from "./LoadMoreLogo";
+import FormShareYoutube from "./FormShareYouTube";
+import DialogDraggableLogo from "./DraggableLogo";
 
 export {
   CheckboxesTags,
@@ -18,4 +20,6 @@ export {
   DialogUploadEvent,
   DialogMoreEvent,
   DialogMoreLogo,
+  FormShareYoutube,
+  DialogDraggableLogo,
 };

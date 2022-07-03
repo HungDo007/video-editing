@@ -6,6 +6,6 @@ namespace video_editing_api.Model.InputModel
     {
         public string Description { get; set; }
         public List<EventStorage> Event { get; set; }
-        public List<List<string>> Logo { get; set; } = new List<List<string>>();
+        public List<Logo> Logo { get; set; }
     }
 }

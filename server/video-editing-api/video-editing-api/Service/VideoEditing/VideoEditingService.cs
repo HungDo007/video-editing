@@ -222,7 +222,7 @@ namespace video_editing_api.Service.VideoEditing
                 var match = _matchInfo.Find(x => x.Id == concatModel.MatchId).First();
                 //var eventNotQualified = match.JsonFile.Event.Where(x => x.selected == 0).ToList();
                 var inputSend = handlePreSendServer(concatModel.JsonFile);
-                if (inputSend.logo.Count == 0) inputSend.logo.Add(new List<string>());
+                //if (inputSend.logo.Count == 0) inputSend.logo.Add(new List<string>());
 
                 HighlightVideo hl = new HighlightVideo()
                 {
@@ -458,7 +458,8 @@ namespace video_editing_api.Service.VideoEditing
                         players = item.players,
                         time = item.time,
                         ts = new List<int>(),
-                        qualified = item.selected == 0 ? item.selected : 1
+                        qualified = item.selected == 0 ? item.selected : 1,
+                        logo = item.logo
                     };
                     if (item.ts != null && item.ts.Count > 0)
                     {
@@ -496,110 +497,7 @@ namespace video_editing_api.Service.VideoEditing
             }
         }
 
-        public async Task<string> SaveEvent(InputAddEventAndLogo input)
-        {
-            try
-            {
-                string publicId = System.Guid.NewGuid().ToString();
-                string fileName = input.File.FileName;
-                string type = fileName.Substring(fileName.LastIndexOf("."));
 
-                return await _storageService.SaveFileNoFolder($"{publicId}{type}", input.File);
-            }
-            catch (System.Exception ex)
-            {
-                throw new System.Exception(ex.Message);
-            }
-        }
-        public async Task<List<string>> SaveLogo(InputAddEventAndLogo input)
-        {
-            try
-            {
-                string publicId = System.Guid.NewGuid().ToString();
-                string fileName = input.File.FileName;
-                string type = fileName.Substring(fileName.LastIndexOf("."));
-                string file_name = await _storageService.SaveFileNoFolder($"{publicId}{type}", input.File);
-
-                return new List<string> { file_name, input.position.ToString() };
-            }
-            catch (System.Exception ex)
-            {
-                throw new System.Exception(ex.Message);
-            }
-        }
-        public async Task<List<List<string>>> SaveLogo(string matchId, InputAddEventAndLogo input)
-        {
-            try
-            {
-                string publicId = System.Guid.NewGuid().ToString();
-                string fileName = input.File.FileName;
-                string type = fileName.Substring(fileName.LastIndexOf("."));
-                string file_name = await _storageService.SaveFileNoFolder($"{publicId}{type}", input.File);
-
-                var match = _matchInfo.Find(x => x.Id == matchId).First();
-
-                var logo = match.JsonFile.logo;
-                if (logo == null)
-                {
-                    logo = new List<List<string>>();
-                }
-                int index = -1;
-                for (int i = 0; i < logo.Count; i++)
-                {
-                    if (logo[i][1] == input.position.ToString())
-                    {
-                        index = i;
-                        break;
-                    }
-                }
-
-                if (index == -1)
-                {
-                    var logoItem = new List<string> { file_name, input.position.ToString() };
-                    logo.Add(logoItem);
-                }
-                else
-                {
-                    logo[index][0] = file_name;
-                }
-                match.JsonFile.logo = logo;
-                _matchInfo.ReplaceOne(m => m.Id == matchId, match);
-                return logo;
-            }
-            catch (System.Exception ex)
-            {
-                throw new System.Exception(ex.Message);
-            }
-        }
-
-        public async Task<List<List<string>>> DeleteLogo(string matchId, int position)
-        {
-            try
-            {
-                var match = _matchInfo.Find(x => x.Id == matchId).First();
-
-                var logo = match.JsonFile.logo;
-
-                int index = -1;
-                for (int i = 0; i < logo.Count; i++)
-                {
-                    if (logo[i][1] == position.ToString())
-                    {
-                        index = i;
-                        break;
-                    }
-                }
-
-                logo.Remove(logo[index]);
-                match.JsonFile.logo = logo;
-                _matchInfo.ReplaceOne(m => m.Id == matchId, match);
-                return logo;
-            }
-            catch (System.Exception ex)
-            {
-                throw new System.Exception(ex.Message);
-            }
-        }
         #endregion
 
         #region tag
@@ -833,7 +731,7 @@ namespace video_editing_api.Service.VideoEditing
             {
                 InputSendServer<EventStorage> inputSendServer = new InputSendServer<EventStorage>();
                 inputSendServer.Event = input.Event;
-                if (input.Logo.Count == 0) input.Logo.Add(new List<string>());
+                //if (input.Logo.Count == 0) input.Logo.Add(new List<string>());
                 inputSendServer.logo = input.Logo;
 
 

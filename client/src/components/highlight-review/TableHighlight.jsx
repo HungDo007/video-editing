@@ -1,8 +1,9 @@
 import React, { useRef, useState } from "react";
-import ShareIcon from "@mui/icons-material/Share";
 import VideoLibraryIcon from "@mui/icons-material/VideoLibrary";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CloudDownloadIcon from "@mui/icons-material/CloudDownload";
+import FacebookIcon from "@mui/icons-material/Facebook";
+import { FacebookShareButton } from "react-share";
 import { IconButton, Tooltip } from "@mui/material";
 import { SearchOutlined } from "@ant-design/icons";
 import {
@@ -14,6 +15,7 @@ import Highlighter from "react-highlight-words";
 import { Table, Input, Button, Space, Tag } from "antd";
 import "../VideoInput/table-video.css";
 import "antd/dist/antd.css";
+import { FormShareYoutube } from "../flugin";
 
 function TableHighlight(props) {
   const { data, handleViewClick, handleIconDeleteClick } = props;
@@ -26,6 +28,13 @@ function TableHighlight(props) {
     confirm();
     setSearchText(selectedKeys[0]);
     setSearchedColumn(dataIndex);
+  };
+  //for share
+  const [open, setOpen] = useState(false);
+  const [urlShare, setUrlShare] = useState();
+
+  const handleClose = () => {
+    setOpen(false);
   };
 
   const getColumnSearchProps = (dataIndex) => ({
@@ -122,21 +131,6 @@ function TableHighlight(props) {
       key: "description",
       ...getColumnSearchProps("description"),
     },
-    // {
-    //   render: (row) => {
-    //     return (
-    //       <Tooltip key={123} title="Share">
-    //         <IconButton
-    //           onClick={(e) => {
-    //             console.log(row);
-    //           }}
-    //         >
-    //           <ShareIcon />
-    //         </IconButton>
-    //       </Tooltip>
-    //     );
-    //   },
-    // },
     {
       title: "Status",
       render: (row) => {
@@ -166,9 +160,7 @@ function TableHighlight(props) {
         return (
           <Tooltip key={123} title="View">
             <IconButton
-              aria-label="delete"
               onClick={(e) => {
-                console.log(row);
                 handleViewClick(row);
               }}
               disabled={row.status === 1 ? false : true}
@@ -198,6 +190,20 @@ function TableHighlight(props) {
     {
       render: (row) => {
         return (
+          <Tooltip key={123565} title="Share">
+            <FacebookShareButton
+              url={row.mp4}
+              disabled={row.status === 1 ? false : true}
+            >
+              <FacebookIcon />
+            </FacebookShareButton>
+          </Tooltip>
+        );
+      },
+    },
+    {
+      render: (row) => {
+        return (
           <Tooltip key={123} title="Delete">
             <IconButton
               onClick={(e) => {
@@ -216,12 +222,15 @@ function TableHighlight(props) {
     return `Total: ${total} videos`;
   };
   return (
-    <Table
-      bordered
-      pagination={{ showTotal: showTotal, showSizeChanger: true }}
-      columns={columns}
-      dataSource={data}
-    />
+    <>
+      <FormShareYoutube open={open} handleClose={handleClose} />
+      <Table
+        bordered
+        pagination={{ showTotal: showTotal, showSizeChanger: true }}
+        columns={columns}
+        dataSource={data}
+      />
+    </>
   );
 }
 
