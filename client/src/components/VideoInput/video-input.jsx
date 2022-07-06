@@ -351,21 +351,29 @@ const VideoInput = () => {
   const handleSendServerNotMerge = () => {
     //const payload = reducerObj(filtered);
     const temp = [...logoGallery];
-    const logo = temp.reduce((fills, lg) => {
-      if (lg.position.x > 0) {
-        lg.position.x = parseInt((lg.position.x / 800) * 1920);
-        lg.position.y = parseInt((lg.position.y / 350) * 1080);
-        lg.size[0] = parseInt((lg.size[0] / 800) * 1920);
-        lg.size[1] = parseInt((lg.size[1] / 350) * 1080);
-        fills.push(lg);
-      }
-      return fills;
-    }, []);
+    const lgg = temp.filter((l) => l.position.x > 0);
+    lgg.forEach((element) => {
+      element.position.x = parseInt((element.position.x / 800) * 1920);
+      element.position.y = parseInt((element.position.y / 350) * 1080);
+      element.size[0] = parseInt((element.size[0] / 800) * 1920);
+      element.size[1] = parseInt((element.size[1] / 350) * 1080);
+    });
+    // const logo = temp.reduce((fills, lg) => {
+    //   if (lg.position.x > 0) {
+    //     const temp1 = { ...lg };
+    //     temp1.position.x = parseInt((lg.position.x / 800) * 1920);
+    //     temp1.position.y = parseInt((lg.position.y / 350) * 1080);
+    //     temp1.size[0] = parseInt((lg.size[0] / 800) * 1920);
+    //     temp1.size[1] = parseInt((lg.size[1] / 350) * 1080);
+    //     fills.push(temp1);
+    //   }
+    //   return fills;
+    // }, []);
 
     const newBody = {
       ...body,
       event: filtered,
-      logo: logo,
+      logo: lgg,
     };
 
     const downloadNotMerge = async () => {
