@@ -55,7 +55,10 @@ function DialogDraggableLogo(props) {
                     onTrack(l, { x: d.x, y: d.y });
                   }}
                   onResizeStop={(e, direction, ref, delta, position) => {
-                    onResize(l, [ref.style.width, ref.style.height]);
+                    onResize(l, [
+                      parseInt(ref.style.width),
+                      parseInt(ref.style.height),
+                    ]);
                   }}
                 >
                   <div

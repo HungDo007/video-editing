@@ -252,21 +252,18 @@ const VideoInput = () => {
   const handleSendServer = (e) => {
     e.preventDefault();
     const temp = [...logoGallery];
-    const logo = temp.reduce((fills, lg) => {
-      if (lg.position.x > 0) {
-        lg.position.x = parseInt((lg.position.x * 1920) / 800);
-        lg.position.y = parseInt((lg.position.y * 1080) / 350);
-        lg.size[0] = parseInt((lg.size[0] * 1920) / 800);
-        lg.size[1] = parseInt((lg.size[1] * 1080) / 350);
-        fills.push(lg);
-      }
-      return fills;
-    }, []);
+    const lgg = temp.filter((l) => l.position.x > 0);
+    lgg.forEach((element) => {
+      element.position.x = parseInt((element.position.x / 800) * 1920);
+      element.position.y = parseInt((element.position.y / 350) * 1080);
+      element.size[0] = parseInt((element.size[0] / 800) * 1920);
+      element.size[1] = parseInt((element.size[1] / 350) * 1080);
+    });
 
     const newBody = {
       ...body,
       event: filtered,
-      logo: logo,
+      logo: lgg,
     };
     const concatHighlight = async () => {
       try {
@@ -297,6 +294,7 @@ const VideoInput = () => {
     const newBody = {
       ...body,
       event: payload,
+      logo: [],
     };
 
     const downloadOne = async () => {
