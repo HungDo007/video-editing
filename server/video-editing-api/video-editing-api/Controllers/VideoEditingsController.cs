@@ -183,7 +183,6 @@ namespace video_editing_api.Controllers
             {
                 var res = await _videoEditingService.NotConcatVideoOfMatch(concatModel);
                 return Ok(new Response<List<string>>(200, "", res));
-                //return File(res, "application/zip", "videos.zip");
             }
             catch (System.Exception e)
             {
@@ -221,7 +220,6 @@ namespace video_editing_api.Controllers
         }
 
         [HttpGet("getTeam")]
-        [AllowAnonymous]
         public async Task<IActionResult> getTeam(string leagueId)
         {
             try
@@ -270,7 +268,6 @@ namespace video_editing_api.Controllers
             {
                 var res = await _videoEditingService.DownloadOne(concatModel);
                 return Ok(new Response<string>(200, "", res));
-                //return File(content, "video/mp2t", "video.ts");
             }
             catch (System.Exception e)
             {
@@ -335,5 +332,72 @@ namespace video_editing_api.Controllers
                 return BadRequest(new Response<string>(400, e.Message, null));
             }
         }
+
+        //[HttpPost("shareYoutube")]
+        //[AllowAnonymous]
+        //public async Task<IActionResult> ShareYoutube([FromForm] ShareModel model)
+        //{
+        //    try
+        //    {
+        //        var url = "https://store.cads.live/projects/62b6a65c62f89f86a9e1894b/raw/video";
+
+        //        //Thread thead = new Thread(() =>
+        //        //{
+        //        //    Run().Wait();
+        //        //});
+        //        //thead.IsBackground = true;
+        //        //thead.Start();
+        //        Run();
+        //        return Ok(new Response<bool>(200, "", true));
+        //    }
+        //    catch (System.Exception e)
+        //    {
+        //        return BadRequest(new Response<string>(400, e.Message, null));
+        //    }
+        //}
+
+
+        //private async Task Run()
+        //{
+        //    UserCredential credential;
+        //    using (var stream = new FileStream("C:\\Users\\Admin\\Downloads\\client_secret.json", FileMode.Open, FileAccess.Read))
+        //    {
+        //        credential = await GoogleWebAuthorizationBroker.AuthorizeAsync(
+        //            GoogleClientSecrets.Load(stream).Secrets,
+        //            // This OAuth 2.0 access scope allows an application to upload files to the
+        //            // authenticated user's YouTube channel, but doesn't allow other types of access.
+        //            new[] { YouTubeService.Scope.YoutubeUpload },
+        //            "user",
+        //            CancellationToken.None
+        //        );
+        //    }
+
+        //    var youtubeService = new YouTubeService(new BaseClientService.Initializer()
+        //    {
+        //        HttpClientInitializer = credential,
+        //        ApplicationName = Assembly.GetExecutingAssembly().GetName().Name
+        //    });
+
+        //    var video = new Video();
+        //    video.Snippet = new VideoSnippet();
+        //    video.Snippet.Title = "Title for video";
+        //    video.Snippet.Description = "description for video";
+        //    string[] tagSeo = Regex.Split("hello every one", " ");
+        //    video.Snippet.Tags = tagSeo;
+        //    video.Snippet.CategoryId = "22"; // See https://developers.google.com/youtube/v3/docs/videoCategories/list
+        //    video.Status = new VideoStatus();
+        //    video.Status.PrivacyStatus = "public"; // or "private" or "public"
+        //    var filePath = "https://store.cads.live/projects/62b6a65c62f89f86a9e1894b/raw/video"; // Replace with path to actual movie file.
+
+        //    using (var fileStream = new FileStream(filePath, FileMode.Open))
+        //    {
+        //        var videosInsertRequest = youtubeService.Videos.Insert(video, "snippet,status", fileStream, "video/*");
+        //        //videosInsertRequest.ProgressChanged += videosInsertRequest_ProgressChanged;
+        //        //videosInsertRequest.ResponseReceived += videosInsertRequest_ResponseReceived;
+
+        //        await videosInsertRequest.UploadAsync();
+        //    }
+        //}
+
     }
 }

@@ -22,12 +22,11 @@ function DialogDraggableLogo(props) {
           backgroundColor: "#CEEBF9",
           fontSize: "15px",
           display: "flex",
-          justifyContent: "space-between",
+          justifyContent: "flex-end",
           alignItems: "center",
         }}
         id="scroll-dialog-title"
       >
-        <b>Double click on the image to resize</b>
         <IconButton color="primary" onClick={handleClose}>
           <CancelOutlinedIcon />
         </IconButton>
@@ -52,7 +51,7 @@ function DialogDraggableLogo(props) {
                   size={{ width: l.size[0], height: l.size[1] }}
                   position={{ x: l.position.x, y: l.position.y }}
                   onDragStop={(e, d) => {
-                    onTrack(l, { x: d.x, y: d.y });
+                    onTrack(l, { x: parseInt(d.x), y: parseInt(d.y) });
                   }}
                   onResizeStop={(e, direction, ref, delta, position) => {
                     onResize(l, [

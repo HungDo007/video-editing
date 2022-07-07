@@ -222,6 +222,7 @@ namespace video_editing_api.Service.VideoEditing
                 var match = _matchInfo.Find(x => x.Id == concatModel.MatchId).First();
                 //var eventNotQualified = match.JsonFile.Event.Where(x => x.selected == 0).ToList();
                 var inputSend = handlePreSendServer(concatModel.JsonFile);
+
                 //if (inputSend.logo.Count == 0) inputSend.logo.Add(new List<string>());
 
                 HighlightVideo hl = new HighlightVideo()
@@ -285,7 +286,7 @@ namespace video_editing_api.Service.VideoEditing
                 var team = await _teamOfLeague.Find(team => team.TournamentId == match.TournamentId && team.Username == username).FirstOrDefaultAsync();
                 if (team == null)
                 {
-                    flagTag = true;
+                    flagTeam = true;
                     team = new TeamOfLeague();
                     team.Username = username;
                     team.TournamentId = match.TournamentId;
@@ -430,11 +431,18 @@ namespace video_editing_api.Service.VideoEditing
                 List<Eventt> eventts = new List<Eventt>();
 
                 var inputSend = new InputSendServer<Eventt>();
+                foreach (var item in input.logo)
+                {
+                    item.position.x = (int)Math.Round((float)item.position.x / 800 * 1920);
+                    item.position.y = (int)Math.Round((float)item.position.y / 800 * 1920);
+                    item.size[0] = (int)Math.Round((float)item.size[0] / 800 * 1920);
+                    item.size[1] = (int)Math.Round((float)item.size[1] / 800 * 1920);
+                }
+
                 inputSend = _mapper.Map<InputSendServer<Eventt>>(input);
-
                 eventts = MapAndAddEvent(eventts, input.Event);
-
                 inputSend.Event = eventts;
+                //inputSend.logo = input.logo;
                 return inputSend;
 
             }

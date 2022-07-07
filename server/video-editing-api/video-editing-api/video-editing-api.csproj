@@ -17,9 +17,11 @@
 
   <ItemGroup>
     <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="11.0.0" />
+    <PackageReference Include="Google.Apis" Version="1.57.0" />
+    <PackageReference Include="Google.Apis.Auth" Version="1.57.0" />
+    <PackageReference Include="Google.Apis.YouTube.v3" Version="1.57.0.2735" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="5.0.9" />
     <PackageReference Include="AspNetCore.Identity.MongoDbCore" Version="3.1.2" />    
-    <PackageReference Include="CloudinaryDotNet" Version="1.17.0" />    
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.14.0" />
     <PackageReference Include="Minio" Version="4.0.0" />
     <PackageReference Include="MongoDB.Driver" Version="2.15.0" />

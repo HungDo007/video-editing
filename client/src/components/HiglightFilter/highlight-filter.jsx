@@ -317,20 +317,11 @@ function HighlightFilter() {
   const mergeVideoHL = (e) => {
     e.preventDefault();
     const temp = [...logoGallery];
-    const logo = temp.reduce((fills, lg) => {
-      if (lg.position.x > 0) {
-        lg.position.x = parseInt((lg.position.x / 800) * 1920);
-        lg.position.y = parseInt((lg.position.y / 350) * 1080);
-        lg.size[0] = parseInt((lg.size[0] / 800) * 1920);
-        lg.size[1] = parseInt((lg.size[1] / 350) * 1080);
-        fills.push(lg);
-      }
-      return fills;
-    }, []);
+    const lgg = temp.filter((l) => l.position.x > 0);
 
     const body = {
       event: filtered,
-      logo: logo,
+      logo: lgg,
       description: hlDescription,
     };
     const mergeHL = async () => {
