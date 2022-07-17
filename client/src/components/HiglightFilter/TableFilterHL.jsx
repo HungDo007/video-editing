@@ -15,6 +15,8 @@ import { Table, Input, Button, Space, Tag } from "antd";
 import "../VideoInput/table-video.css";
 import "antd/dist/antd.css";
 import { FacebookShareButton } from "react-share";
+import { FormShareYoutube } from "../flugin";
+import YouTubeIcon from "@mui/icons-material/YouTube";
 
 function TableFilterHL(props) {
   const { data, handleViewClick, handleIconDeleteClick } = props;
@@ -27,6 +29,12 @@ function TableFilterHL(props) {
     confirm();
     setSearchText(selectedKeys[0]);
     setSearchedColumn(dataIndex);
+  };
+  //for share
+  const [open, setOpen] = useState(false);
+  const [urlShare, setUrlShare] = useState();
+  const handleClose = () => {
+    setOpen(false);
   };
 
   const getColumnSearchProps = (dataIndex) => ({
@@ -164,16 +172,33 @@ function TableFilterHL(props) {
         );
       },
     },
+    // {
+    //   render: (row) => {
+    //     return (
+    //       <Tooltip key={123565} title="Share">
+    //         <FacebookShareButton
+    //           url={row.mp4}
+    //           disabled={row.status === 1 ? false : true}
+    //         >
+    //           <FacebookIcon />
+    //         </FacebookShareButton>
+    //       </Tooltip>
+    //     );
+    //   },
+    // },
     {
       render: (row) => {
         return (
-          <Tooltip key={123565} title="Share">
-            <FacebookShareButton
-              url={row.mp4}
-              disabled={row.status === 1 ? false : true}
+          <Tooltip key={1235695} title="Share">
+            <IconButton
+              onClick={(e) => {
+                setUrlShare(row.mp4);
+                setOpen(true);
+              }}
+              disabled={row.status !== 0 ? false : true}
             >
-              <FacebookIcon />
-            </FacebookShareButton>
+              <YouTubeIcon />
+            </IconButton>
           </Tooltip>
         );
       },
@@ -199,12 +224,19 @@ function TableFilterHL(props) {
     return `Total: ${total} videos`;
   };
   return (
-    <Table
-      bordered
-      pagination={{ showTotal: showTotal, showSizeChanger: true }}
-      columns={columns}
-      dataSource={data}
-    />
+    <>
+      <FormShareYoutube
+        open={open}
+        handleClose={handleClose}
+        videoUrl={urlShare}
+      />
+      <Table
+        bordered
+        pagination={{ showTotal: showTotal, showSizeChanger: true }}
+        columns={columns}
+        dataSource={data}
+      />
+    </>
   );
 }
 

@@ -140,6 +140,10 @@ const videoEditingApi = {
     const url = `/VideoEditings/deleteGallery/${id}`;
     return axiosClient.delete(url);
   },
+  shareYoutube: (formData) => {
+    const url = "/VideoEditings/ShareYoutube";
+    return axiosClient.post(url, formData);
+  },
 };
 
 export default videoEditingApi;

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using video_editing_api.Model.Collection;
 using video_editing_api.Model.InputModel;
+using video_editing_api.Model.InputModel.Youtube;
 
 namespace video_editing_api.Service.VideoEditing
 {
@@ -39,5 +40,8 @@ namespace video_editing_api.Service.VideoEditing
         Task<string> SaveToGallery(string username, GalleryInput input);
         Task<List<Gallery>> getGalley(string username, int Type);
         Task<bool> deleteGallery(string id);
+
+        Task<string> getUriRedirect(VideoUploadModel model);
+        Task HandleCode(string code);
     }
 }

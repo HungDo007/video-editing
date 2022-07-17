@@ -6,6 +6,7 @@ import FacebookIcon from "@mui/icons-material/Facebook";
 import { FacebookShareButton } from "react-share";
 import { IconButton, Tooltip } from "@mui/material";
 import { SearchOutlined } from "@ant-design/icons";
+import YouTubeIcon from "@mui/icons-material/YouTube";
 import {
   CheckCircleOutlined,
   SyncOutlined,
@@ -187,16 +188,33 @@ function TableHighlight(props) {
         );
       },
     },
+    // {
+    //   render: (row) => {
+    //     return (
+    //       <Tooltip key={123565} title="Share">
+    //         <FacebookShareButton
+    //           url={row.mp4}
+    //           disabled={row.status === 1 ? false : true}
+    //         >
+    //           <FacebookIcon />
+    //         </FacebookShareButton>
+    //       </Tooltip>
+    //     );
+    //   },
+    // },
     {
       render: (row) => {
         return (
-          <Tooltip key={123565} title="Share">
-            <FacebookShareButton
-              url={row.mp4}
-              disabled={row.status === 1 ? false : true}
+          <Tooltip key={1235695} title="Share">
+            <IconButton
+              onClick={(e) => {
+                setUrlShare(row.mp4);
+                setOpen(true);
+              }}
+              disabled={row.status !== 0 ? false : true}
             >
-              <FacebookIcon />
-            </FacebookShareButton>
+              <YouTubeIcon />
+            </IconButton>
           </Tooltip>
         );
       },
@@ -223,7 +241,11 @@ function TableHighlight(props) {
   };
   return (
     <>
-      <FormShareYoutube open={open} handleClose={handleClose} />
+      <FormShareYoutube
+        open={open}
+        handleClose={handleClose}
+        videoUrl={urlShare}
+      />
       <Table
         bordered
         pagination={{ showTotal: showTotal, showSizeChanger: true }}

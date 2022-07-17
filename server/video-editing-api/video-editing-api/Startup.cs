@@ -33,6 +33,7 @@ namespace video_editing_api
         {
             services.AddHostedService<MergeQueueBackgroundService>();
             services.AddSignalR();
+            services.AddHttpClient();
             #region AddCors
             services.AddCors(options =>
             {
