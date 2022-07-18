@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
 using video_editing_api.Model;
 using video_editing_api.Model.Collection;
@@ -357,13 +356,14 @@ namespace video_editing_api.Controllers
         {
             try
             {
-                Thread thead = new Thread(() =>
-                {
-                    _videoEditingService.HandleCode(code);
-                });
-                thead.IsBackground = true;
-                thead.Start();
-                return Ok("In progress of posting to your youtube channel!!!");
+                //Thread thead = new Thread(() =>
+                //{
+                //    _videoEditingService.HandleCode(code);
+                //});
+                //thead.IsBackground = true;
+                //thead.Start();
+                await _videoEditingService.HandleCode(code);
+                return Ok("Successs!!!");
             }
             catch (System.Exception e)
             {

@@ -890,31 +890,31 @@ namespace video_editing_api.Service.VideoEditing
 
                 var tokenResponse = await FetchToken(user, token);
                 var youTubeService = FetchYouTubeService(tokenResponse, user.client_id, user.client_secret);
-                //Console.WriteLine("Lấy video stream nè");
+                Console.WriteLine("Lấy stream");
                 var filePath = videoShare.VideoUrl; // Replace with path to actual movie file.
                 WebClient Client = new WebClient();
                 using (var fileStream = new MemoryStream(Client.DownloadData(filePath)))
                 {
-                    //Console.WriteLine("Lấy video stream xong nè" + fileStream.Length);
+                    Console.WriteLine("Lấy stream done" + fileStream.Length);
                     var videosInsertRequest = youTubeService.Videos.Insert(video, "snippet,status", fileStream, "video/*");
-                    //videosInsertRequest.ProgressChanged += VideoUploadProgressChanged;
-                    //videosInsertRequest.ResponseReceived += VideoUploadResponseReceived;
+                    videosInsertRequest.ProgressChanged += VideoUploadProgressChanged;
+                    videosInsertRequest.ResponseReceived += VideoUploadResponseReceived;
 
                     var chunkSize = 256 * 1024 * 4;
                     videosInsertRequest.ChunkSize = chunkSize;
                     _sizeOfVideo = fileStream.Length;
-                    //var progress = await videosInsertRequest.UploadAsync();
-                    await videosInsertRequest.UploadAsync();
-                    //switch (progress.Status)
-                    //{
-                    //    case UploadStatus.Completed:
-                    //        Console.WriteLine("\n||==>UploadStatus.Conplete");
-                    //        break;
-                    //    case UploadStatus.Failed:
-                    //        var error = progress.Exception;
-                    //        Console.WriteLine("\n||==>UploadStatus.Failed->error.Message:{error.Message}", error.Message);
-                    //        break;
-                    //}
+                    var progress = await videosInsertRequest.UploadAsync();
+                    //await videosInsertRequest.UploadAsync();
+                    switch (progress.Status)
+                    {
+                        case UploadStatus.Completed:
+                            Console.WriteLine("\n||==>UploadStatus.Conplete");
+                            break;
+                        case UploadStatus.Failed:
+                            var error = progress.Exception;
+                            Console.WriteLine("\n||==>UploadStatus.Failed->error.Message:{error.Message}", error.Message);
+                            break;
+                    }
                 }
 
             }

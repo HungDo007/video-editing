@@ -3,8 +3,7 @@ import queryString from "query-string";
 import Cookies from "js-cookie";
 
 //set up default config here
-const CancelToken = axios.CancelToken;
-const source = CancelToken.source();
+
 
 const axiosClient = axios.create({
   baseURL: process.env.REACT_APP_BASE_API_URL,
@@ -13,8 +12,7 @@ const axiosClient = axios.create({
   },
   paramsSerializer: (params) => queryString.stringify(params),
 });
-axiosClient.defaults.timeout = 0;
-axiosClient.defaults.cancelToken = source.token;
+axiosClient.defaults.timeout = 86400000;
 axiosClient.interceptors.request.use(async (config) => {
   //handle token here
   const token = Cookies.get("Token");
