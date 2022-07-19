@@ -38,7 +38,7 @@ const videoEditingApi = {
       description: hlDescription,
       jsonFile: data,
     };
-    return axiosClient.post(url, body);
+    return axiosClient.post(url, body, {timeout:86400000});
   },
 
   getHighlight: () => {
@@ -91,7 +91,7 @@ const videoEditingApi = {
       description: hlDescription,
       jsonFile: data,
     };
-    return axiosClient.post(url, body);
+    return axiosClient.post(url, body, {timeout:86400000});
   },
 
   uploadSmallVideo: (formdata) => {
