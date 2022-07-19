@@ -42,6 +42,6 @@ namespace video_editing_api.Service.VideoEditing
         Task<bool> deleteGallery(string id);
 
         Task<string> getUriRedirect(VideoUploadModel model);
-        Task HandleCode(string code);
+        Task HandleCode(string code, string state);
     }
 }

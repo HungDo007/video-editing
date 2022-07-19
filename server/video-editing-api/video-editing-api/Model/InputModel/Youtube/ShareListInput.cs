@@ -8,14 +8,14 @@ namespace video_editing_api.Model.InputModel.Youtube
         {
         }
 
-        public ShareListInput(OAuthUserCredential credential, string videoUrl, Video videoInfo)
+        public ShareListInput(string id, string videoUrl, Video videoInfo)
         {
-            Credential = credential;
+            Id = id;
             VideoUrl = videoUrl;
             VideoInfo = videoInfo;
         }
 
-        public OAuthUserCredential Credential { get; set; }
+        public string Id { get; set; }
         public string VideoUrl { get; set; }
         public Video VideoInfo { get; set; }
     }

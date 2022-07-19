@@ -16,6 +16,7 @@ import { FileUploader } from "react-drag-drop-files";
 const privacyOpt = [
   { name: "Private", value: "private" },
   { name: "Public", value: "public" },
+  { name: "Unlisted", value: "unlisted" },
 ];
 function FormShareYoutube(props) {
   const { open, handleClose, videoUrl } = props;
@@ -39,12 +40,13 @@ function FormShareYoutube(props) {
     setPrivacy();
   }, [videoUrl]);
   const handleSubmit = () => {
-    if (!file) {
-      setNoti(true);
-      setMessage("Please chose file Credentials");
-      setTypeNoti("error");
-      return;
-    } else if (!title || title === "") {
+    // if (!file) {
+    //   setNoti(true);
+    //   setMessage("Please chose file Credentials");
+    //   setTypeNoti("error");
+    //   return;
+    // } else
+    if (!title || title === "") {
       setNoti(true);
       setMessage("Please enter Title for video");
       setTypeNoti("error");
@@ -62,7 +64,6 @@ function FormShareYoutube(props) {
     formData.append("urlVideo", videoUrl);
     formData.append("tags", tag);
     formData.append("privacy", privacy.value);
-    console.log("a");
     const getUrlAuthor = async () => {
       try {
         var response = await videoEditingApi.shareYoutube(formData);
@@ -118,7 +119,7 @@ function FormShareYoutube(props) {
             tabIndex={-1}
           >
             <Grid container spacing={2}>
-              <Grid item xs={12}>
+              {/* <Grid item xs={12}>
                 <b>Credentials</b>
               </Grid>
               <Grid item xs={1}></Grid>
@@ -144,7 +145,7 @@ function FormShareYoutube(props) {
                 >
                   <small> How to get credentials</small>
                 </a>
-              </Grid>
+              </Grid> */}
               <Grid item xs={1}></Grid>
 
               <Grid item xs={12}>

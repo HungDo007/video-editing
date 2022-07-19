@@ -78,7 +78,6 @@ function TableEditVideo(props) {
       <SearchOutlined style={{ color: filtered ? "#1890ff" : "unset" }} />
     ),
     onFilter: (value, record) => {
-      setSelect(-1);
       return record[dataIndex]
         ? record[dataIndex]
             .toString()
@@ -126,7 +125,6 @@ function TableEditVideo(props) {
       //...getColumnSearchProps("event"),
       filters: filterEvent,
       onFilter: (event, record) => {
-        setSelect(-1);
         return record.event === event;
       },
     },
@@ -137,7 +135,6 @@ function TableEditVideo(props) {
       width: 75,
       filters: filterLv,
       onFilter: (level, record) => {
-        setSelect(-1);
         return record.level === level;
       },
     },
@@ -176,7 +173,6 @@ function TableEditVideo(props) {
         },
       ],
       onFilter: (value, record) => {
-        setSelect(-1);
         return record.selected === value;
       },
     },
@@ -203,14 +199,15 @@ function TableEditVideo(props) {
 
   return (
     <Table
-      rowClassName={(record, index) =>
-        index === select ? "table-row-selected" : ""
-      }
+      rowClassName={(record, index) => {
+        console.log(record, select);
+        return record.file_name === select ? "table-row-selected" : "";
+      }}
       bordered
       onRow={(record, rowIndex) => {
         return {
           onClick: (event) => {
-            setSelect(rowIndex);
+            setSelect(record.file_name);
             onTableClick(record);
           }, // click row
         };

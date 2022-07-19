@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using video_editing_api.Model;
 using video_editing_api.Model.Collection;
@@ -182,6 +184,7 @@ namespace video_editing_api.Controllers
         {
             try
             {
+                Thread.Sleep(TimeSpan.FromMinutes(10));
                 var res = await _videoEditingService.NotConcatVideoOfMatch(concatModel);
                 return Ok(new Response<List<string>>(200, "", res));
             }
@@ -352,7 +355,7 @@ namespace video_editing_api.Controllers
 
         [HttpGet("share/authorize")]
         [AllowAnonymous]
-        public async Task<IActionResult> ShareAuthor(string code)
+        public async Task<IActionResult> ShareAuthor(string code, string state)
         {
             try
             {
@@ -362,7 +365,7 @@ namespace video_editing_api.Controllers
                 //});
                 //thead.IsBackground = true;
                 //thead.Start();
-                await _videoEditingService.HandleCode(code);
+                await _videoEditingService.HandleCode(code, state);
                 return Ok("Successs!!!");
             }
             catch (System.Exception e)

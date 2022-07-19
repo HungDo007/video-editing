@@ -25,7 +25,6 @@ using video_editing_api.Model.Collection;
 using video_editing_api.Model.InputModel;
 using video_editing_api.Model.InputModel.Youtube;
 using video_editing_api.Service.DBConnection;
-using video_editing_api.Service.Storage;
 
 
 namespace video_editing_api.Service.VideoEditing
@@ -40,15 +39,12 @@ namespace video_editing_api.Service.VideoEditing
         private readonly IMongoCollection<TeamOfLeague> _teamOfLeague;
         private readonly IMongoCollection<Gallery> _gallery;
 
-
-        private readonly IStorageService _storageService;
-        private readonly IWebHostEnvironment _env;
         private readonly IMapper _mapper;
         private IHttpClientFactory _clientFactory;
 
-        private string _dir;
+        private readonly string _pathClientSecret;
         public VideoEditingService(IDbClient dbClient, IConfiguration config,
-            IStorageService storageService, IWebHostEnvironment env, IMapper mapper, IHttpClientFactory clientFactory)
+            IWebHostEnvironment webHostEnvironment, IMapper mapper, IHttpClientFactory clientFactory)
         {
             _tournament = dbClient.GetTournamentCollection();
             _matchInfo = dbClient.GetMatchInfoCollection();
@@ -57,10 +53,10 @@ namespace video_editing_api.Service.VideoEditing
             _teamOfLeague = dbClient.GetTeamOfLeagueCollection();
             _gallery = dbClient.GetGalleryCollection();
             _clientFactory = clientFactory;
-            _dir = env.WebRootPath;
-            _storageService = storageService;
+
+            _pathClientSecret = Path.Combine(webHostEnvironment.ContentRootPath, "Cert", "client_secret.json");
+
             _mapper = mapper;
-            _env = env;
         }
 
 
@@ -689,16 +685,6 @@ namespace video_editing_api.Service.VideoEditing
                 };
 
                 gallery.file_name = await UploadToServerStorage(input.File);
-                //if (input.Type == SystemConstants.GalleryVideoType)
-                //{
-                //}
-                //else
-                //{
-                //    string publicId = System.Guid.NewGuid().ToString();
-                //    string fileName = input.File.FileName;
-                //    string type = fileName.Substring(fileName.LastIndexOf("."));
-                //    gallery.file_name = await _storageService.SaveFileNoFolder($"{publicId}{type}", input.File);
-                //}
                 await _gallery.InsertOneAsync(gallery);
                 return "success";
             }
@@ -796,29 +782,21 @@ namespace video_editing_api.Service.VideoEditing
         {
             try
             {
-                string textCredential;
-                using (var reader = new StreamReader(model.Credential.OpenReadStream()))
-                {
-                    textCredential = await reader.ReadToEndAsync();
-                }
+                const string OAUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
+                OAuthUserCredential user = JsonConvert.DeserializeObject<OAuthUserCredential>(File.ReadAllText(_pathClientSecret));
 
-
-                dynamic dynamicJson = JsonConvert.DeserializeObject(textCredential);
-                var a = dynamicJson.web;
-
-
-                OAuthUserCredential user = JsonConvert.DeserializeObject<OAuthUserCredential>(JsonConvert.SerializeObject(a));
-
+                string id = Guid.NewGuid().ToString();
                 var data = new Dictionary<string, string>
                 {
                      { "client_id", user.client_id },
                      { "scope", YouTubeService.Scope.YoutubeUpload },
                      { "response_type", "code" },
                      { "redirect_uri", user.redirect_uris[0] },
-                     { "access_type", "offline" }
+                     { "access_type", "offline" },
+                     {"state", id }
                 };
 
-                var newUrl = QueryHelpers.AddQueryString(user.auth_uri, data);
+                var newUrl = QueryHelpers.AddQueryString(OAUTH_URL, data);
                 //video to share
                 var video = new Video()
                 {
@@ -832,11 +810,11 @@ namespace video_editing_api.Service.VideoEditing
                         CategoryId = "28",
                         Title = model.Title,
                         Description = model.Description,
-                        Tags = model.Tags.Split(" "),
+                        Tags = string.IsNullOrEmpty(model.Tags) ? null : model.Tags.Split(" "),
                     }
                 };
 
-                var inputShare = new ShareListInput(user, model.UrlVideo, video);
+                var inputShare = new ShareListInput(id, model.UrlVideo, video);
                 BackgroundQueue.ShareListInputs.Add(inputShare);
                 return newUrl;
             }
@@ -846,36 +824,31 @@ namespace video_editing_api.Service.VideoEditing
             }
 
         }
-        private long _sizeOfVideo;
-        private long _bytesSent;
-        public async Task HandleCode(string code)
+
+        public async Task HandleCode(string code, string state)
         {
             try
             {
                 HttpResponseMessage response = new HttpResponseMessage();
-                ShareListInput videoShare = new ShareListInput();
-                foreach (var item in BackgroundQueue.ShareListInputs)
+                ShareListInput videoShare = BackgroundQueue.ShareListInputs.Where(x => x.Id == state).FirstOrDefault();
+                if (videoShare == null)
                 {
-                    var payload = new Dictionary<string, string>
-                    {
-                        { "code" , code } ,
-                        { "client_id" , item.Credential.client_id } ,
-                        { "client_secret" , item.Credential.client_secret } ,
-                        { "redirect_uri" , item.Credential.redirect_uris[0] } ,
-                        { "grant_type" , "authorization_code" }
-                    };
-
-                    var content = new FormUrlEncodedContent(payload);
-
-                    var client = _clientFactory.CreateClient();
-                    response = await client.PostAsync(item.Credential.token_uri, content);
-                    if (response.IsSuccessStatusCode)
-                    {
-                        videoShare = item;
-                        BackgroundQueue.ShareListInputs.Remove(item);
-                        break;
-                    }
+                    throw new Exception("No find video for share");
                 }
+
+                OAuthUserCredential user = JsonConvert.DeserializeObject<OAuthUserCredential>(File.ReadAllText(_pathClientSecret));
+                var payload = new Dictionary<string, string>
+                {
+                    { "code" , code } ,
+                    { "client_id" , user.client_id } ,
+                    { "client_secret" , user.client_secret } ,
+                    { "redirect_uri" , user.redirect_uris[0] } ,
+                    { "grant_type" , "authorization_code" }
+                };
+
+                var content = new FormUrlEncodedContent(payload);
+                var client = _clientFactory.CreateClient();
+                response = await client.PostAsync(user.token_uri, content);
                 response.EnsureSuccessStatusCode();
 
                 var token = new Token();
@@ -886,7 +859,6 @@ namespace video_editing_api.Service.VideoEditing
                 }
 
                 var video = videoShare.VideoInfo;
-                OAuthUserCredential user = videoShare.Credential;
 
                 var tokenResponse = await FetchToken(user, token);
                 var youTubeService = FetchYouTubeService(tokenResponse, user.client_id, user.client_secret);
@@ -895,16 +867,14 @@ namespace video_editing_api.Service.VideoEditing
                 WebClient Client = new WebClient();
                 using (var fileStream = new MemoryStream(Client.DownloadData(filePath)))
                 {
-                    Console.WriteLine("Lấy stream done" + fileStream.Length);
+                    Console.WriteLine("Lấy stream done, fileSize: " + fileStream.Length);
                     var videosInsertRequest = youTubeService.Videos.Insert(video, "snippet,status", fileStream, "video/*");
                     videosInsertRequest.ProgressChanged += VideoUploadProgressChanged;
                     videosInsertRequest.ResponseReceived += VideoUploadResponseReceived;
 
-                    var chunkSize = 256 * 1024 * 4;
-                    videosInsertRequest.ChunkSize = chunkSize;
-                    _sizeOfVideo = fileStream.Length;
+                    //var chunkSize = 256 * 1024 * 4;
+                    //videosInsertRequest.ChunkSize = chunkSize;
                     var progress = await videosInsertRequest.UploadAsync();
-                    //await videosInsertRequest.UploadAsync();
                     switch (progress.Status)
                     {
                         case UploadStatus.Completed:
@@ -925,20 +895,18 @@ namespace video_editing_api.Service.VideoEditing
         }
         void VideoUploadResponseReceived(Video video)
         {
-            Console.WriteLine("\n||==>Video id was successfully uploaded.\n");
-            _bytesSent = _sizeOfVideo;
+            Console.WriteLine("n||==>Video was successfully uploaded.\n");
         }
 
         void VideoUploadProgressChanged(IUploadProgress progress)
         {
-            var status = progress.Status;
             switch (progress.Status)
             {
                 case UploadStatus.Uploading:
-                    _bytesSent = progress.BytesSent;
+                    var bytesSent = progress.BytesSent;
                     try
                     {
-                        Console.WriteLine($"||==> Uploading video: {_bytesSent} bytes sent.");
+                        Console.WriteLine($"||==> Uploading video: {bytesSent} bytes sent.");
                     }
                     catch { }
                     break;
@@ -955,8 +923,6 @@ namespace video_editing_api.Service.VideoEditing
 
         private async Task<TokenResponse> FetchToken(OAuthUserCredential user, Token token)
         {
-            //var token = JsonSerializer.Deserialize<Token>(token);
-
             var isValid = await IsValid(token.access_token);
             if (!isValid)
             {
