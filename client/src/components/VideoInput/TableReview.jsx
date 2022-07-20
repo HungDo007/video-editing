@@ -1,12 +1,18 @@
 import React, { useCallback, useRef } from "react";
 import "antd/dist/antd.css";
-import { Checkbox, Table } from "antd";
+import { Button, Checkbox, Table } from "antd";
 import update from "immutability-helper";
 import RemoveCircleIcon from "@mui/icons-material/RemoveCircleOutline";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { formatTimeSlice } from "./video-input";
 import { IconButton, Tooltip } from "@mui/material";
+import {
+  CaretUpOutlined,
+  CaretDownOutlined,
+  VerticalAlignTopOutlined,
+  VerticalAlignBottomOutlined,
+} from "@ant-design/icons";
 const type = "DraggableBodyRow";
 
 const DraggableBodyRow = ({
@@ -65,6 +71,48 @@ function TableReview(props) {
 
   const columns = [
     {
+      width: 100,
+      render: (selected, row, index) => {
+        console.log(data?.length);
+        return (
+          <>
+            <div>
+              <Button
+                icon={<VerticalAlignTopOutlined />}
+                size="small"
+                style={{ width: 30 }}
+                onClick={() => moveRow(index, 0)}
+                disabled={index === 0 ? true : false}
+              />
+              <Button
+                icon={<CaretUpOutlined />}
+                size="small"
+                style={{ width: 30 }}
+                onClick={() => moveRow(index, index - 1)}
+                disabled={index === 0 ? true : false}
+              />
+            </div>
+            <div>
+              <Button
+                icon={<VerticalAlignBottomOutlined />}
+                size="small"
+                style={{ width: 30 }}
+                onClick={() => moveRow(index, data?.length - 1)}
+                disabled={index + 1 === data?.length ? true : false}
+              />
+              <Button
+                icon={<CaretDownOutlined />}
+                size="small"
+                style={{ width: 30 }}
+                onClick={() => moveRow(index, index + 1)}
+                disabled={index + 1 === data?.length ? true : false}
+              />
+            </div>
+          </>
+        );
+      },
+    },
+    {
       title: "Time",
       dataIndex: "time",
       render: (time) =>
@@ -76,6 +124,7 @@ function TableReview(props) {
     },
     {
       title: "Level",
+      width: 120,
       dataIndex: "level",
       render: (level) => (level ? level : "-"),
     },
@@ -98,6 +147,7 @@ function TableReview(props) {
           </>
         );
       },
+      width: 120,
       render: (_, record) => {
         return (
           <Checkbox
@@ -160,7 +210,7 @@ function TableReview(props) {
         components={components}
         bordered
         pagination={false}
-        scroll={{ y: "60vh", x: "100%" }}
+        scroll={{ y: "70vh", x: "100%" }}
         onRow={(_, index) => {
           const attr = {
             index,

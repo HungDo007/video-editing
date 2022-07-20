@@ -4,7 +4,6 @@ import Cookies from "js-cookie";
 
 //set up default config here
 
-
 const axiosClient = axios.create({
   baseURL: process.env.REACT_APP_BASE_API_URL,
   headers: {
@@ -12,7 +11,7 @@ const axiosClient = axios.create({
   },
   paramsSerializer: (params) => queryString.stringify(params),
 });
-axiosClient.defaults.timeout = 86400000;
+
 axiosClient.interceptors.request.use(async (config) => {
   //handle token here
   const token = Cookies.get("Token");

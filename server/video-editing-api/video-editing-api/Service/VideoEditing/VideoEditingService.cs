@@ -8,6 +8,7 @@ using Google.Apis.YouTube.v3;
 using Google.Apis.YouTube.v3.Data;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Configuration;
 using MongoDB.Driver;
@@ -20,6 +21,7 @@ using System.Net;
 using System.Net.Http;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using video_editing_api.Model.Collection;
 using video_editing_api.Model.InputModel;
@@ -39,12 +41,13 @@ namespace video_editing_api.Service.VideoEditing
         private readonly IMongoCollection<TeamOfLeague> _teamOfLeague;
         private readonly IMongoCollection<Gallery> _gallery;
 
+        private readonly IHubContext<NotiHub> _hub;
         private readonly IMapper _mapper;
         private IHttpClientFactory _clientFactory;
 
         private readonly string _pathClientSecret;
         public VideoEditingService(IDbClient dbClient, IConfiguration config,
-            IWebHostEnvironment webHostEnvironment, IMapper mapper, IHttpClientFactory clientFactory)
+            IWebHostEnvironment webHostEnvironment, IMapper mapper, IHttpClientFactory clientFactory, IHubContext<NotiHub> hub)
         {
             _tournament = dbClient.GetTournamentCollection();
             _matchInfo = dbClient.GetMatchInfoCollection();
@@ -54,9 +57,14 @@ namespace video_editing_api.Service.VideoEditing
             _gallery = dbClient.GetGalleryCollection();
             _clientFactory = clientFactory;
 
+            _hub = hub;
             _pathClientSecret = Path.Combine(webHostEnvironment.ContentRootPath, "Cert", "client_secret.json");
 
             _mapper = mapper;
+        }
+
+        public VideoEditingService()
+        {
         }
 
 
@@ -374,7 +382,7 @@ namespace video_editing_api.Service.VideoEditing
 
 
 
-        public async Task<List<string>> NotConcatVideoOfMatch(ConcatModel concatModel)
+        public async Task<List<string>> NotConcatVideoOfMatch(string username, ConcatModel concatModel)
         {
             try
             {
@@ -382,19 +390,26 @@ namespace video_editing_api.Service.VideoEditing
                 concatModel.JsonFile.Event = jsonFile;
 
                 var inputSend = handlePreSendServer(concatModel.JsonFile);
-
-                HttpClient client = new HttpClient();
-                client.Timeout = TimeSpan.FromDays(1);
-                client.BaseAddress = new System.Uri("http://118.69.218.59:7007");
-
                 var json = JsonConvert.SerializeObject(inputSend);
                 json = json.Replace("E", "e");
-                var httpContent = new StringContent(json, Encoding.UTF8, "application/json");
-                var response = await client.PostAsync("/highlight_nomerge", httpContent);
-                var result = await response.Content.ReadAsStringAsync();
 
-                var listRes = JsonConvert.DeserializeObject<NotConcatResultModel>(result);
-                return listRes.mp4;
+                Thread thead = new Thread(async () =>
+                {
+                    Console.WriteLine("start thread");
+                    HttpClient client = new HttpClient();
+                    client.Timeout = TimeSpan.FromDays(1);
+                    client.BaseAddress = new System.Uri("http://118.69.218.59:7007");
+                    var httpContent = new StringContent(json, Encoding.UTF8, "application/json");
+                    var response = await client.PostAsync("/highlight_nomerge", httpContent);
+                    var result = await response.Content.ReadAsStringAsync();
+
+                    var listRes = JsonConvert.DeserializeObject<NotConcatResultModel>(result);
+                    await _hub.Clients.Group(username).SendAsync("not_merge", "background_task", JsonConvert.SerializeObject(listRes.mp4));
+                    Console.WriteLine("stop thread");
+                });
+                thead.IsBackground = true;
+                thead.Start();
+                return null;
             }
             catch (System.Exception ex)
             {
@@ -491,6 +506,24 @@ namespace video_editing_api.Service.VideoEditing
             }
         }
 
+        public async Task<bool> UpdateLogTrimedAll(string matchId, int selected)
+        {
+            try
+            {
+                var match = _matchInfo.Find(x => x.Id == matchId).First();
+
+                foreach (var item in match.JsonFile.Event)
+                {
+                    item.selected = selected;
+                }
+                await _matchInfo.ReplaceOneAsync(m => m.Id == matchId, match);
+                return true;
+            }
+            catch (System.Exception ex)
+            {
+                throw new System.Exception(ex.Message);
+            }
+        }
         public async Task<bool> UpdateLogTrimed(string matchId, EventStorage eventStorage)
         {
             try
@@ -503,7 +536,7 @@ namespace video_editing_api.Service.VideoEditing
 
                 match.JsonFile.Event[ev] = eventStorage;
 
-                _matchInfo.ReplaceOne(m => m.Id == matchId, match);
+                await _matchInfo.ReplaceOneAsync(m => m.Id == matchId, match);
                 return true;
             }
             catch (System.Exception ex)

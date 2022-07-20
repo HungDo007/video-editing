@@ -5,9 +5,11 @@ import { SearchOutlined } from "@ant-design/icons";
 import "./table-video.css";
 import "antd/dist/antd.css";
 import { formatTimeSlice } from "./video-input";
+import { Checkbox } from "@mui/material";
 
 function TableEditVideo(props) {
-  const { data, onTableClick, buttonReview, height } = props;
+  const { data, onTableClick, buttonReview, height, onCheckOne, onCheckAll } =
+    props;
   const [searchText, setSearchText] = useState();
   const [searchedColumn, setSearchedColumn] = useState();
   const searchInput = useRef(null);
@@ -149,31 +151,25 @@ function TableEditVideo(props) {
       },
     },
     {
-      title: "Status",
-      dataIndex: "selected",
-      key: "Trim Length",
-      width: 100,
-      render: (selected, row) => {
-        if (selected === 1) return "Trimmed";
-        else if (selected === 0) return "Not qualified";
-        else return "-";
+      title: () => {
+        return (
+          <Checkbox
+            checked={
+              data?.findIndex((d) => d.selected === 0 || d.selected === -1) ===
+              -1
+            }
+            onChange={(e) => onCheckAll(e.target.checked)}
+          />
+        );
       },
-      filters: [
-        {
-          text: "-",
-          value: -1,
-        },
-        {
-          text: "Trimmed",
-          value: 1,
-        },
-        {
-          text: "Not qualified",
-          value: 0,
-        },
-      ],
-      onFilter: (value, record) => {
-        return record.selected === value;
+      width: 100,
+      render: (_, record) => {
+        return (
+          <Checkbox
+            checked={record.selected === 1}
+            onChange={(e) => onCheckOne(e.target.checked, record)}
+          />
+        );
       },
     },
   ];
@@ -194,15 +190,15 @@ function TableEditVideo(props) {
   }
 
   const onPageChange = (page, pageSize) => {
-    onTableClick(data[(page - 1) * pageSize + select]);
+    setSelect(data[(page - 1) * pageSize].file_name);
+    onTableClick(data[(page - 1) * pageSize]);
   };
 
   return (
     <Table
-      rowClassName={(record, index) => {
-        console.log(record, select);
-        return record.file_name === select ? "table-row-selected" : "";
-      }}
+      rowClassName={(record, index) =>
+        record.file_name === select ? "table-row-selected" : ""
+      }
       bordered
       onRow={(record, rowIndex) => {
         return {

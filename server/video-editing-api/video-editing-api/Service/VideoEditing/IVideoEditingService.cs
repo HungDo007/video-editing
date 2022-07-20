@@ -18,7 +18,7 @@ namespace video_editing_api.Service.VideoEditing
         Task<bool> DeleteMatch(string id);
         Task<string> ConcatVideoOfMatch(string username, ConcatModel concatModel);
 
-        Task<List<string>> NotConcatVideoOfMatch(ConcatModel concatModel);
+        Task<List<string>> NotConcatVideoOfMatch(string username, ConcatModel concatModel);
 
         Task<bool> DeleteHighlight(string id);
         Task<List<HighlightVideo>> GetHighlightVideos();
@@ -30,6 +30,7 @@ namespace video_editing_api.Service.VideoEditing
 
 
         Task<bool> UpdateLogTrimed(string matchId, EventStorage eventStorage);
+        Task<bool> UpdateLogTrimedAll(string matchId, int selected);
 
         Task<List<Tag>> GetTag(string username);
         Task<List<Team>> GetTeam(string username, string leagueId);

@@ -1,9 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using System;
 using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
 using video_editing_api.Model;
 using video_editing_api.Model.Collection;
@@ -184,8 +182,7 @@ namespace video_editing_api.Controllers
         {
             try
             {
-                Thread.Sleep(TimeSpan.FromMinutes(10));
-                var res = await _videoEditingService.NotConcatVideoOfMatch(concatModel);
+                var res = await _videoEditingService.NotConcatVideoOfMatch(User.Identity.Name, concatModel);
                 return Ok(new Response<List<string>>(200, "", res));
             }
             catch (System.Exception e)
@@ -295,6 +292,26 @@ namespace video_editing_api.Controllers
                 return BadRequest(new Response<string>(400, e.Message, null));
             }
         }
+
+
+        [HttpPost("updateAll/{matchId}")]
+        public async Task<IActionResult> updateLogTrimmedAll(string matchId, int selected)
+        {
+            try
+            {
+                var res = await _videoEditingService.UpdateLogTrimedAll(matchId, selected);
+                if (res)
+                    return Ok(new Response<bool>(200, "", res));
+                else
+                    return BadRequest(new Response<bool>(400, "don't find event", false));
+            }
+            catch (System.Exception e)
+            {
+                return BadRequest(new Response<string>(400, e.Message, null));
+            }
+        }
+
+
 
         [HttpPost("SaveToGallery")]
         [DisableRequestSizeLimit]

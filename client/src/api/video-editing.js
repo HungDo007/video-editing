@@ -6,6 +6,11 @@ const videoEditingApi = {
     return axiosClient.get(url);
   },
 
+  updateAll: (id, checked) => {
+    const url = `/VideoEditings/updateAll/${id}?selected=${checked}`;
+    return axiosClient.post(url);
+  },
+
   getMatchById: (params) => {
     const url = "/VideoEditings/getMatchById";
     return axiosClient.get(url, { params });
@@ -38,7 +43,7 @@ const videoEditingApi = {
       description: hlDescription,
       jsonFile: data,
     };
-    return axiosClient.post(url, body, {timeout:86400000});
+    return axiosClient.post(url, body);
   },
 
   getHighlight: () => {
@@ -91,7 +96,7 @@ const videoEditingApi = {
       description: hlDescription,
       jsonFile: data,
     };
-    return axiosClient.post(url, body, {timeout:86400000});
+    return axiosClient.post(url, body);
   },
 
   uploadSmallVideo: (formdata) => {

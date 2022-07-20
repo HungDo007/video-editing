@@ -14,11 +14,14 @@ import {
   DialogContent,
   DialogContentText,
   DialogActions,
+  DialogTitle,
+  IconButton,
 } from "@mui/material";
 import ReactPlayer from "react-player";
 import videoEditingApi from "../../api/video-editing";
 import { useLocation } from "react-router-dom";
 import HighlightReview from "../highlight-review";
+import RemoveCircleIcon from "@mui/icons-material/RemoveCircleOutline";
 import TableEditVideo from "./TableEditVideo";
 import TableReview from "./TableReview";
 import { DialogDraggableLogo, DialogMoreEvent } from "../flugin";
@@ -37,12 +40,12 @@ const VideoInput = () => {
   const [opendialog, setOpenDialog] = useState(false);
 
   const [hlSuccess, setHlSuccess] = useState();
+  const [notMergeSuccess, setNotMergeSuccess] = useState();
 
   const location = useLocation();
   const videoPlayer = useRef(null);
 
   const descriptionElementRef = useRef(null);
-  const [isTrimmed, setIsTrimmed] = useState(true);
   const [rowSelected, setRowSelected] = useState();
 
   const [hlDescription, setHlDescription] = useState("");
@@ -91,6 +94,11 @@ const VideoInput = () => {
       connection1.on("noti", (user, message) => {
         setHlSuccess(JSON.parse(message));
       });
+
+      connection1.on("not_merge", (user, message) => {
+        setNotMergeSuccess(JSON.parse(message));
+      });
+
       await connection1.start();
       await connection1.invoke("JoinRoom", {
         username: localStorage.getItem("username"),
@@ -110,6 +118,14 @@ const VideoInput = () => {
       setHighlights(temp);
     }
   }, [hlSuccess]);
+
+  useEffect(() => {
+    if (notMergeSuccess) {
+      setOpen(false);
+      download_files(notMergeSuccess);
+      setNotMergeSuccess();
+    }
+  }, [notMergeSuccess]);
 
   useEffect(() => {
     setVideoPieceTime([rowSelected?.startTime, rowSelected?.endTime]);
@@ -152,9 +168,6 @@ const VideoInput = () => {
       }
 
       setVideoSrc(temp);
-      setIsTrimmed(
-        response.data.jsonFile.event[0].selected === 0 ? false : true
-      );
     };
 
     const getGallery = async () => {
@@ -341,21 +354,8 @@ const VideoInput = () => {
   }
 
   const handleSendServerNotMerge = () => {
-    //const payload = reducerObj(filtered);
     const temp = [...logoGallery];
     const lgg = temp.filter((l) => l.position.x > 0);
-
-    // const logo = temp.reduce((fills, lg) => {
-    //   if (lg.position.x > 0) {
-    //     const temp1 = { ...lg };
-    //     temp1.position.x = parseInt((lg.position.x / 800) * 1920);
-    //     temp1.position.y = parseInt((lg.position.y / 350) * 1080);
-    //     temp1.size[0] = parseInt((lg.size[0] / 800) * 1920);
-    //     temp1.size[1] = parseInt((lg.size[1] / 350) * 1080);
-    //     fills.push(temp1);
-    //   }
-    //   return fills;
-    // }, []);
 
     const newBody = {
       ...body,
@@ -365,18 +365,14 @@ const VideoInput = () => {
 
     const downloadNotMerge = async () => {
       try {
-        var response = await videoEditingApi.downloadNotMerge(
+        await videoEditingApi.downloadNotMerge(
           location.state.row.id,
           hlDescription,
           newBody
         );
-        setOpen(false);
-        ///Create blob link to download
-
-        download_files(response.data);
       } catch (error) {
         setNoti(true);
-        //setMessage(error.response.data.description);
+        setOpen(false);
         setMessage(error);
         setTypeNoti("error");
       }
@@ -402,25 +398,40 @@ const VideoInput = () => {
     const vdSrc = newVideoSrc.findIndex(
       (vid) => vid.file_name === row.file_name
     );
-    if (row.selected !== 0) {
-      setIsTrimmed(true);
+    if (row.selected !== 1) {
       newVideoSrc[vdSrc].selected = 1;
-    } else {
-      setIsTrimmed(false);
     }
     setVideoSrc(newVideoSrc);
   };
 
-  const handleNotQualifiedOrTrimmedClick = () => {
+  const onCheckOne = (checked, record) => {
     const newVideoSrc = [...videoSrc];
     const vdSrc = newVideoSrc.findIndex(
-      (vid) => vid.file_name === rowSelected.file_name
+      (vid) => vid.file_name === record.file_name
     );
-    newVideoSrc[vdSrc].selected = isTrimmed ? 0 : 1;
-    setIsTrimmed(!isTrimmed);
+    newVideoSrc[vdSrc].selected = checked ? 1 : 0;
     setVideoSrc(newVideoSrc);
     updateLogTrimmed(newVideoSrc[vdSrc]);
   };
+
+  const onCheckAll = (checked) => {
+    var temp = [...videoSrc];
+    const payload = temp.reduce((filtered, video) => {
+      var tempVideo = { ...video };
+      tempVideo.selected = checked ? 1 : 0;
+      filtered.push(tempVideo);
+      return filtered;
+    }, []);
+    setVideoSrc(payload);
+
+    const updateAll = async () => {
+      try {
+        await videoEditingApi.updateAll(location.state.row.id, checked ? 1 : 0);
+      } catch (error) {}
+    };
+    updateAll();
+  };
+
   const [isReady, setIsReady] = useState(false);
   const onReady = useCallback(
     (rowSelected) => {
@@ -508,13 +519,7 @@ const VideoInput = () => {
         onResize={onResize}
       />
 
-      <Dialog
-        open={opendialog}
-        onClose={handleClose}
-        scroll="paper"
-        fullWidth={true}
-        maxWidth="lg"
-      >
+      <Dialog open={opendialog} onClose={handleClose} scroll="paper" fullScreen>
         <DialogContent dividers={true}>
           <DialogContentText
             id="scroll-dialog-description"
@@ -600,6 +605,16 @@ const VideoInput = () => {
               >
                 Merge
               </Button>
+              <Button
+                sx={{
+                  backgroundColor: "red",
+                  marginLeft: "10px",
+                }}
+                variant="contained"
+                onClick={handleClose}
+              >
+                Cancel
+              </Button>
             </div>
           </Grid>
         </DialogActions>
@@ -657,13 +672,6 @@ const VideoInput = () => {
                 <div>{formatTimeSlice(rowSelected?.startTime)}</div>
                 <Button
                   variant="contained"
-                  color={isTrimmed ? "error" : "info"}
-                  onClick={handleNotQualifiedOrTrimmedClick}
-                >
-                  {isTrimmed ? "Not qualified" : "Trim"}
-                </Button>
-                <Button
-                  variant="contained"
                   onClick={handleDownloadOneClick}
                   color="secondary"
                 >
@@ -680,6 +688,8 @@ const VideoInput = () => {
             data={videoSrc}
             height="50vh"
             onTableClick={onTableClick}
+            onCheckOne={onCheckOne}
+            onCheckAll={onCheckAll}
             buttonReview={
               <Button variant="contained" onClick={handleEditVideo}>
                 Review
