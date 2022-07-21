@@ -269,14 +269,24 @@ function HighlightFilter() {
     getJsonFileFromTagName();
   };
 
-  const handleNotQualifiedOrTrimmedClick = () => {
+  const onCheckOne = (checked, record) => {
     const newVideoSrc = [...videoSrc];
     const vdSrc = newVideoSrc.findIndex(
-      (vid) => vid.file_name === rowSelected.file_name
+      (vid) => vid.file_name === record.file_name
     );
-    newVideoSrc[vdSrc].selected = isTrimmed ? 0 : 1;
-    setIsTrimmed(!isTrimmed);
+    newVideoSrc[vdSrc].selected = checked ? 1 : 0;
     setVideoSrc(newVideoSrc);
+  };
+
+  const onCheckAll = (checked) => {
+    var temp = [...videoSrc];
+    const payload = temp.reduce((filtered, video) => {
+      var tempVideo = { ...video };
+      tempVideo.selected = checked ? 1 : 0;
+      filtered.push(tempVideo);
+      return filtered;
+    }, []);
+    setVideoSrc(payload);
   };
 
   const handleSlideChange = (event, newValue) => {
@@ -419,13 +429,6 @@ function HighlightFilter() {
         onTrack={onTrack}
         onResize={onResize}
       />
-      {/* <DialogMoreLogo
-        open={openDialogMoreLogo}
-        handleClose={handleCloseEventAndLogo}
-        onChange={onChangeSelectLogo}
-        eventLogo={logoGallery}
-        logoAdd={logoAdd}
-      /> */}
 
       <Backdrop
         sx={{
@@ -437,13 +440,7 @@ function HighlightFilter() {
         <CircularProgress color="inherit" />
       </Backdrop>
 
-      <Dialog
-        open={opendialog}
-        onClose={handleClose}
-        scroll="paper"
-        fullWidth={true}
-        maxWidth="lg"
-      >
+      <Dialog open={opendialog} onClose={handleClose} scroll="paper" fullScreen>
         <DialogContent dividers={true}>
           <DialogContentText
             id="scroll-dialog-description"
@@ -515,10 +512,19 @@ function HighlightFilter() {
                 }}
                 variant="contained"
                 type="submit"
-                //onClick={mergeVideoHL}
                 disabled={filtered?.length > 0 ? false : true}
               >
                 Merge
+              </Button>
+              <Button
+                sx={{
+                  backgroundColor: "red",
+                  marginLeft: "10px",
+                }}
+                variant="contained"
+                onClick={handleClose}
+              >
+                Cancel
               </Button>
             </div>
           </Grid>
@@ -631,6 +637,8 @@ function HighlightFilter() {
             <TableEditVideo
               data={videoSrc}
               height="55vh"
+              onCheckOne={onCheckOne}
+              onCheckAll={onCheckAll}
               onTableClick={onTableClick}
               buttonReview={
                 <Button variant="contained" onClick={handleEditVideo}>
@@ -678,13 +686,6 @@ function HighlightFilter() {
                     }}
                   >
                     <div>{formatTimeSlice(rowSelected?.startTime)}</div>
-                    <Button
-                      variant="contained"
-                      color={isTrimmed ? "error" : "info"}
-                      onClick={handleNotQualifiedOrTrimmedClick}
-                    >
-                      {isTrimmed ? "Not qualified" : "Trim"}
-                    </Button>
                     <div>{formatTimeSlice(rowSelected?.endTime)}</div>
                   </Box>
                 </div>

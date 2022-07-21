@@ -14,14 +14,11 @@ import {
   DialogContent,
   DialogContentText,
   DialogActions,
-  DialogTitle,
-  IconButton,
 } from "@mui/material";
 import ReactPlayer from "react-player";
 import videoEditingApi from "../../api/video-editing";
 import { useLocation } from "react-router-dom";
 import HighlightReview from "../highlight-review";
-import RemoveCircleIcon from "@mui/icons-material/RemoveCircleOutline";
 import TableEditVideo from "./TableEditVideo";
 import TableReview from "./TableReview";
 import { DialogDraggableLogo, DialogMoreEvent } from "../flugin";
@@ -333,7 +330,7 @@ const VideoInput = () => {
 
   function download_files(files) {
     function download_next(i) {
-      if (i >= files.length) {
+      if (i >= files?.length) {
         return;
       }
       var link = document.createElement("a");
@@ -347,7 +344,7 @@ const VideoInput = () => {
       // for IE, which will otherwise only download the first file.
       setTimeout(function () {
         download_next(i + 1);
-      }, 1000);
+      }, 2000);
     }
     // Initiate the first download.
     download_next(0);
@@ -698,12 +695,6 @@ const VideoInput = () => {
           />
         </Grid>
       </Grid>
-
-      {/* <Box sx={{ textAlign: "center", margin: 2 }}>
-        <Button variant="contained" onClick={handleEditVideo}>
-          Review
-        </Button>
-      </Box> */}
       <div
         style={{ height: 3, backgroundColor: "black", marginBottom: "15px" }}
       ></div>
