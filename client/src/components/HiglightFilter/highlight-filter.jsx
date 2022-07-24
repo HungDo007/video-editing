@@ -164,9 +164,14 @@ function HighlightFilter() {
         if (responseL.data.length > 0) {
           responseL.data.forEach((element, index) => {
             const data = {
+              label: element.event,
               file_name: element.file_name,
-              position: { x: -280, y: index * 15 },
-              size: [100, 70],
+              position: { x: 0, y: 0 },
+              size: [
+                Math.floor(element.width / 2),
+                Math.floor(element.height / 2),
+              ],
+              selected: 0,
             };
             logoG.push(data);
           });
@@ -324,14 +329,34 @@ function HighlightFilter() {
     setOpenDialog(false);
   };
 
+  const handelCheckLogo = (checked, logoSelected) => {
+    const temp = [...logoGallery];
+    const idx = temp.findIndex(
+      (item) => item.file_name === logoSelected.file_name
+    );
+    temp[idx].selected = checked;
+    setLogoGallery(temp);
+  };
+
   const mergeVideoHL = (e) => {
     e.preventDefault();
     const temp = [...logoGallery];
-    const lgg = temp.filter((l) => l.position.x > 0);
+
+    const lggg = temp.reduce((logoSent, tempLogo) => {
+      if (tempLogo.selected) {
+        const logoSentItem = {
+          position: tempLogo.position,
+          file_name: tempLogo.file_name,
+          size: tempLogo.size,
+        };
+        logoSent.push(logoSentItem);
+      }
+      return logoSent;
+    }, []);
 
     const body = {
       event: filtered,
-      logo: lgg,
+      logo: lggg,
       description: hlDescription,
     };
     const mergeHL = async () => {
@@ -428,6 +453,7 @@ function HighlightFilter() {
         logo={logoGallery}
         onTrack={onTrack}
         onResize={onResize}
+        handelCheckLogo={handelCheckLogo}
       />
 
       <Backdrop

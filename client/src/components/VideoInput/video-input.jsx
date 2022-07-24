@@ -38,7 +38,7 @@ const VideoInput = () => {
 
   const [hlSuccess, setHlSuccess] = useState();
   const [notMergeSuccess, setNotMergeSuccess] = useState();
-
+  const [downloadOneSuccess, setDownloadOneSuccess] = useState();
   const location = useLocation();
   const videoPlayer = useRef(null);
 
@@ -96,6 +96,10 @@ const VideoInput = () => {
         setNotMergeSuccess(JSON.parse(message));
       });
 
+      connection1.on("download_one", (user, message) => {
+        setDownloadOneSuccess(JSON.parse(message));
+      });
+
       await connection1.start();
       await connection1.invoke("JoinRoom", {
         username: localStorage.getItem("username"),
@@ -123,6 +127,23 @@ const VideoInput = () => {
       setNotMergeSuccess();
     }
   }, [notMergeSuccess]);
+
+  useEffect(() => {
+    if (downloadOneSuccess) {
+      setOpen(false);
+      setOpen(false);
+      // Create blob link to download
+      const link = document.createElement("a");
+      link.href = downloadOneSuccess.replace("raw", "download");
+      // Append to html link element page
+      document.body.appendChild(link);
+      // Start download
+      link.click();
+      // Clean up and remove the link
+      link.parentNode.removeChild(link);
+      setDownloadOneSuccess();
+    }
+  }, [downloadOneSuccess]);
 
   useEffect(() => {
     setVideoPieceTime([rowSelected?.startTime, rowSelected?.endTime]);
@@ -187,9 +208,14 @@ const VideoInput = () => {
         if (responseL.data.length > 0) {
           responseL.data.forEach((element, index) => {
             const data = {
+              label: element.event,
               file_name: element.file_name,
-              position: { x: -280, y: index * 15 },
-              size: [100, 70],
+              position: { x: 0, y: 0 },
+              size: [
+                Math.floor(element.width / 2),
+                Math.floor(element.height / 2),
+              ],
+              selected: false,
             };
             logoG.push(data);
           });
@@ -244,6 +270,15 @@ const VideoInput = () => {
     videoPlayer.current.seekTo(newValue[indexSeekTo], "seconds");
   };
 
+  const handelCheckLogo = (checked, logoSelected) => {
+    const temp = [...logoGallery];
+    const idx = temp.findIndex(
+      (item) => item.file_name === logoSelected.file_name
+    );
+    temp[idx].selected = checked;
+    setLogoGallery(temp);
+  };
+
   const handleEditVideo = () => {
     const temp = { ...previousDataRow.current };
     updateLogTrimmed(temp);
@@ -262,13 +297,25 @@ const VideoInput = () => {
   const handleSendServer = (e) => {
     e.preventDefault();
     const temp = [...logoGallery];
-    const lgg = temp.filter((l) => l.position.x > 0);
+
+    const lggg = temp.reduce((logoSent, tempLogo) => {
+      if (tempLogo.selected) {
+        const logoSentItem = {
+          position: tempLogo.position,
+          file_name: tempLogo.file_name,
+          size: tempLogo.size,
+        };
+        logoSent.push(logoSentItem);
+      }
+      return logoSent;
+    }, []);
 
     const newBody = {
       ...body,
       event: filtered,
-      logo: lgg,
+      logo: lggg,
     };
+    console.log(newBody);
     const concatHighlight = async () => {
       try {
         await videoEditingApi.concatHighlight(
@@ -303,21 +350,11 @@ const VideoInput = () => {
 
     const downloadOne = async () => {
       try {
-        var response = await videoEditingApi.downloadOne(
+        await videoEditingApi.downloadOne(
           location.state.row.id,
           hlDescription,
           newBody
         );
-        setOpen(false);
-        // Create blob link to download
-        const link = document.createElement("a");
-        link.href = response.data.replace("raw", "download");
-        // Append to html link element page
-        document.body.appendChild(link);
-        // Start download
-        link.click();
-        // Clean up and remove the link
-        link.parentNode.removeChild(link);
       } catch (error) {
         setNoti(true);
         setMessage(error.response.data.description);
@@ -514,6 +551,7 @@ const VideoInput = () => {
         logo={logoGallery}
         onTrack={onTrack}
         onResize={onResize}
+        handelCheckLogo={handelCheckLogo}
       />
 
       <Dialog open={opendialog} onClose={handleClose} scroll="paper" fullScreen>

@@ -198,7 +198,7 @@ function TableReview(props) {
   );
 
   const renderFooter = () => {
-    var count = logo?.filter((lg) => lg.position.x > 0).length;
+    var count = logo?.filter((lg) => lg.selected).length;
     return `${count} logo selected`;
   };
 

@@ -15,6 +15,7 @@ using MongoDB.Driver;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -396,15 +397,23 @@ namespace video_editing_api.Service.VideoEditing
                 Thread thead = new Thread(async () =>
                 {
                     Console.WriteLine("start thread");
-                    HttpClient client = new HttpClient();
-                    client.Timeout = TimeSpan.FromDays(1);
-                    client.BaseAddress = new System.Uri("http://118.69.218.59:7007");
-                    var httpContent = new StringContent(json, Encoding.UTF8, "application/json");
-                    var response = await client.PostAsync("/highlight_nomerge", httpContent);
-                    var result = await response.Content.ReadAsStringAsync();
+                    try
+                    {
+                        HttpClient client = new HttpClient();
+                        client.Timeout = TimeSpan.FromDays(1);
+                        client.BaseAddress = new System.Uri("http://118.69.218.59:7007");
+                        var httpContent = new StringContent(json, Encoding.UTF8, "application/json");
+                        var response = await client.PostAsync("/highlight_nomerge", httpContent);
+                        var result = await response.Content.ReadAsStringAsync();
 
-                    var listRes = JsonConvert.DeserializeObject<NotConcatResultModel>(result);
-                    await _hub.Clients.Group(username).SendAsync("not_merge", "background_task", JsonConvert.SerializeObject(listRes.mp4));
+                        var listRes = JsonConvert.DeserializeObject<NotConcatResultModel>(result);
+                        await _hub.Clients.Group(username).SendAsync("not_merge", "background_task", JsonConvert.SerializeObject(listRes.mp4));
+
+                    }
+                    catch (System.Exception ex)
+                    {
+                        Console.WriteLine(ex.Message);
+                    }
                     Console.WriteLine("stop thread");
                 });
                 thead.IsBackground = true;
@@ -421,23 +430,39 @@ namespace video_editing_api.Service.VideoEditing
 
         #region Download File    
 
-        public async Task<string> DownloadOne(ConcatModel concatModel)
+        public async Task<string> DownloadOne(string username, ConcatModel concatModel)
         {
             try
             {
                 var inputSend = handlePreSendServer(concatModel.JsonFile);
-
-                HttpClient client = new HttpClient();
-                client.Timeout = TimeSpan.FromDays(1);
-                client.BaseAddress = new System.Uri("http://118.69.218.59:7007");
                 var json = JsonConvert.SerializeObject(inputSend);
                 json = json.Replace("E", "e");
-                var httpContent = new StringContent(json, Encoding.UTF8, "application/json");
-                var response = await client.PostAsync("/highlight", httpContent);
-                var result = await response.Content.ReadAsStringAsync();
 
-                ConcatResultModel model = JsonConvert.DeserializeObject<ConcatResultModel>(result);
-                return model.mp4;
+                Thread thead = new Thread(async () =>
+                {
+                    Console.WriteLine("start thread download one");
+                    try
+                    {
+                        HttpClient client = new HttpClient();
+                        client.Timeout = TimeSpan.FromDays(1);
+                        client.BaseAddress = new System.Uri("http://118.69.218.59:7007");
+                        var httpContent = new StringContent(json, Encoding.UTF8, "application/json");
+                        var response = await client.PostAsync("/highlight", httpContent);
+                        var result = await response.Content.ReadAsStringAsync();
+
+                        ConcatResultModel model = JsonConvert.DeserializeObject<ConcatResultModel>(result);
+                        await _hub.Clients.Group(username).SendAsync("download_one", "background_task", JsonConvert.SerializeObject(model.mp4));
+
+                    }
+                    catch (System.Exception ex)
+                    {
+                        Console.WriteLine(ex.Message);
+                    }
+                    Console.WriteLine("stop thread download one");
+                });
+                thead.IsBackground = true;
+                thead.Start();
+                return null;
             }
             catch (System.Exception ex)
             {
@@ -455,10 +480,10 @@ namespace video_editing_api.Service.VideoEditing
                 var inputSend = new InputSendServer<Eventt>();
                 foreach (var item in input.logo)
                 {
-                    item.position.x = (int)Math.Round((float)item.position.x / 800 * 1920);
-                    item.position.y = (int)Math.Round((float)item.position.y / 800 * 1920);
-                    item.size[0] = (int)Math.Round((float)item.size[0] / 800 * 1920);
-                    item.size[1] = (int)Math.Round((float)item.size[1] / 800 * 1920);
+                    item.position.x = (int)Math.Round((float)item.position.x * 2);
+                    item.position.y = (int)Math.Round((float)item.position.y * 2);
+                    item.size[0] = (int)Math.Round((float)item.size[0] * 2);
+                    item.size[1] = (int)Math.Round((float)item.size[1] * 2);
                 }
 
                 inputSend = _mapper.Map<InputSendServer<Eventt>>(input);
@@ -485,6 +510,7 @@ namespace video_editing_api.Service.VideoEditing
                         level = item.level,
                         mainpoint = item.mainpoint,
                         file_name = item.file_name,
+                        ts_source = item.ts_source,
                         players = item.players,
                         time = item.time,
                         ts = new List<int>(),
@@ -716,7 +742,16 @@ namespace video_editing_api.Service.VideoEditing
                     Event = input.EventName,
                     Username = username
                 };
-
+                if (input.Type == 0)
+                {
+#pragma warning disable CA1416 // Validate platform compatibility
+                    using (var image = Image.FromStream(input.File.OpenReadStream()))
+                    {
+                        gallery.Width = image.Width;
+                        gallery.Height = image.Height;
+                    }
+#pragma warning restore CA1416 // Validate platform compatibility
+                }
                 gallery.file_name = await UploadToServerStorage(input.File);
                 await _gallery.InsertOneAsync(gallery);
                 return "success";

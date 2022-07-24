@@ -267,7 +267,7 @@ namespace video_editing_api.Controllers
         {
             try
             {
-                var res = await _videoEditingService.DownloadOne(concatModel);
+                var res = await _videoEditingService.DownloadOne(User.Identity.Name, concatModel);
                 return Ok(new Response<string>(200, "", res));
             }
             catch (System.Exception e)

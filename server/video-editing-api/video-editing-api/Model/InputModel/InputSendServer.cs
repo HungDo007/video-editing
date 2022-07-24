@@ -23,6 +23,7 @@ namespace video_editing_api.Model.InputModel
         public string time { get; set; }
         public string Event { get; set; }
         public string file_name { get; set; }
+        public string ts_source { get; set; }
         public List<string> players { get; set; }
         public List<int> ts { get; set; }
         public int mainpoint { get; set; }
@@ -36,6 +37,7 @@ namespace video_editing_api.Model.InputModel
         public string time { get; set; }
         public string Event { get; set; }
         public string file_name { get; set; }
+        public string ts_source { get; set; }
         public List<string> players { get; set; }
         public List<int> ts { get; set; }
         public int mainpoint { get; set; } = 0;

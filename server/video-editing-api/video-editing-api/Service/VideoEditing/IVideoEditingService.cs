@@ -26,7 +26,7 @@ namespace video_editing_api.Service.VideoEditing
         Task<List<HighlightVideo>> GetHighlightVideosHL(string username);
         Task<string> UploadJson(string username, string matchId, IFormFile jsonfile);
 
-        Task<string> DownloadOne(ConcatModel concatModel);
+        Task<string> DownloadOne(string username, ConcatModel concatModel);
 
 
         Task<bool> UpdateLogTrimed(string matchId, EventStorage eventStorage);
