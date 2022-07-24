@@ -1,20 +1,14 @@
 import {
   Button,
-  Checkbox,
   Dialog,
   DialogActions,
   DialogContent,
   FormControl,
   FormControlLabel,
-  FormGroup,
-  FormLabel,
-  Grid,
   Radio,
   RadioGroup,
 } from "@mui/material";
 import React from "react";
-import bg from "./default-video-image.png";
-import { Rnd } from "react-rnd";
 import ContentResizeLogo from "./ContentResizeLogo";
 
 function DialogDraggableLogo(props) {
