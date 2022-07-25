@@ -1,40 +1,44 @@
-import {
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  FormControl,
-  FormControlLabel,
-  Radio,
-  RadioGroup,
-} from "@mui/material";
+import { Button, Dialog, DialogActions, DialogContent } from "@mui/material";
 import React from "react";
-import ContentResizeLogo from "./ContentResizeLogo";
+import ContentFrame from "./ContentFrame";
+import ContentLogo from "./ContentLogo";
 
 function DialogDraggableLogo(props) {
-  const { open, handleClose, logo, onTrack, onResize, handelCheckLogo } = props;
+  const { type, open, handleClose, logo, onTrack, onResize, handelCheckLogo } =
+    props;
 
   return (
     <Dialog open={open} fullScreen={true}>
       <DialogContent dividers={true}>
-        <ContentResizeLogo
-          logo={logo}
-          onTrack={onTrack}
-          onResize={onResize}
-          handelCheckLogo={handelCheckLogo}
-        />
+        {type === "logo" ? (
+          <ContentLogo
+            logo={logo}
+            onTrack={onTrack}
+            onResize={onResize}
+            handelCheckLogo={handelCheckLogo}
+          />
+        ) : (
+          <ContentFrame
+            logo={logo}
+            onTrack={onTrack}
+            onResize={onResize}
+            handelCheckLogo={handelCheckLogo}
+          />
+        )}
       </DialogContent>
-      <DialogActions
-        style={{ display: "flex", justifyContent: "space-between" }}
-      >
-        <FormControl>
-          <RadioGroup row>
-            <FormControlLabel value="female" control={<Radio />} label="Logo" />
-            <FormControlLabel value="male" control={<Radio />} label="Frame" />
-          </RadioGroup>
-        </FormControl>
+      <DialogActions>
         <Button variant="contained" onClick={handleClose}>
           Save
+        </Button>
+        <Button
+          sx={{
+            backgroundColor: "red",
+            marginLeft: "10px",
+          }}
+          variant="contained"
+          onClick={handleClose}
+        >
+          Cancel
         </Button>
       </DialogActions>
     </Dialog>

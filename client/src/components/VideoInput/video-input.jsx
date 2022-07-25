@@ -63,6 +63,7 @@ const VideoInput = () => {
   const [logoGallery, setLogoGallery] = useState();
   const [opendialogUploadEvent, setOpendialogUploadEvent] = useState(false);
   const [opendialogUploadLogo, setOpendialogUploadLogo] = useState(false);
+  const [typeDraggable, setTypeDraggable] = useState();
 
   useEffect(() => {
     previousVideoPieceTime.current = videoPieceTime;
@@ -546,6 +547,7 @@ const VideoInput = () => {
       />
 
       <DialogDraggableLogo
+        type={typeDraggable}
         open={opendialogUploadLogo}
         handleClose={handleClose1}
         logo={logoGallery}
@@ -601,6 +603,20 @@ const VideoInput = () => {
                 }}
                 variant="contained"
                 onClick={() => {
+                  setTypeDraggable("frame");
+                  setOpendialogUploadLogo(true);
+                }}
+              >
+                Add Frame
+              </Button>
+              <Button
+                sx={{
+                  backgroundColor: "#996699",
+                  marginLeft: "10px",
+                }}
+                variant="contained"
+                onClick={() => {
+                  setTypeDraggable("logo");
                   setOpendialogUploadLogo(true);
                 }}
               >

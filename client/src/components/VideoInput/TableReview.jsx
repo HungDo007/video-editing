@@ -1,4 +1,4 @@
-import React, { useCallback, useRef } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import "antd/dist/antd.css";
 import { Button, Checkbox, Table } from "antd";
 import update from "immutability-helper";
@@ -69,6 +69,7 @@ function TableReview(props) {
   const { data, setData, handleIconRemoveClick, logo, onCheck, logoCheckAll } =
     props;
 
+  const [select, setSelect] = useState(0);
   const columns = [
     {
       width: 100,
@@ -185,6 +186,7 @@ function TableReview(props) {
   const moveRow = useCallback(
     (dragIndex, hoverIndex) => {
       const dragRow = data[dragIndex];
+      setSelect(data[dragIndex].file_name);
       setData(
         update(data, {
           $splice: [
@@ -209,12 +211,18 @@ function TableReview(props) {
         dataSource={data}
         components={components}
         bordered
+        rowClassName={(record, index) =>
+          record.file_name === select ? "table-row-selected" : ""
+        }
         pagination={false}
         scroll={{ y: "70vh", x: "100%" }}
-        onRow={(_, index) => {
+        onRow={(record, index) => {
           const attr = {
             index,
             moveRow,
+            onClick: (event) => {
+              setSelect(record.file_name);
+            },
           };
           return attr;
         }}

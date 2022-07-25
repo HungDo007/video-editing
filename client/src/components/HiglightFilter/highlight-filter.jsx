@@ -516,6 +516,18 @@ function HighlightFilter() {
                   setOpenDialogMoreLogo(true);
                 }}
               >
+                Add Frame
+              </Button>
+              <Button
+                sx={{
+                  backgroundColor: "#996699",
+                  marginLeft: "10px",
+                }}
+                variant="contained"
+                onClick={() => {
+                  setOpenDialogMoreLogo(true);
+                }}
+              >
                 Add Logo
               </Button>
 

@@ -15,7 +15,6 @@ using MongoDB.Driver;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -740,18 +739,10 @@ namespace video_editing_api.Service.VideoEditing
                 {
                     Type = input.Type,
                     Event = input.EventName,
-                    Username = username
+                    Username = username,
+                    Height = input.Height,
+                    Width = input.Width
                 };
-                if (input.Type == 0)
-                {
-#pragma warning disable CA1416 // Validate platform compatibility
-                    using (var image = Image.FromStream(input.File.OpenReadStream()))
-                    {
-                        gallery.Width = image.Width;
-                        gallery.Height = image.Height;
-                    }
-#pragma warning restore CA1416 // Validate platform compatibility
-                }
                 gallery.file_name = await UploadToServerStorage(input.File);
                 await _gallery.InsertOneAsync(gallery);
                 return "success";

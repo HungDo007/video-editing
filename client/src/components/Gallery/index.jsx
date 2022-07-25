@@ -51,6 +51,8 @@ function Gallery() {
   const [open, setOpen] = useState(false);
   const [file, setFile] = useState();
   const [event, setEvent] = useState();
+  const [width, setWidth] = useState(0);
+  const [height, setHeight] = useState(0);
 
   const [noti, setNoti] = useState(false);
   const [message, setMessage] = useState();
@@ -88,6 +90,18 @@ function Gallery() {
   };
   const handleFileChange = (file) => {
     setFile(file);
+
+    if (typeAdd === 0) {
+      var img = document.createElement("img");
+      img.onload = function () {
+        setHeight(this.height);
+        setWidth(this.width);
+      };
+      img.src = URL.createObjectURL(file);
+    } else {
+      setHeight(0);
+      setWidth(0);
+    }
   };
 
   const handleUploadClick = () => {
@@ -103,6 +117,8 @@ function Gallery() {
     formData.append("eventName", event);
     formData.append("file", file);
     formData.append("type", typeAdd);
+    formData.append("width", width);
+    formData.append("height", height);
     const saveToGallery = async () => {
       try {
         await videoEditingApi.saveToGallery(formData);

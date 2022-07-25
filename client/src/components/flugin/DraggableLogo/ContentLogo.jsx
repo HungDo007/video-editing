@@ -3,7 +3,7 @@ import React from "react";
 import { Rnd } from "react-rnd";
 import bg from "./default-video-image.png";
 
-function ContentResizeLogo(props) {
+function ContentLogo(props) {
   const { logo, onTrack, onResize, handelCheckLogo } = props;
   return (
     <Grid container spacing={2}>
@@ -13,7 +13,7 @@ function ContentResizeLogo(props) {
         style={{
           borderRight: "1px solid black",
           display: "flex",
-          flexWrap: "wrap",
+          flexFlow: "row wrap",
         }}
       >
         {logo?.map((l) => (
@@ -28,17 +28,15 @@ function ContentResizeLogo(props) {
               }}
             ></div>
             <div>
-              <FormGroup>
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={l.selected}
-                      onChange={(e) => handelCheckLogo(e.target.checked, l)}
-                    />
-                  }
-                  label={l.label}
-                />
-              </FormGroup>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={l.selected}
+                    onChange={(e) => handelCheckLogo(e.target.checked, l)}
+                  />
+                }
+                label={l.label}
+              />
             </div>
           </div>
         ))}
@@ -50,12 +48,14 @@ function ContentResizeLogo(props) {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
+          width: "100%",
         }}
       >
         <div
           style={{
             height: 540,
             width: 960,
+            overflow: "auto",
             border: "1px solid black",
             padding: 0,
             backgroundImage: `url(${bg})`,
@@ -96,4 +96,4 @@ function ContentResizeLogo(props) {
   );
 }
 
-export default ContentResizeLogo;
+export default ContentLogo;
