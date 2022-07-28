@@ -67,6 +67,7 @@ function ContentLogo(props) {
                 <Rnd
                   size={{ width: l.size[0], height: l.size[1] }}
                   position={{ x: l.position.x, y: l.position.y }}
+                  enableResizing={{ top:false, right:false, bottom:false, left:false, topRight:true, bottomRight:true, bottomLeft:true, topLeft:true }}
                   onDragStop={(e, d) => {
                     onTrack(l, { x: parseInt(d.x), y: parseInt(d.y) });
                   }}
@@ -75,6 +76,7 @@ function ContentLogo(props) {
                       parseInt(ref.style.width),
                       parseInt(ref.style.height),
                     ]);
+                    onTrack(l, { x: parseInt(position.x), y: parseInt(position.y) });
                   }}
                 >
                   <div
