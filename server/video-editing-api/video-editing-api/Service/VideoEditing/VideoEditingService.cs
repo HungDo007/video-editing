@@ -390,33 +390,44 @@ namespace video_editing_api.Service.VideoEditing
                 concatModel.JsonFile.Event = jsonFile;
 
                 var inputSend = handlePreSendServer(concatModel.JsonFile);
-                var json = JsonConvert.SerializeObject(inputSend);
-                json = json.Replace("E", "e");
 
-                Thread thead = new Thread(async () =>
+                HighlightVideo hl = new HighlightVideo()
                 {
-                    Console.WriteLine("start thread");
-                    try
-                    {
-                        HttpClient client = new HttpClient();
-                        client.Timeout = TimeSpan.FromDays(1);
-                        client.BaseAddress = new System.Uri("http://118.69.218.59:7007");
-                        var httpContent = new StringContent(json, Encoding.UTF8, "application/json");
-                        var response = await client.PostAsync("/highlight_nomerge", httpContent);
-                        var result = await response.Content.ReadAsStringAsync();
+                    MatchId = concatModel.MatchId,
+                    Description = concatModel.Description,
+                    MatchInfo = $"(Not merge)T({DateTime.Now.ToString("dd-MM-yyyy-hh-mm")})",
+                    Status = SystemConstants.HighlightStatusProcessing,
+                    StatusMerge = 1
+                };
+                await _highlight.InsertOneAsync(hl);
 
-                        var listRes = JsonConvert.DeserializeObject<NotConcatResultModel>(result);
-                        await _hub.Clients.Group(username).SendAsync("not_merge", "background_task", JsonConvert.SerializeObject(listRes.mp4));
+                var mergeQueue = new MergeQueueInput(inputSend, hl.Id, username, 1);
+                BackgroundQueue.MergeQueue.Enqueue(mergeQueue);
 
-                    }
-                    catch (System.Exception ex)
-                    {
-                        Console.WriteLine(ex.Message);
-                    }
-                    Console.WriteLine("stop thread");
-                });
-                thead.IsBackground = true;
-                thead.Start();
+                //Thread thead = new Thread(async () =>
+                //{
+                //    Console.WriteLine("start thread");
+                //    try
+                //    {
+                //        HttpClient client = new HttpClient();
+                //        client.Timeout = TimeSpan.FromDays(1);
+                //        client.BaseAddress = new System.Uri("http://118.69.218.59:7007");
+                //        var httpContent = new StringContent(json, Encoding.UTF8, "application/json");
+                //        var response = await client.PostAsync("/highlight_nomerge", httpContent);
+                //        var result = await response.Content.ReadAsStringAsync();
+
+                //        var listRes = JsonConvert.DeserializeObject<NotConcatResultModel>(result);
+                //        await _hub.Clients.Group(username).SendAsync("not_merge", "background_task", JsonConvert.SerializeObject(listRes.mp4));
+
+                //    }
+                //    catch (System.Exception ex)
+                //    {
+                //        Console.WriteLine(ex.Message);
+                //    }
+                //    Console.WriteLine("stop thread");
+                //});
+                //thead.IsBackground = true;
+                //thead.Start();
                 return null;
             }
             catch (System.Exception ex)

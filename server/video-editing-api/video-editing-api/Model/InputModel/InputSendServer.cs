@@ -14,6 +14,9 @@ namespace video_editing_api.Model.InputModel
         public string outfolder { get; set; } = "/data/{}/{}/highlights/";
         public string inforder { get; set; } = "/data/{}/{}/ts/";
         public string mp4folder { get; set; } = "/data/{}/{}/mp4/";
+        public string aspect_ratio { get; set; } = string.Empty;
+        public string resolution { get; set; } = string.Empty;
+        public string bitrate { get; set; } = string.Empty;
         public List<Logo> logo { get; set; }
     }
 

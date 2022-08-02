@@ -33,11 +33,14 @@ export const formatTimeSlice = (time) => {
 };
 
 const VideoInput = () => {
+  const [bitrate, setBitrate] = useState(1000);
+  const [resolution, setResolution] = useState({ value: "1920:1080" });
+  const [aspectRatio, setAspectRatio] = useState({ value: "3:2" });
+
   const [connection, setConnection] = useState();
   const [opendialog, setOpenDialog] = useState(false);
 
   const [hlSuccess, setHlSuccess] = useState();
-  const [notMergeSuccess, setNotMergeSuccess] = useState();
   const [downloadOneSuccess, setDownloadOneSuccess] = useState();
   const location = useLocation();
   const videoPlayer = useRef(null);
@@ -93,8 +96,8 @@ const VideoInput = () => {
         setHlSuccess(JSON.parse(message));
       });
 
-      connection1.on("not_merge", (user, message) => {
-        setNotMergeSuccess(JSON.parse(message));
+      connection1.on("background_no_merge", (user, message) => {
+        setHlSuccess(JSON.parse(message));
       });
 
       connection1.on("download_one", (user, message) => {
@@ -120,14 +123,6 @@ const VideoInput = () => {
       setHighlights(temp);
     }
   }, [hlSuccess]);
-
-  useEffect(() => {
-    if (notMergeSuccess) {
-      setOpen(false);
-      download_files(notMergeSuccess);
-      setNotMergeSuccess();
-    }
-  }, [notMergeSuccess]);
 
   useEffect(() => {
     if (downloadOneSuccess) {
@@ -311,12 +306,16 @@ const VideoInput = () => {
       return logoSent;
     }, []);
 
+    const newBitrate = bitrate ? bitrate : "1000";
+    setBitrate(newBitrate);
     const newBody = {
       ...body,
       event: filtered,
       logo: lggg,
+      aspect_ratio: aspectRatio.value,
+      resolution: resolution.value,
+      bitrate: newBitrate.toString(),
     };
-    console.log(newBody);
     const concatHighlight = async () => {
       try {
         await videoEditingApi.concatHighlight(
@@ -366,6 +365,10 @@ const VideoInput = () => {
     downloadOne();
   };
 
+  const downloadNoMerge = (files) => {
+    download_files(files);
+  };
+
   function download_files(files) {
     function download_next(i) {
       if (i >= files?.length) {
@@ -392,10 +395,15 @@ const VideoInput = () => {
     const temp = [...logoGallery];
     const lgg = temp.filter((l) => l.position.x > 0);
 
+    const newBitrate = bitrate ? bitrate : "1000";
+    setBitrate(newBitrate);
     const newBody = {
       ...body,
       event: filtered,
       logo: lgg,
+      aspect_ratio: aspectRatio.value,
+      resolution: resolution.value,
+      bitrate: newBitrate.toString(),
     };
 
     const downloadNotMerge = async () => {
@@ -405,6 +413,12 @@ const VideoInput = () => {
           hlDescription,
           newBody
         );
+        setOpen(false);
+        setNoti(true);
+        setOpenDialog(false);
+        setMessage("Consolidation in progress");
+        setTypeNoti("success");
+        getHighlight();
       } catch (error) {
         setNoti(true);
         setOpen(false);
@@ -449,22 +463,58 @@ const VideoInput = () => {
     updateLogTrimmed(newVideoSrc[vdSrc]);
   };
 
-  const onCheckAll = (checked) => {
+  const onCheckAll = (checked, filteredInfo) => {
     var temp = [...videoSrc];
     const payload = temp.reduce((filtered, video) => {
       var tempVideo = { ...video };
-      tempVideo.selected = checked ? 1 : 0;
-      filtered.push(tempVideo);
-      return filtered;
+
+      if (filteredInfo?.event !== null || filteredInfo?.level !== null) {
+        if (filteredInfo.level !== null && filteredInfo.event !== null) {
+          if (
+            filteredInfo.event.includes(tempVideo.event) &&
+            filteredInfo.level.includes(tempVideo.level)
+          ) {
+            tempVideo.selected = checked ? 1 : 0;
+            filtered.push(tempVideo);
+          } else {
+            tempVideo.selected = 0;
+            filtered.push(tempVideo);
+          }
+          return filtered;
+        } else if (filteredInfo.level === null) {
+          if (filteredInfo.event.includes(tempVideo.event)) {
+            tempVideo.selected = checked ? 1 : 0;
+            filtered.push(tempVideo);
+          } else {
+            tempVideo.selected = 0;
+            filtered.push(tempVideo);
+          }
+          return filtered;
+        } else {
+          if (filteredInfo.level.includes(tempVideo.level)) {
+            tempVideo.selected = checked ? 1 : 0;
+            filtered.push(tempVideo);
+          } else {
+            tempVideo.selected = 0;
+            filtered.push(tempVideo);
+          }
+          return filtered;
+        }
+      } else {
+        tempVideo.selected = checked ? 1 : 0;
+        filtered.push(tempVideo);
+        return filtered;
+      }
     }, []);
+
     setVideoSrc(payload);
 
-    const updateAll = async () => {
-      try {
-        await videoEditingApi.updateAll(location.state.row.id, checked ? 1 : 0);
-      } catch (error) {}
-    };
-    updateAll();
+    // const updateAll = async () => {
+    //   try {
+    //     await videoEditingApi.updateAll(location.state.row.id, checked ? 1 : 0);
+    //   } catch (error) {}
+    // };
+    // updateAll();
   };
 
   const [isReady, setIsReady] = useState(false);
@@ -508,7 +558,9 @@ const VideoInput = () => {
   const onResize = (lg, newSize) => {
     const temp = [...logoGallery];
     const idx = temp.findIndex((l) => l.file_name === lg.file_name);
-    temp[idx].size = newSize;
+    let newNewSize = [...newSize];
+    newNewSize[1] = (newSize[0] * temp[idx].size[1]) / temp[idx].size[0];
+    temp[idx].size = newNewSize;
     setLogoGallery(temp);
   };
 
@@ -571,6 +623,12 @@ const VideoInput = () => {
               logo={logoGallery}
               onCheck={handleCheckLogo}
               logoCheckAll={handleLogoCheckAll}
+              aspectRatio={aspectRatio}
+              resolution={resolution}
+              bitrate={bitrate}
+              setAspectRatio={setAspectRatio}
+              setResolution={setResolution}
+              setBitrate={setBitrate}
             />
           </DialogContentText>
         </DialogContent>
@@ -597,7 +655,7 @@ const VideoInput = () => {
               required
             />
             <div>
-              <Button
+              {/* <Button
                 sx={{
                   backgroundColor: "#996699",
                 }}
@@ -608,7 +666,7 @@ const VideoInput = () => {
                 }}
               >
                 Add Frame
-              </Button>
+              </Button> */}
               <Button
                 sx={{
                   backgroundColor: "#996699",
@@ -756,6 +814,7 @@ const VideoInput = () => {
         getHighlight={getHighlight}
         highlights={highlights}
         mode={1}
+        downloadNoMerge={downloadNoMerge}
       />
     </>
   );

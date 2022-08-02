@@ -42,8 +42,16 @@ namespace video_editing_api
                         Console.WriteLine("send " + DateTime.Now.ToString("dd-MM-yyy hh:mm:ss"));
 
                         MergeQueueInput input = BackgroundQueue.MergeQueue.Dequeue();
-                        string message = await HandleSendServer(input, higlight);
-                        await _hub.Clients.Group(input.Username).SendAsync("noti", "background_task", message);
+                        string message = string.Empty;
+                        if (input.Status == 0)
+                        {
+                            message = await HandleSendServer(input, higlight);
+                        }
+                        else if (input.Status == 1)
+                        {
+                            message = await HandleSendServerNotMerge(input, higlight);
+                        }
+                        await _hub.Clients.Group(input.Username).SendAsync("noti", input.Status == 0 ? "background_task" : "background_no_merge", message);
                         Console.WriteLine("done" + DateTime.Now.ToString("dd-MM-yyy hh:mm:ss"));
                     }
                 }
@@ -80,6 +88,55 @@ namespace video_editing_api
                     {
                         hl.mp4 = model.mp4;
                         hl.ts = model.ts;
+                        hl.Status = SystemConstants.HighlightStatusSucceed;
+                    }
+                    await _highlight.ReplaceOneAsync(hl => hl.Id == input.IdHiglight, hl);
+                }
+                else
+                {
+                    Console.WriteLine("error server thầy" + DateTime.Now.ToString("dd-MM-yyy hh:mm:ss"));
+                    hl.Status = SystemConstants.HighlightStatusFailed;
+                    await _highlight.ReplaceOneAsync(hl => hl.Id == input.IdHiglight, hl);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("error" + DateTime.Now.ToString("dd-MM-yyy hh:mm:ss"));
+                hl = _highlight.Find(hl => hl.Id == input.IdHiglight).FirstOrDefault();
+                hl.Status = SystemConstants.HighlightStatusFailed;
+                await _highlight.ReplaceOneAsync(hl => hl.Id == input.IdHiglight, hl);
+            }
+
+            return JsonConvert.SerializeObject(hl);
+        }
+
+        private async Task<string> HandleSendServerNotMerge(MergeQueueInput input, IMongoCollection<HighlightVideo> _highlight)
+        {
+            HighlightVideo hl = new HighlightVideo();
+            try
+            {
+                HttpClient client = new HttpClient();
+                client.Timeout = TimeSpan.FromDays(1);
+                client.BaseAddress = new System.Uri(_baseUrl);
+
+                var json = JsonConvert.SerializeObject(input.JsonFile);
+                json = json.Replace("E", "e");
+                Console.WriteLine("json " + json);
+
+                var httpContent = new StringContent(json, Encoding.UTF8, "application/json");
+                var response = await client.PostAsync("/highlight_nomerge", httpContent);
+
+
+
+                hl = _highlight.Find(hl => hl.Id == input.IdHiglight).FirstOrDefault();
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = await response.Content.ReadAsStringAsync();
+                    var listRes = JsonConvert.DeserializeObject<NotConcatResultModel>(result);
+                    if (hl != null)
+                    {
+                        hl.list_mp4 = listRes.mp4;
                         hl.Status = SystemConstants.HighlightStatusSucceed;
                     }
                     await _highlight.ReplaceOneAsync(hl => hl.Id == input.IdHiglight, hl);

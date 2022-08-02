@@ -1,7 +1,6 @@
 import { Checkbox, FormControlLabel, FormGroup, Grid } from "@mui/material";
 import React from "react";
 import { Rnd } from "react-rnd";
-import bg from "./default-video-image.png";
 
 function ContentLogo(props) {
   const { logo, onTrack, onResize, handelCheckLogo } = props;
@@ -55,29 +54,51 @@ function ContentLogo(props) {
           style={{
             height: 540,
             width: 960,
-            overflow: "auto",
-            border: "1px solid black",
-            padding: 0,
-            backgroundImage: `url(${bg})`,
+            overflow: "inherit",
           }}
         >
+          <video width="100%" height="100%">
+            <source
+              src="https://store.cads.live/projects/62e0bf83923dc2204c59076b/raw/video#t=0.1"
+              type="video/mp4"
+            />
+          </video>
           {logo?.map(
             (l) =>
               l.selected && (
                 <Rnd
                   size={{ width: l.size[0], height: l.size[1] }}
                   position={{ x: l.position.x, y: l.position.y }}
-                  enableResizing={{ top:false, right:false, bottom:false, left:false, topRight:true, bottomRight:true, bottomLeft:true, topLeft:true }}
+                  enableResizing={{
+                    top: false,
+                    right: false,
+                    bottom: false,
+                    left: false,
+                    topRight: true,
+                    bottomRight: true,
+                    bottomLeft: true,
+                    topLeft: true,
+                  }}
                   onDragStop={(e, d) => {
                     onTrack(l, { x: parseInt(d.x), y: parseInt(d.y) });
                   }}
-                  onResizeStop={(e, direction, ref, delta, position) => {
+                  onResize={(e, direction, ref, delta, position) => {
                     onResize(l, [
-                      parseInt(ref.style.width),
-                      parseInt(ref.style.height),
+                      parseInt(ref.offsetWidth),
+                      parseInt(ref.offsetHeight),
                     ]);
-                    onTrack(l, { x: parseInt(position.x), y: parseInt(position.y) });
+                    onTrack(l, {
+                      x: parseInt(position.x),
+                      y: parseInt(position.y),
+                    });
                   }}
+                  // onResizeStop={(e, direction, ref, delta, position) => {
+                  //   onResize(l, [
+                  //     parseInt(ref.style.width),
+                  //     parseInt(ref.style.height),
+                  //   ]);
+                  //   onTrack(l, { x: parseInt(position.x), y: parseInt(position.y) });
+                  // }}
                 >
                   <div
                     style={{

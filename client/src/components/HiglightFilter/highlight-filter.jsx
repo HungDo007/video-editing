@@ -29,6 +29,10 @@ import HighlightReview from "../highlight-review";
 import { DialogDraggableLogo, DialogMoreEvent } from "../flugin";
 
 function HighlightFilter() {
+  const [bitrate, setBitrate] = useState("1000");
+  const [resolution, setResolution] = useState({ value: "1920:1080" });
+  const [aspectRatio, setAspectRatio] = useState({ value: "3:2" });
+
   const [connection, setConnection] = useState();
   const [filtered, setFiltered] = useState([]);
 
@@ -283,14 +287,51 @@ function HighlightFilter() {
     setVideoSrc(newVideoSrc);
   };
 
-  const onCheckAll = (checked) => {
+  const onCheckAll = (checked, filteredInfo) => {
     var temp = [...videoSrc];
+    console.log(filteredInfo, checked);
     const payload = temp.reduce((filtered, video) => {
       var tempVideo = { ...video };
-      tempVideo.selected = checked ? 1 : 0;
-      filtered.push(tempVideo);
-      return filtered;
+
+      if (filteredInfo?.event !== null || filteredInfo?.level !== null) {
+        if (filteredInfo.level !== null && filteredInfo.event !== null) {
+          if (
+            filteredInfo.event.includes(tempVideo.event) &&
+            filteredInfo.level.includes(tempVideo.level)
+          ) {
+            tempVideo.selected = checked ? 1 : 0;
+            filtered.push(tempVideo);
+          } else {
+            tempVideo.selected = 0;
+            filtered.push(tempVideo);
+          }
+          return filtered;
+        } else if (filteredInfo.level === null) {
+          if (filteredInfo.event.includes(tempVideo.event)) {
+            tempVideo.selected = checked ? 1 : 0;
+            filtered.push(tempVideo);
+          } else {
+            tempVideo.selected = 0;
+            filtered.push(tempVideo);
+          }
+          return filtered;
+        } else {
+          if (filteredInfo.level.includes(tempVideo.level)) {
+            tempVideo.selected = checked ? 1 : 0;
+            filtered.push(tempVideo);
+          } else {
+            tempVideo.selected = 0;
+            filtered.push(tempVideo);
+          }
+          return filtered;
+        }
+      } else {
+        tempVideo.selected = checked ? 1 : 0;
+        filtered.push(tempVideo);
+        return filtered;
+      }
     }, []);
+
     setVideoSrc(payload);
   };
 
@@ -353,11 +394,15 @@ function HighlightFilter() {
       }
       return logoSent;
     }, []);
-
+    const newBitrate = bitrate ? bitrate : "1000";
+    setBitrate(newBitrate);
     const body = {
       event: filtered,
       logo: lggg,
       description: hlDescription,
+      aspect_ratio: aspectRatio.value,
+      resolution: resolution.value,
+      bitrate: newBitrate.toString(),
     };
     const mergeHL = async () => {
       try {
@@ -406,7 +451,9 @@ function HighlightFilter() {
   const onResize = (lg, newSize) => {
     const temp = [...logoGallery];
     const idx = temp.findIndex((l) => l.file_name === lg.file_name);
-    temp[idx].size = newSize;
+    let newNewSize = [...newSize];
+    newNewSize[1] = (newSize[0] * temp[idx].size[1]) / temp[idx].size[0];
+    temp[idx].size = newNewSize;
     setLogoGallery(temp);
   };
   const handleCheckLogo = (row, e) => {
@@ -481,6 +528,12 @@ function HighlightFilter() {
               logo={logoGallery}
               onCheck={handleCheckLogo}
               logoCheckAll={handleLogoCheckAll}
+              aspectRatio={aspectRatio}
+              resolution={resolution}
+              bitrate={bitrate}
+              setAspectRatio={setAspectRatio}
+              setResolution={setResolution}
+              setBitrate={setBitrate}
             />
           </DialogContentText>
         </DialogContent>
@@ -507,7 +560,7 @@ function HighlightFilter() {
               required
             />
             <div style={{ display: "flex", justifyContent: "flex-end" }}>
-              <Button
+              {/* <Button
                 sx={{
                   backgroundColor: "#996699",
                 }}
@@ -517,7 +570,7 @@ function HighlightFilter() {
                 }}
               >
                 Add Frame
-              </Button>
+              </Button> */}
               <Button
                 sx={{
                   backgroundColor: "#996699",

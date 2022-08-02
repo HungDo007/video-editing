@@ -195,7 +195,7 @@ function TableFilterHL(props) {
                 setUrlShare(row.mp4);
                 setOpen(true);
               }}
-              disabled={row.status !== 0 ? false : true}
+              disabled={row.status === 1 ? false : true}
             >
               <YouTubeIcon />
             </IconButton>

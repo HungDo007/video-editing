@@ -19,6 +19,46 @@ function TableEditVideo(props) {
   const [filterLv, setFilterLv] = useState();
   const [filterEvent, setFilterEvent] = useState();
 
+  const [filteredInfo, setFilteredInfo] = useState({
+    event: null,
+    level: null,
+  });
+  const [checked, setChecked] = useState(false);
+  useEffect(() => {
+    if (filteredInfo.event === null && filteredInfo.level === null) {
+      setChecked(
+        data?.findIndex((d) => d.selected === 0 || d.selected === -1) === -1
+      );
+    } else {
+      var temp = [...data];
+      const payload = temp.reduce((filtered, video) => {
+        var tempVideo = { ...video };
+        if (filteredInfo.level !== null && filteredInfo.event !== null) {
+          if (
+            filteredInfo.event.includes(tempVideo.event) &&
+            filteredInfo.level.includes(tempVideo.level)
+          ) {
+            filtered.push(tempVideo);
+          }
+          return filtered;
+        } else if (filteredInfo.level === null) {
+          if (filteredInfo.event.includes(tempVideo.event)) {
+            filtered.push(tempVideo);
+          }
+          return filtered;
+        } else {
+          if (filteredInfo.level.includes(tempVideo.level)) {
+            filtered.push(tempVideo);
+          }
+          return filtered;
+        }
+      }, []);
+      setChecked(
+        payload?.findIndex((d) => d.selected === 0 || d.selected === -1) === -1
+      );
+    }
+  }, [data]);
+
   useEffect(() => {
     const lvfilter = [...new Set(data.map((item) => item.level))];
     var a = [];
@@ -126,9 +166,8 @@ function TableEditVideo(props) {
       width: 150,
       //...getColumnSearchProps("event"),
       filters: filterEvent,
-      onFilter: (event, record) => {
-        return record.event === event;
-      },
+      filteredValue: filteredInfo.event || null,
+      onFilter: (event, record) => record.event.includes(event),
     },
     {
       title: "Level",
@@ -136,9 +175,8 @@ function TableEditVideo(props) {
       key: "level",
       width: 75,
       filters: filterLv,
-      onFilter: (level, record) => {
-        return record.level === level;
-      },
+      filteredValue: filteredInfo.level || null,
+      onFilter: (level, record) => record.level === level,
     },
     {
       title: "Trim Length",
@@ -155,10 +193,11 @@ function TableEditVideo(props) {
         return (
           <Checkbox
             checked={
-              data?.findIndex((d) => d.selected === 0 || d.selected === -1) ===
-              -1
+              // data?.findIndex((d) => d.selected === 0 || d.selected === -1) ===
+              // -1
+              checked
             }
-            onChange={(e) => onCheckAll(e.target.checked)}
+            onChange={(e) => onCheckAll(e.target.checked, filteredInfo)}
           />
         );
       },
@@ -191,9 +230,10 @@ function TableEditVideo(props) {
 
   const onPageChange = (page, pageSize) => {
     setSelect(data[(page - 1) * pageSize].file_name);
-    onTableClick(data[(page - 1) * pageSize]);
   };
-
+  const handleChange = (pagination, filters, sorter, extra) => {
+    setFilteredInfo(filters);
+  };
   return (
     <Table
       rowClassName={(record, index) =>
@@ -208,6 +248,7 @@ function TableEditVideo(props) {
           }, // click row
         };
       }}
+      onChange={handleChange}
       columns={columns}
       dataSource={data}
       pagination={{

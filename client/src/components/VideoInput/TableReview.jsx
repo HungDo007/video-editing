@@ -6,7 +6,7 @@ import RemoveCircleIcon from "@mui/icons-material/RemoveCircleOutline";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { formatTimeSlice } from "./video-input";
-import { IconButton, Tooltip } from "@mui/material";
+import { Autocomplete, IconButton, TextField, Tooltip } from "@mui/material";
 import {
   CaretUpOutlined,
   CaretDownOutlined,
@@ -14,6 +14,22 @@ import {
   VerticalAlignBottomOutlined,
 } from "@ant-design/icons";
 const type = "DraggableBodyRow";
+
+const aspectRatioOptions = [
+  { value: "4:3" },
+  { value: "5:3" },
+  { value: "3:2" },
+  { value: "16:10" },
+  { value: "16:9" },
+  { value: "2:1" },
+];
+const resolutionRatioOptions = [
+  { value: "320:240" },
+  { value: "512:384" },
+  { value: "720:480" },
+  { value: "1280:720" },
+  { value: "1920:1080" },
+];
 
 const DraggableBodyRow = ({
   index,
@@ -66,15 +82,26 @@ const DraggableBodyRow = ({
 };
 
 function TableReview(props) {
-  const { data, setData, handleIconRemoveClick, logo, onCheck, logoCheckAll } =
-    props;
+  const {
+    data,
+    setData,
+    handleIconRemoveClick,
+    logo,
+    onCheck,
+    logoCheckAll,
+    aspectRatio,
+    resolution,
+    bitrate,
+    setAspectRatio,
+    setResolution,
+    setBitrate,
+  } = props;
 
   const [select, setSelect] = useState(0);
   const columns = [
     {
       width: 100,
       render: (selected, row, index) => {
-        console.log(data?.length);
         return (
           <>
             <div>
@@ -201,7 +228,60 @@ function TableReview(props) {
 
   const renderFooter = () => {
     var count = logo?.filter((lg) => lg.selected).length;
-    return `${count} logo selected`;
+    return (
+      <>
+        {count} logo selected
+        <Autocomplete
+          options={aspectRatioOptions}
+          size="small"
+          value={aspectRatio || null}
+          //fullWidth
+          getOptionLabel={(option) => option["value"] || ""}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="Aspect ratio"
+              variant="standard"
+              inputProps={{
+                ...params.inputProps,
+              }}
+            />
+          )}
+          onChange={(e, value) =>
+            value ? setAspectRatio(value) : setAspectRatio({ value: "4:3" })
+          }
+        />
+        <Autocomplete
+          options={resolutionRatioOptions}
+          size="small"
+          value={resolution || null}
+          //fullWidth
+          getOptionLabel={(option) => option["value"] || ""}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="Resolution"
+              variant="standard"
+              inputProps={{
+                ...params.inputProps,
+              }}
+            />
+          )}
+          onChange={(e, value) =>
+            value ? setResolution(value) : setResolution({ value: "1920:1080" })
+          }
+        />
+        <TextField
+          value={bitrate}
+          label="Bitrate (kbps)"
+          variant="standard"
+          size="small"
+          type="number"
+          onChange={(e) => setBitrate(e.target.value)}
+          fullWidth
+        />
+      </>
+    );
   };
 
   return (
@@ -215,7 +295,7 @@ function TableReview(props) {
           record.file_name === select ? "table-row-selected" : ""
         }
         pagination={false}
-        scroll={{ y: "70vh", x: "100%" }}
+        scroll={{ y: "50vh", x: "100%" }}
         onRow={(record, index) => {
           const attr = {
             index,

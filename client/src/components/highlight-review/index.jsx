@@ -19,7 +19,7 @@ import { Typography } from "antd";
 import TableFilterHL from "../HiglightFilter/TableFilterHL";
 
 function HighlightReview(props) {
-  const { highlights, getHighlight, mode } = props;
+  const { highlights, getHighlight, mode, downloadNoMerge } = props;
   //const [highlights, setHighlights] = useState();
   const [source, setSource] = useState();
   const [name, setName] = useState();
@@ -147,6 +147,7 @@ function HighlightReview(props) {
           data={highlights}
           handleViewClick={handleViewClick}
           handleIconDeleteClick={handleIconDeleteClick}
+          downloadNoMerge={downloadNoMerge}
         />
       ) : (
         <TableFilterHL

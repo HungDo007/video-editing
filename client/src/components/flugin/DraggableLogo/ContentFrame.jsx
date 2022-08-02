@@ -10,7 +10,7 @@ import { Rnd } from "react-rnd";
 import bg from "./default-video-image.png";
 
 function ContentFrame(props) {
-  const { logo, onTrack, onResize, handelCheckLogo } = props;
+  const { logo } = props;
   const [idxSelected, setIdxSelected] = useState(0);
   const handleRadioCheck = (e) => {
     setIdxSelected(e.target.value);

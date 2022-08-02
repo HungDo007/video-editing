@@ -2,8 +2,6 @@ import React, { useRef, useState } from "react";
 import VideoLibraryIcon from "@mui/icons-material/VideoLibrary";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CloudDownloadIcon from "@mui/icons-material/CloudDownload";
-import FacebookIcon from "@mui/icons-material/Facebook";
-import { FacebookShareButton } from "react-share";
 import { IconButton, Tooltip } from "@mui/material";
 import { SearchOutlined } from "@ant-design/icons";
 import YouTubeIcon from "@mui/icons-material/YouTube";
@@ -19,7 +17,8 @@ import "antd/dist/antd.css";
 import { FormShareYoutube } from "../flugin";
 
 function TableHighlight(props) {
-  const { data, handleViewClick, handleIconDeleteClick } = props;
+  const { data, handleViewClick, handleIconDeleteClick, downloadNoMerge } =
+    props;
 
   // for search
   const searchInput = useRef(null);
@@ -164,7 +163,9 @@ function TableHighlight(props) {
               onClick={(e) => {
                 handleViewClick(row);
               }}
-              disabled={row.status === 1 ? false : true}
+              disabled={
+                row.status === 1 && row.statusMerge === 0 ? false : true
+              }
             >
               <VideoLibraryIcon />
             </IconButton>
@@ -175,11 +176,20 @@ function TableHighlight(props) {
     {
       render: (row) => {
         const temp = { ...row };
-        return (
+        return row.statusMerge === 0 ? (
           <Tooltip key={123} title="Download">
             <IconButton
               href={temp.mp4?.replace("raw", "download")}
               target="_blank"
+              disabled={row.status === 1 ? false : true}
+            >
+              <CloudDownloadIcon />
+            </IconButton>
+          </Tooltip>
+        ) : (
+          <Tooltip key={12332} title="Download">
+            <IconButton
+              onClick={() => downloadNoMerge(row.list_mp4)}
               disabled={row.status === 1 ? false : true}
             >
               <CloudDownloadIcon />
@@ -211,7 +221,7 @@ function TableHighlight(props) {
                 setUrlShare(row.mp4);
                 setOpen(true);
               }}
-              disabled={row.status !== 0 ? false : true}
+              disabled={row.status === 1 ? false : true}
             >
               <YouTubeIcon />
             </IconButton>
