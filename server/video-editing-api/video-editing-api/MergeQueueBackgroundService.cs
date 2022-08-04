@@ -71,12 +71,12 @@ namespace video_editing_api
                 HttpClient client = new HttpClient();
                 client.Timeout = TimeSpan.FromDays(1);
                 client.BaseAddress = new System.Uri(_baseUrl);
-
+                input.JsonFile.merge = 1;
                 var json = JsonConvert.SerializeObject(input.JsonFile);
                 json = json.Replace("E", "e");
                 Console.WriteLine("json " + json);
                 var httpContent = new StringContent(json, Encoding.UTF8, "application/json");
-                var response = await client.PostAsync("/highlight", httpContent);
+                var response = await client.PostAsync("/projects/merge", httpContent);
 
                 hl = _highlight.Find(hl => hl.Id == input.IdHiglight).FirstOrDefault();
 
@@ -118,13 +118,13 @@ namespace video_editing_api
                 HttpClient client = new HttpClient();
                 client.Timeout = TimeSpan.FromDays(1);
                 client.BaseAddress = new System.Uri(_baseUrl);
-
+                input.JsonFile.merge = 0;
                 var json = JsonConvert.SerializeObject(input.JsonFile);
                 json = json.Replace("E", "e");
                 Console.WriteLine("json " + json);
 
                 var httpContent = new StringContent(json, Encoding.UTF8, "application/json");
-                var response = await client.PostAsync("/highlight_nomerge", httpContent);
+                var response = await client.PostAsync("/projects/merge", httpContent);
 
 
 

@@ -48,7 +48,7 @@ function HighlightFilter() {
 
   const [opendialog, setOpenDialog] = useState(false);
   const descriptionElementRef = useRef(null);
-
+  const [typeDraggable, setTypeDraggable] = useState("logo");
   const [noti, setNoti] = useState(false);
   const [message, setMessage] = useState();
   const [typeNoti, setTypeNoti] = useState();
@@ -495,6 +495,8 @@ function HighlightFilter() {
       />
 
       <DialogDraggableLogo
+        fileName={filtered[0] ? filtered[0].file_name : ""}
+        type={typeDraggable}
         open={openDialogMoreLogo}
         handleClose={handleCloseEventAndLogo}
         logo={logoGallery}
@@ -566,6 +568,7 @@ function HighlightFilter() {
                 }}
                 variant="contained"
                 onClick={() => {
+                  setTypeDraggable("frame")
                   setOpenDialogMoreLogo(true);
                 }}
               >
@@ -578,6 +581,7 @@ function HighlightFilter() {
                 }}
                 variant="contained"
                 onClick={() => {
+                  setTypeDraggable("logo");
                   setOpenDialogMoreLogo(true);
                 }}
               >

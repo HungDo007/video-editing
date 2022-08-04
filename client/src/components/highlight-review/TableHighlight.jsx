@@ -176,6 +176,7 @@ function TableHighlight(props) {
     {
       render: (row) => {
         const temp = { ...row };
+        console.log(row.statusMerge === 0);
         return row.statusMerge === 0 ? (
           <Tooltip key={123} title="Download">
             <IconButton

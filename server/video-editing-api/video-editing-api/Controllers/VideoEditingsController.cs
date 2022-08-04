@@ -1,7 +1,11 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
+using System.Net.Http;
+using System.Text;
 using System.Threading.Tasks;
 using video_editing_api.Model;
 using video_editing_api.Model.Collection;
@@ -189,6 +193,22 @@ namespace video_editing_api.Controllers
             {
                 return BadRequest(new Response<string>(400, e.Message, null));
             }
+        }
+
+        [HttpPost("test")]
+        [AllowAnonymous]
+        public async Task<IActionResult> Test(InputSendServer<Eventt> a)
+        {
+            HttpClient client = new HttpClient();
+            client.Timeout = TimeSpan.FromDays(1);
+            client.BaseAddress = new System.Uri("https://store.cads.live");
+
+            var json = JsonConvert.SerializeObject(a);
+            json = json.Replace("E", "e");
+            var httpContent = new StringContent(json, Encoding.UTF8, "application/json");
+            var response = await client.PostAsync("/projects/merge", httpContent);
+            var result = await response.Content.ReadAsStringAsync();
+            return Ok();
         }
 
         [HttpPost("uploadJson/{matchId}")]

@@ -1,9 +1,9 @@
-import { Checkbox, FormControlLabel, FormGroup, Grid } from "@mui/material";
+import { Checkbox, FormControlLabel, Grid } from "@mui/material";
 import React from "react";
 import { Rnd } from "react-rnd";
 
 function ContentLogo(props) {
-  const { logo, onTrack, onResize, handelCheckLogo } = props;
+  const { logo, onTrack, onResize, handelCheckLogo, fileName } = props;
   return (
     <Grid container spacing={2}>
       <Grid
@@ -58,10 +58,7 @@ function ContentLogo(props) {
           }}
         >
           <video width="100%" height="100%">
-            <source
-              src="https://store.cads.live/projects/62e0bf83923dc2204c59076b/raw/video#t=0.1"
-              type="video/mp4"
-            />
+            <source src={fileName + "#t=0.1"} type="video/mp4" />
           </video>
           {logo?.map(
             (l) =>

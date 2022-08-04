@@ -4,14 +4,23 @@ import ContentFrame from "./ContentFrame";
 import ContentLogo from "./ContentLogo";
 
 function DialogDraggableLogo(props) {
-  const { type, open, handleClose, logo, onTrack, onResize, handelCheckLogo } =
-    props;
+  const {
+    type,
+    open,
+    handleClose,
+    logo,
+    onTrack,
+    onResize,
+    handelCheckLogo,
+    fileName,
+  } = props;
 
   return (
     <Dialog open={open} fullScreen={true}>
       <DialogContent dividers={true}>
         {type === "logo" ? (
           <ContentLogo
+            fileName={fileName}
             logo={logo}
             onTrack={onTrack}
             onResize={onResize}
@@ -19,6 +28,7 @@ function DialogDraggableLogo(props) {
           />
         ) : (
           <ContentFrame
+            fileName={fileName}
             logo={logo}
             onTrack={onTrack}
             onResize={onResize}

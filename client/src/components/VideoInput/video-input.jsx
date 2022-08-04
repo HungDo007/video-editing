@@ -599,6 +599,7 @@ const VideoInput = () => {
       />
 
       <DialogDraggableLogo
+        fileName={filtered[0] ? filtered[0].file_name : ""}
         type={typeDraggable}
         open={opendialogUploadLogo}
         handleClose={handleClose1}
