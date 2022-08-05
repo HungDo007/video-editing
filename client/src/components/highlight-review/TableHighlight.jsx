@@ -190,7 +190,7 @@ function TableHighlight(props) {
         ) : (
           <Tooltip key={12332} title="Download">
             <IconButton
-              onClick={() => downloadNoMerge(row.list_mp4)}
+              onClick={() => downloadNoMerge(row.list_ts)}
               disabled={row.status === 1 ? false : true}
             >
               <CloudDownloadIcon />
