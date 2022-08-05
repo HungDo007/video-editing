@@ -44,6 +44,7 @@ namespace video_editing_api.Service.VideoEditing
         private readonly IHubContext<NotiHub> _hub;
         private readonly IMapper _mapper;
         private IHttpClientFactory _clientFactory;
+        private readonly IConfiguration _config;
 
         private readonly string _pathClientSecret;
         public VideoEditingService(IDbClient dbClient, IConfiguration config,
@@ -56,7 +57,7 @@ namespace video_editing_api.Service.VideoEditing
             _teamOfLeague = dbClient.GetTeamOfLeagueCollection();
             _gallery = dbClient.GetGalleryCollection();
             _clientFactory = clientFactory;
-
+            _config = config;
             _hub = hub;
             _pathClientSecret = Path.Combine(webHostEnvironment.ContentRootPath, "Cert", "client_secret.json");
 
@@ -445,6 +446,7 @@ namespace video_editing_api.Service.VideoEditing
             try
             {
                 var inputSend = handlePreSendServer(concatModel.JsonFile);
+                inputSend.merge = 1;
                 var json = JsonConvert.SerializeObject(inputSend);
                 json = json.Replace("E", "e");
 
@@ -455,9 +457,9 @@ namespace video_editing_api.Service.VideoEditing
                     {
                         HttpClient client = new HttpClient();
                         client.Timeout = TimeSpan.FromDays(1);
-                        client.BaseAddress = new System.Uri("http://118.69.218.59:7007");
+                        client.BaseAddress = new System.Uri(_config["BaseUrlMergeVideo"]);
                         var httpContent = new StringContent(json, Encoding.UTF8, "application/json");
-                        var response = await client.PostAsync("/highlight", httpContent);
+                        var response = await client.PostAsync("/projects/merge", httpContent);
                         var result = await response.Content.ReadAsStringAsync();
 
                         ConcatResultModel model = JsonConvert.DeserializeObject<ConcatResultModel>(result);
