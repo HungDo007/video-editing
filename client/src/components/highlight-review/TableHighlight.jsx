@@ -180,7 +180,7 @@ function TableHighlight(props) {
         return row.statusMerge === 0 ? (
           <Tooltip key={123} title="Download">
             <IconButton
-              href={temp.mp4?.replace("raw", "download")}
+              href={temp.ts?.replace("raw", "download")}
               target="_blank"
               disabled={row.status === 1 ? false : true}
             >
