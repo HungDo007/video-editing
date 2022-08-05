@@ -137,6 +137,7 @@ namespace video_editing_api
                     if (hl != null)
                     {
                         hl.list_mp4 = listRes.mp4;
+                        hl.list_ts = listRes.ts;
                         hl.Status = SystemConstants.HighlightStatusSucceed;
                     }
                     await _highlight.ReplaceOneAsync(hl => hl.Id == input.IdHiglight, hl);
