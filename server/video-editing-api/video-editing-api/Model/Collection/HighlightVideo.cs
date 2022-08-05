@@ -25,8 +25,9 @@ namespace video_editing_api.Model.Collection
         public string ts { get; set; }
         [JsonProperty("status")]
         public int Status { get; set; }
-        [JsonProperty("status_merge")]
+        [JsonProperty("statusMerge")]
         public int StatusMerge { get; set; } = 0;
         public List<string> list_mp4 { get; set; }
+        public List<string> list_ts { get; set; }
     }
 }
