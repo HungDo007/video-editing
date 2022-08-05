@@ -559,7 +559,7 @@ const VideoInput = () => {
     const temp = [...logoGallery];
     const idx = temp.findIndex((l) => l.file_name === lg.file_name);
     let newNewSize = [...newSize];
-    newNewSize[1] = (newSize[0] * temp[idx].size[1]) / temp[idx].size[0];
+    newNewSize[1] =  parseInt((newSize[0] * temp[idx].size[1]) / temp[idx].size[0]);
     temp[idx].size = newNewSize;
     setLogoGallery(temp);
   };
