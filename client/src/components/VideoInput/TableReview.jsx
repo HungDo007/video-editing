@@ -15,20 +15,12 @@ import {
 } from "@ant-design/icons";
 const type = "DraggableBodyRow";
 
-const aspectRatioOptions = [
-  { value: "4:3" },
-  { value: "5:3" },
-  { value: "3:2" },
-  { value: "16:10" },
-  { value: "16:9" },
-  { value: "2:1" },
-];
 const resolutionRatioOptions = [
-  { value: "320:240" },
-  { value: "512:384" },
-  { value: "720:480" },
-  { value: "1280:720" },
-  { value: "1920:1080" },
+  { label: "1080p", value: "1920:1080" },
+  { label: "720p", value: "1280:720" },
+  { label: "480p", value: "854:480" },
+  { label: "360p", value: "640:360" },
+  { label: "240p", value: "426:240" },
 ];
 
 const DraggableBodyRow = ({
@@ -89,10 +81,8 @@ function TableReview(props) {
     logo,
     onCheck,
     logoCheckAll,
-    aspectRatio,
     resolution,
     bitrate,
-    setAspectRatio,
     setResolution,
     setBitrate,
   } = props;
@@ -232,31 +222,11 @@ function TableReview(props) {
       <>
         {count} logo selected
         <Autocomplete
-          options={aspectRatioOptions}
-          size="small"
-          value={aspectRatio || null}
-          //fullWidth
-          getOptionLabel={(option) => option["value"] || ""}
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              label="Aspect ratio"
-              variant="standard"
-              inputProps={{
-                ...params.inputProps,
-              }}
-            />
-          )}
-          onChange={(e, value) =>
-            value ? setAspectRatio(value) : setAspectRatio({ value: "4:3" })
-          }
-        />
-        <Autocomplete
           options={resolutionRatioOptions}
           size="small"
           value={resolution || null}
           //fullWidth
-          getOptionLabel={(option) => option["value"] || ""}
+          getOptionLabel={(option) => option["label"] || ""}
           renderInput={(params) => (
             <TextField
               {...params}
@@ -268,7 +238,9 @@ function TableReview(props) {
             />
           )}
           onChange={(e, value) =>
-            value ? setResolution(value) : setResolution({ value: "1920:1080" })
+            value
+              ? setResolution(value)
+              : setResolution({ label: "1080p", value: "1920:1080" })
           }
         />
         <TextField

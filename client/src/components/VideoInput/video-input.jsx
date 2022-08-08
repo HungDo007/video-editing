@@ -22,6 +22,7 @@ import HighlightReview from "../highlight-review";
 import TableEditVideo from "./TableEditVideo";
 import TableReview from "./TableReview";
 import { DialogDraggableLogo, DialogMoreEvent } from "../flugin";
+import CustomizedSlider from "./Silder";
 
 export const formatTimeSlice = (time) => {
   var mind = time % (60 * 60);
@@ -34,8 +35,10 @@ export const formatTimeSlice = (time) => {
 
 const VideoInput = () => {
   const [bitrate, setBitrate] = useState(1000);
-  const [resolution, setResolution] = useState({ value: "1920:1080" });
-  const [aspectRatio, setAspectRatio] = useState({ value: "3:2" });
+  const [resolution, setResolution] = useState({
+    label: "1080p",
+    value: "1920:1080",
+  });
 
   const [connection, setConnection] = useState();
   const [opendialog, setOpenDialog] = useState(false);
@@ -312,7 +315,6 @@ const VideoInput = () => {
       ...body,
       event: filtered,
       logo: lggg,
-      aspect_ratio: aspectRatio.value,
       resolution: resolution.value,
       bitrate: newBitrate.toString(),
     };
@@ -401,7 +403,6 @@ const VideoInput = () => {
       ...body,
       event: filtered,
       logo: lgg,
-      aspect_ratio: aspectRatio.value,
       resolution: resolution.value,
       bitrate: newBitrate.toString(),
     };
@@ -559,7 +560,9 @@ const VideoInput = () => {
     const temp = [...logoGallery];
     const idx = temp.findIndex((l) => l.file_name === lg.file_name);
     let newNewSize = [...newSize];
-    newNewSize[1] =  parseInt((newSize[0] * temp[idx].size[1]) / temp[idx].size[0]);
+    newNewSize[1] = parseInt(
+      (newSize[0] * temp[idx].size[1]) / temp[idx].size[0]
+    );
     temp[idx].size = newNewSize;
     setLogoGallery(temp);
   };
@@ -624,10 +627,8 @@ const VideoInput = () => {
               logo={logoGallery}
               onCheck={handleCheckLogo}
               logoCheckAll={handleLogoCheckAll}
-              aspectRatio={aspectRatio}
               resolution={resolution}
               bitrate={bitrate}
-              setAspectRatio={setAspectRatio}
               setResolution={setResolution}
               setBitrate={setBitrate}
             />
@@ -760,8 +761,19 @@ const VideoInput = () => {
 
           <Grid item xs={12} sx={{ display: "flex", justifyContent: "center" }}>
             <div style={{ width: "100%", maxWidth: "720px" }}>
-              <Box sx={{ display: "flex" }}>
-                <Slider
+              <Box
+                sx={{
+                  display: "flex",
+                  marginBottom: "20px",
+                  marginTop: "20px",
+                }}
+              >
+                <CustomizedSlider
+                  duration={duration}
+                  videoPieceTime={videoPieceTime}
+                  handleSlideChange={handleSlideChange}
+                />
+                {/* <Slider
                   min={0}
                   max={duration}
                   value={videoPieceTime}
@@ -770,7 +782,7 @@ const VideoInput = () => {
                     return formatTimeSlice(s);
                   }}
                   onChange={handleSlideChange}
-                />
+                /> */}
               </Box>
               <Box
                 sx={{
@@ -780,6 +792,16 @@ const VideoInput = () => {
                 }}
               >
                 <div>{formatTimeSlice(rowSelected?.startTime)}</div>
+
+                <div>{formatTimeSlice(rowSelected?.endTime)}</div>
+              </Box>
+              <Box
+                sx={{
+                  marginBottom: 2,
+                  display: "flex",
+                  justifyContent: "center",
+                }}
+              >
                 <Button
                   variant="contained"
                   onClick={handleDownloadOneClick}
@@ -787,7 +809,6 @@ const VideoInput = () => {
                 >
                   Download
                 </Button>
-                <div>{formatTimeSlice(rowSelected?.endTime)}</div>
               </Box>
             </div>
           </Grid>
@@ -796,7 +817,7 @@ const VideoInput = () => {
         <Grid item xs={5} overflow="auto">
           <TableEditVideo
             data={videoSrc}
-            height="50vh"
+            height="55vh"
             onTableClick={onTableClick}
             onCheckOne={onCheckOne}
             onCheckAll={onCheckAll}

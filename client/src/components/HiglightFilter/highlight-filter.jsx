@@ -13,7 +13,6 @@ import {
   DialogContent,
   DialogContentText,
   Grid,
-  Slider,
   Snackbar,
   TextField,
 } from "@mui/material";
@@ -27,11 +26,14 @@ import ReactPlayer from "react-player";
 import TableReview from "../VideoInput/TableReview";
 import HighlightReview from "../highlight-review";
 import { DialogDraggableLogo, DialogMoreEvent } from "../flugin";
+import CustomizedSlider from "../VideoInput/Silder";
 
 function HighlightFilter() {
   const [bitrate, setBitrate] = useState("1000");
-  const [resolution, setResolution] = useState({ value: "1920:1080" });
-  const [aspectRatio, setAspectRatio] = useState({ value: "3:2" });
+  const [resolution, setResolution] = useState({
+    label: "1080p",
+    value: "1920:1080",
+  });
 
   const [connection, setConnection] = useState();
   const [filtered, setFiltered] = useState([]);
@@ -400,7 +402,6 @@ function HighlightFilter() {
       event: filtered,
       logo: lggg,
       description: hlDescription,
-      aspect_ratio: aspectRatio.value,
       resolution: resolution.value,
       bitrate: newBitrate.toString(),
     };
@@ -530,10 +531,8 @@ function HighlightFilter() {
               logo={logoGallery}
               onCheck={handleCheckLogo}
               logoCheckAll={handleLogoCheckAll}
-              aspectRatio={aspectRatio}
               resolution={resolution}
               bitrate={bitrate}
-              setAspectRatio={setAspectRatio}
               setResolution={setResolution}
               setBitrate={setBitrate}
             />
@@ -760,9 +759,24 @@ function HighlightFilter() {
                 xs={12}
                 sx={{ display: "flex", justifyContent: "center" }}
               >
-                <div style={{ width: "100%", maxWidth: "720px" }}>
-                  <Box sx={{ display: "flex" }}>
-                    <Slider
+                <div
+                  style={{
+                    width: "100%",
+                    maxWidth: "720px",
+                    marginTop: "20px",
+                  }}
+                >
+                  <Box
+                    sx={{
+                      display: "flex",
+                    }}
+                  >
+                    <CustomizedSlider
+                      duration={duration}
+                      videoPieceTime={videoPieceTime}
+                      handleSlideChange={handleSlideChange}
+                    />
+                    {/* <Slider
                       min={0}
                       max={duration}
                       value={videoPieceTime}
@@ -771,7 +785,7 @@ function HighlightFilter() {
                         return formatTimeSlice(s);
                       }}
                       onChange={handleSlideChange}
-                    />
+                    /> */}
                   </Box>
                   <Box
                     sx={{
