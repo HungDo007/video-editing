@@ -795,7 +795,7 @@ const VideoInput = () => {
 
                 <div>{formatTimeSlice(rowSelected?.endTime)}</div>
               </Box>
-              <Box
+              {/* <Box
                 sx={{
                   marginBottom: 2,
                   display: "flex",
@@ -809,7 +809,7 @@ const VideoInput = () => {
                 >
                   Download
                 </Button>
-              </Box>
+              </Box> */}
             </div>
           </Grid>
           <Grid item xs={12}></Grid>
